@@ -1,0 +1,82 @@
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD}
+    entrypoint: ["bash", "-c", "if [ ! -s /data/configdb/keyfile ]; then openssl rand -base64 756 > /data/configdb/keyfile; fi; chown mongodb:mongodb /data/configdb/keyfile; chmod 400 /data/configdb/keyfile; exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /data/configdb/keyfile"]
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+      - ./deploy/mongo-health.js:/scripts/mongo-health.js:ro
+    networks: [database]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "/scripts/mongo-health.js"]
+      interval: 10s
+      timeout: 10s
+      start_period: 30s
+      retries: 12
+  mongo-init:
+    image: mongo:7.0
+    restart: on-failure
+    environment:
+      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?Set MONGO_APP_PASSWORD}
+    command: ["mongosh", "--host", "mongo", "--quiet", "/scripts/mongo-init.js"]
+    volumes:
+      - ./deploy/mongo-init.js:/scripts/mongo-init.js:ro
+    networks: [database]
+    depends_on:
+      mongo:
+        condition: service_healthy
+  backend:
+    build:
+      context: ./backend
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://tooltracker:${MONGO_APP_PASSWORD:?Set MONGO_APP_PASSWORD}@mongo:27017/tooltracker?replicaSet=rs0&authSource=tooltracker
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the root .env}
+      CORS_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN in the root .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAME_SITE: lax
+    networks: [default, database]
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(async r=>{const d=await r.json();process.exit(r.ok&&d.database==='connected'?0:1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
+    restart: unless-stopped
+  proxy:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8081}:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
+networks:
+  database:
+    internal: true
+
+volumes:
+  mongo-data:
+  mongo-config:
