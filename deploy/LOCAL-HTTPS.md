@@ -1,6 +1,6 @@
 # Tool Tracker: LAN HTTPS and biometric login
 
-App: **https://tools.192.168.0.116.sslip.io:8444**
+App: **[Tool Tracker](https://tools.192.168.0.116.sslip.io:8444)**
 
 Connect each device to the same LAN as the NUC. The hostname resolves to the
 private address 192.168.0.116 using [sslip.io DNS](https://nip.io/); it does not
@@ -13,7 +13,7 @@ Install the **Tool Tracker LAN Root CA** on every device before using the HTTPS
 app. Download only the public certificate/profile below; private keys stay on
 the NUC. Certificate SHA-256 fingerprint:
 
-```
+```text
 19:9D:E9:3B:5F:2E:CF:FC:5F:7B:24:83:49:07:55:3C:C8:3E:9B:64:19:87:74:6A:FB:41:4A:F6:D5:F7:52:A7
 ```
 
