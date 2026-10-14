@@ -9,6 +9,9 @@ import DetailSheet from '@/components/DetailSheet';
 import ToolFormSheet from '@/components/ToolFormSheet';
 import { PasswordSheet, UsersSheet } from '@/components/AccountSheets';
 import Sidebar from '@/components/Sidebar';
+import PasskeySheet from '@/components/PasskeySheet';
+import { startAuthentication } from '@simplewebauthn/browser';
+import { passkeyError } from '@/lib/passkeyText';
 import Toast, { useToast } from '@/components/Toasts';
 
 type Filter = null | 'store' | 'machine' | 'taken' | 'overdue';
@@ -37,6 +40,7 @@ export default function Home() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Tool | null>(null);
   const [pwOpen, setPwOpen] = useState(false);
+  const [passkeysOpen, setPasskeysOpen] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const { msg, show, toast } = useToast();
@@ -64,7 +68,8 @@ export default function Home() {
   const reload = useCallback(async (quiet = true) => {
     if (!quiet) setSync('syncing');
     try {
-      const [td, md] = await Promise.all([api.tools(), api.machines()]);
+      const [td, md, account] = await Promise.all([api.tools(), api.machines(), api.me()]);
+      setUser(account.user);
       setTools(td.tools);
       setMachines(md.machines);
       setSync('synced');
@@ -78,12 +83,13 @@ export default function Home() {
     api.me().then((d) => setUser(d.user)).catch(() => {}).finally(() => setBooting(false));
   }, []);
 
+  const userId = user?.id;
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     reload(false);
     const id = setInterval(() => { if (document.visibilityState === 'visible') reload(); }, POLL_MS);
     return () => clearInterval(id);
-  }, [user, reload]);
+  }, [userId, reload]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => { if (!searchRef.current?.contains(e.target as Node)) setShowSugg(false); };
@@ -98,7 +104,15 @@ export default function Home() {
   }
   async function logout() {
     try { await api.logout(); } catch {}
-    setUser(null); setTools([]); setActiveId(null);
+    setUser(null); setTools([]); setActiveId(null); setPasskeysOpen(false); setPwOpen(false); setUsersOpen(false);
+  }
+  async function passkeyLogin() {
+    try {
+      setLoginError('');
+      const { options } = await api.passkeyLoginOptions();
+      const response = await startAuthentication({ optionsJSON: options });
+      setUser((await api.passkeyLoginVerify(response)).user);
+    } catch (e) { setLoginError(passkeyError(e, lang)); }
   }
 
   // ---- derived data ----
@@ -170,7 +184,7 @@ export default function Home() {
   const toggleFilter = (f: Exclude<Filter, null>) => setFilter((cur) => (cur === f ? null : f));
 
   if (booting) return <div className="boot">…</div>;
-  if (!user) return <LoginForm lang={lang} onLang={changeLang} onLogin={login} error={loginError} />;
+  if (!user) return <LoginForm lang={lang} onLang={changeLang} onLogin={login} onPasskey={passkeyLogin} error={loginError} />;
 
   const syncText = sync === 'synced' ? t.synced : sync === 'offline' ? t.offline : t.syncing;
 
@@ -178,7 +192,7 @@ export default function Home() {
     <>
       <Sidebar
         open={navOpen} lang={lang} user={user} filter={filter} counts={counts} total={tools.length} sync={sync} syncText={syncText}
-        onFilter={setFilter} onLang={changeLang} onPassword={() => setPwOpen(true)} onUsers={() => setUsersOpen(true)} onLogout={logout} onClose={() => setNavOpen(false)}
+        onFilter={setFilter} onLang={changeLang} onPassword={() => setPwOpen(true)} onPasskeys={() => setPasskeysOpen(true)} onUsers={() => setUsersOpen(true)} onLogout={logout} onClose={() => setNavOpen(false)}
       />
       <div id="app">
         <header className="top">
@@ -291,9 +305,10 @@ export default function Home() {
         canEdit={!!canEdit} isAdmin={!!isAdmin} machines={machines} historyKey={historyKey}
         onClose={() => setActiveId(null)} onAssign={assign} onTakeOut={takeOut} onReturn={giveBack} onEdit={openEdit} onDelete={remove}
       />
-      <ToolFormSheet open={formOpen} tool={editing} lang={lang} onClose={() => { setFormOpen(false); setEditing(null); }} onSave={save} onError={toast} />
+      {canEdit && <ToolFormSheet open={formOpen} tool={editing} lang={lang} onClose={() => { setFormOpen(false); setEditing(null); }} onSave={save} onError={toast} />}
+      <PasskeySheet open={passkeysOpen} lang={lang} onClose={() => setPasskeysOpen(false)} />
       <PasswordSheet open={pwOpen} lang={lang} onClose={() => setPwOpen(false)} onDone={(m) => { setPwOpen(false); toast(m); }} onError={toast} />
-      <UsersSheet open={usersOpen} lang={lang} meId={user.id} onClose={() => setUsersOpen(false)} onError={toast} onDone={toast} />
+      {isAdmin && <UsersSheet open={usersOpen} lang={lang} meId={user.id} onClose={() => setUsersOpen(false)} onError={toast} onDone={toast} />}
       <Toast msg={msg} show={show} />
     </>
   );

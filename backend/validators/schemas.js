@@ -18,6 +18,12 @@ const password = z.string().min(8, "Password must be at least 8 characters").max
 const role = z.enum(["admin", "operator", "viewer"]);
 
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1) });
+export const passkeyRegistrationSchema = z.object({
+  currentPassword: z.string().min(1).max(256),
+  name: z.string().trim().min(1).max(80),
+});
+export const passkeyDeleteSchema = z.object({ currentPassword: z.string().min(1).max(256) });
+export const passkeyResponseSchema = z.object({ response: z.object({ id: z.string().min(1).max(2048) }).passthrough() });
 
 export const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: password });
 

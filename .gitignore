@@ -1,3 +1,6 @@
 Mould tracker.zip
 .env
 .env.production
+deploy/lan-certificates/
+deploy/tls/
+outputs/lan-https/

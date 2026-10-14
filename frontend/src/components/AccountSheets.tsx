@@ -4,6 +4,7 @@ import Sheet from './Sheet';
 import { api } from '@/lib/api';
 import { I18N, type Lang } from '@/lib/i18n';
 import type { Role, User } from '@/lib/types';
+import { passkeyText } from '@/lib/passkeyText';
 
 export function PasswordSheet({ open, lang, onClose, onDone, onError }: {
   open: boolean; lang: Lang; onClose: () => void; onDone: (m: string) => void; onError: (m: string) => void;
@@ -59,6 +60,7 @@ export function UsersSheet({ open, lang, meId, onClose, onError, onDone }: {
   return (
     <Sheet open={open} onClose={onClose} label={t.users}>
       <h2 className="detail-name form-title">{t.users}</h2>
+      <p className="passkey-note">{passkeyText(lang).roles}</p>
       <div className="user-list">
         {users.map((u) => (
           <div className={'user-row' + (u.active ? '' : ' off')} key={u.id}>

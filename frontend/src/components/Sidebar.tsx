@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { I18N, type Lang } from "@/lib/i18n";
 import type { User } from "@/lib/types";
 import Image from "next/image";
+import { passkeyText } from '@/lib/passkeyText';
+import { PwaInstallButton } from './PwaProvider';
 
 export type NavFilter = null | "store" | "machine" | "taken" | "overdue";
 type Counts = { store: number; machine: number; taken: number; overdue: number };
@@ -19,6 +21,7 @@ export default function Sidebar({
   onFilter,
   onLang,
   onPassword,
+  onPasskeys,
   onUsers,
   onLogout,
   onClose,
@@ -34,6 +37,7 @@ export default function Sidebar({
   onFilter: (f: NavFilter) => void;
   onLang: (l: Lang) => void;
   onPassword: () => void;
+  onPasskeys: () => void;
   onUsers: () => void;
   onLogout: () => void;
   onClose: () => void;
@@ -103,6 +107,8 @@ export default function Sidebar({
           <button className="side-link" onClick={act(onPassword)}>
             {t.changePassword}
           </button>
+          <button className="side-link" onClick={act(onPasskeys)}>{passkeyText(lang).title}</button>
+          <PwaInstallButton lang={lang} />
           {user.role === "admin" && (
             <button className="side-link" onClick={act(onUsers)}>
               {t.users}

@@ -1,5 +1,63 @@
 # Ubuntu NUC deployment
 
+## Current NUC installation: managed by Coolify
+
+The live installation is in Coolify under **Mould Tracker / production / Tool
+Tracker**, at https://tools.192.168.0.116.sslip.io:8444. Start, stop and redeploy it through Coolify.
+Install the LAN certificate using [LOCAL-HTTPS.md](LOCAL-HTTPS.md). Port 8081
+redirects to HTTPS and serves public certificate downloads.
+Do not start a second copy with the standalone commands below on this NUC.
+
+Coolify configuration directory:
+`/data/coolify/services/tt0rylhzn4ipcgbjqjdrrmcu`.
+Source code and supporting config files remain at `/home/flexi/apps/tool-tracker`
+(also accessible through `/home/flexi/Tool-Tracker`). The imported service uses the
+existing local images `tool-tracker-backend:latest` and `tool-tracker-frontend:latest`.
+For a code update, build those images from the source folder, then redeploy from
+Coolify. Secrets are stored in Coolify environment settings.
+
+The external MongoDB volumes `tool-tracker_mongo-data` and
+`tool-tracker_mongo-config` were preserved during migration. Do not delete these
+volumes. A migration backup is stored at
+`/home/flexi/apps/tool-tracker/backups/before-coolify-migration.archive.gz`.
+
+## Passkeys and role permissions
+
+Admin manages users and all tool actions. Operator can add, edit and move tools.
+Viewer can only read tools, machines and history. Every protected request reads
+the user's current role and active status from MongoDB, so existing sessions do
+not keep old permissions after a role change or account disablement.
+
+Users can add passkeys from the sidebar after entering their current password,
+and use fingerprint, Face ID or a device PIN to sign in. Only public credential
+keys are stored on the server. Password login remains available for recovery.
+
+Passkeys require a trusted HTTPS hostname. This NUC now uses the local HTTPS
+configuration described in [LOCAL-HTTPS.md](LOCAL-HTTPS.md). For another server,
+configure a trusted HTTPS route for this service, then set these
+backend environment settings (or use the root .env for standalone deployments):
+
+```dotenv
+WEBAUTHN_ORIGIN=https://tools.example.com
+WEBAUTHN_RP_ID=tools.example.com
+CORS_ORIGIN=https://tools.example.com
+COOKIE_SECURE=true
+```
+
+For standalone Compose, set APP_ORIGIN instead of CORS_ORIGIN. The origin must
+match the actual browser URL exactly, with no trailing slash. A local CA must be
+trusted by each client device when using local HTTPS. A browser certificate
+warning bypass is not sufficient. Do not change the RP hostname after enrolling
+passkeys without planning re-enrollment.
+
+Until HTTPS is configured, biometric controls show the HTTPS requirement and
+password authentication continues to work. For development only,
+WEBAUTHN_ORIGIN=http://localhost:3000 and WEBAUTHN_RP_ID=localhost are supported.
+
+Backend authentication tests: `cd backend && npm test`.
+
+## Standalone installation commands
+
 Install Docker Engine and the Compose plugin using the official Ubuntu guide:
 https://docs.docker.com/engine/install/ubuntu/
 

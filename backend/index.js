@@ -13,6 +13,8 @@ import userRoutes from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 const app = express();
+// The deployment exposes only Nginx; trust its forwarded client address.
+app.set("trust proxy", 1);
 
 const origins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",").map((s) => s.trim());
 

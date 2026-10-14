@@ -1,4 +1,7 @@
 import type { MachineInfo, Movement, Role, Tool, ToolInput, User } from "./types";
+import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/browser';
+
+export type PasskeyInfo = { id: string; name: string; createdAt: string; lastUsedAt?: string };
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -32,6 +35,13 @@ export const api = {
   logout: () => request<unknown>("/auth/logout", "POST"),
   me: () => request<{ user: User }>("/auth/me"),
   changePassword: (currentPassword: string, newPassword: string) => request<unknown>("/auth/password", "POST", { currentPassword, newPassword }),
+  passkeyCapabilities: () => request<{ enabled: boolean }>('/auth/passkeys/capabilities'),
+  passkeys: () => request<{ passkeys: PasskeyInfo[] }>('/auth/passkeys'),
+  passkeyRegistrationOptions: (currentPassword: string, name: string) => request<{ options: PublicKeyCredentialCreationOptionsJSON }>('/auth/passkeys/register/options', 'POST', { currentPassword, name }),
+  passkeyRegistrationVerify: (response: RegistrationResponseJSON) => request<unknown>('/auth/passkeys/register/verify', 'POST', { response }),
+  passkeyLoginOptions: () => request<{ options: PublicKeyCredentialRequestOptionsJSON }>('/auth/passkeys/login/options', 'POST'),
+  passkeyLoginVerify: (response: AuthenticationResponseJSON) => request<{ user: User }>('/auth/passkeys/login/verify', 'POST', { response }),
+  removePasskey: (id: string, currentPassword: string) => request<unknown>(`/auth/passkeys/${id}`, 'DELETE', { currentPassword }),
 
   tools: () => request<{ tools: Tool[] }>("/tools"),
   createTool: (input: ToolInput) => request<{ tool: Tool }>("/tools", "POST", input),
