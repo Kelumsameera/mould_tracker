@@ -1,0 +1,46 @@
+name: ToolTracker
+options:
+  bundleIdPrefix: lk.factory
+  deploymentTarget:
+    iOS: "16.0"
+    macOS: "13.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "2.1.0"
+    CURRENT_PROJECT_VERSION: "20100"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  ToolTrackerIOS:
+    type: application
+    platform: iOS
+    sources: [ToolTrackerApp.swift]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: lk.factory.tooltracker.ios
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+    info:
+      path: build/iOS-Info.plist
+      properties:
+        CFBundleDisplayName: Tool Tracker
+        UILaunchScreen: {}
+        NSLocalNetworkUsageDescription: Connect to the Tool Tracker server on your factory network.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+  ToolTrackerMac:
+    type: application
+    platform: macOS
+    sources: [ToolTrackerApp.swift]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: lk.factory.tooltracker.mac
+        GENERATE_INFOPLIST_FILE: YES
+        ENABLE_HARDENED_RUNTIME: YES
+    info:
+      path: build/macOS-Info.plist
+      properties:
+        CFBundleDisplayName: Tool Tracker
+        NSLocalNetworkUsageDescription: Connect to the Tool Tracker server on your factory network.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true

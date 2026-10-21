@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1B2B35">
+  <title>Install Tool Tracker</title>
+  <style>
+    :root{color-scheme:light;font-family:"Avenir Next","Trebuchet MS","Noto Sans Sinhala",sans-serif;color:#18232D;background:#F2F5F7}
+    *{box-sizing:border-box}body{margin:0}header{background:#1B2B35;color:white;padding:36px max(24px,calc((100% - 600px)/2))}header p{color:#CFDDE1;line-height:1.6;margin-bottom:0}h1{font-size:30px;margin:12px 0}main{max-width:648px;margin:auto;padding:24px 24px calc(36px + env(safe-area-inset-bottom,0px))}p,li{font-size:15px;line-height:1.7}li+li{margin-top:10px}ol{padding-left:24px}details{border-bottom:1px solid #DEE5E9;padding:18px 0}summary{font-size:18px;font-weight:bold;cursor:pointer;padding:4px 0}a{color:#18515A;text-underline-offset:3px}header a{color:#fff}.open-app{display:block;background:#246B75;color:white;text-align:center;padding:15px 20px;border-radius:12px;font-weight:bold;text-decoration:none;margin:24px 0 12px}.note{color:#64727D;font-size:13px}.step{font-size:20px;margin:28px 0 8px}button{font:inherit;border:1px solid #87949D;border-radius:8px;background:transparent;color:white;padding:7px 12px;cursor:pointer}button[aria-pressed=true]{background:white;color:#1B2B35}:focus-visible{outline:3px solid #B7791F;outline-offset:4px}[hidden]{display:none!important}code{overflow-wrap:anywhere;font-size:12px}footer{margin-top:28px;border-top:1px solid #DEE5E9;padding-top:14px}
+  </style>
+</head>
+<body>
+  <header>
+    <button type="button" aria-pressed="true" data-language="en">English</button>
+    <button type="button" aria-pressed="false" data-language="si">සිංහල</button>
+    <h1 data-en="Install Tool Tracker" data-si="Tool Tracker install කරන්න">Install Tool Tracker</h1>
+    <p data-en="Open from your home screen or desktop in its own app window, without the browser address bar." data-si="Home screen එකෙන් හෝ desktop එකෙන් browser address bar නැති app window එකක විවෘත කරන්න.">Open from your home screen or desktop in its own app window, without the browser address bar.</p>
+  </header>
+  <main>
+    <p data-en="First, connect to the factory Wi-Fi or LAN. The factory server must be running whenever you use the app." data-si="මුලින් factory Wi-Fi හෝ LAN එකට සම්බන්ධ වෙන්න. App එක භාවිත කරන විට factory server එක ක්‍රියාත්මකව තිබිය යුතුයි.">First, connect to the factory Wi-Fi or LAN. The factory server must be running whenever you use the app.</p>
+    <h2 class="step" data-en="Download the app" data-si="App එක download කරන්න">Download the app</h2>
+    <p data-en="These apps open Tool Tracker without browser menus or extension controls. Version 2.1.0." data-si="මේ apps වල browser menu හෝ extension controls පෙන්වන්නේ නැහැ. Version 2.1.0.">These apps open Tool Tracker without browser menus or extension controls. Version 2.1.0.</p>
+    <a class="open-app" href="/downloads/Tool-Tracker-2.1.0-windows-x64.exe" download data-en="Download Windows installer (.exe)" data-si="Windows installer (.exe) download කරන්න">Download Windows installer (.exe)</a>
+    <p class="note" data-en="Windows 10/11, 64-bit. Install the factory certificate using the Windows steps below, then run the installer. This release has no publisher code signature, so Windows may show an unknown-publisher warning." data-si="Windows 10/11, 64-bit සඳහා. පහත Windows උපදෙස් අනුව factory certificate එක install කර installer එක run කරන්න. Publisher code signature නොමැති නිසා Windows unknown-publisher පණිවිඩයක් පෙන්විය හැකියි.">Windows 10/11, 64-bit. Install the factory certificate using the Windows steps below, then run the installer. This release has no publisher code signature, so Windows may show an unknown-publisher warning.</p>
+    <a class="open-app" href="/downloads/Tool-Tracker-2.1.0-android.apk" download data-en="Download Android app (.apk)" data-si="Android app (.apk) download කරන්න">Download Android app (.apk)</a>
+    <p class="note" data-en="Android 8 or later. Open the downloaded APK and allow installation from your browser when Android asks. The factory certificate is already included in this app; no separate certificate setup is needed. Use email/password to sign in." data-si="Android 8 හෝ ඊට අලුත් version සඳහා. APK එක open කර Android ඉල්ලන විට browser එකෙන් install කිරීමට අවසර දෙන්න. මේ app එකට factory certificate ඇතුළත් නිසා වෙනම certificate setup අවශ්‍ය නැහැ. Email/password එකෙන් login වෙන්න.">Android 8 or later. Open the downloaded APK and allow installation from your browser when Android asks. The factory certificate is already included in this app; no separate certificate setup is needed. Use email/password to sign in.</p>
+    <p class="note"><a href="/downloads/SHA256SUMS.txt" download>Download SHA-256 checksums</a></p>
+    <details>
+      <summary>Apple: iPhone / iPad / Mac</summary>
+      <p data-en="Native Apple downloads are not available yet. A Mac/Xcode build and Apple signing/distribution setup are required. Until those are ready, install the web app using the iPhone/iPad or Mac instructions below." data-si="Apple native download files තවම සූදානම් නැහැ. Mac/Xcode build සහ Apple signing/distribution setup අවශ්‍යයි. එතෙක් පහත iPhone/iPad හෝ Mac උපදෙස් අනුව web app එක install කරන්න.">Native Apple downloads are not available yet. A Mac/Xcode build and Apple signing/distribution setup are required. Until those are ready, install the web app using the iPhone/iPad or Mac instructions below.</p>
+    </details>
+    <h2 class="step" data-en="Or install the web app" data-si="නැත්නම් web app එක install කරන්න">Or install the web app</h2>
+    <h2 class="step" data-en="1. Set up this device" data-si="1. මේ device එක සකස් කරන්න">1. Set up this device</h2>
+    <p data-en="Do this once on each device. Choose your device below, trust the factory certificate, then install the app." data-si="හැම device එකකම මෙය එක්වරක් කරන්න. පහතින් device එක තෝරා factory certificate එක trust කර app එක install කරන්න.">Do this once on each device. Choose your device below, trust the factory certificate, then install the app.</p>
+    <details name="device">
+      <summary>Android</summary>
+      <ol>
+        <li><a href="http://192.168.0.116:8081/tool-tracker-root-ca.crt">Download factory certificate (.crt)</a>.</li>
+        <li>Settings → Security &amp; privacy → More security settings → Encryption &amp; credentials → Install a certificate → CA certificate. Select the downloaded file and confirm. Menu names vary by phone.</li>
+        <li>Restart <strong>Chrome</strong> and open Tool Tracker using the button below. The page should open without a certificate warning.</li>
+        <li>Choose <strong>Install app</strong> on the login screen. If no prompt appears, use Chrome menu → <strong>Add to Home screen → Install</strong>.</li>
+        <li>Open <strong>Tool Tracker</strong> from your home screen or app launcher.</li>
+      </ol>
+    </details>
+    <details name="device">
+      <summary>iPhone / iPad</summary>
+      <ol>
+        <li>Open this page in <strong>Safari</strong>. <a href="http://192.168.0.116:8081/tool-tracker-lan.mobileconfig">Download the factory certificate profile</a> and allow the download.</li>
+        <li>Settings → General → VPN &amp; Device Management → install <strong>Tool Tracker LAN HTTPS</strong>.</li>
+        <li>Settings → General → About → Certificate Trust Settings → enable full trust for <strong>Tool Tracker LAN Root CA</strong>.</li>
+        <li>Open Tool Tracker below in Safari. Tap <strong>Share → Add to Home Screen</strong>. Keep <strong>Open as Web App</strong> on if shown, then tap <strong>Add</strong>.</li>
+        <li>Open <strong>Tool Tracker</strong> from the new home screen icon.</li>
+      </ol>
+    </details>
+    <details name="device">
+      <summary>Windows</summary>
+      <ol>
+        <li><a href="http://192.168.0.116:8081/tool-tracker-root-ca.cer">Download factory certificate (.cer)</a> and double-click it.</li>
+        <li>Install Certificate → Current User → Place all certificates in the following store → <strong>Trusted Root Certification Authorities</strong> → Finish. Confirm <strong>Tool Tracker LAN Root CA</strong>.</li>
+        <li>Close and reopen <strong>Chrome or Edge</strong>. Open Tool Tracker below and choose <strong>Install app</strong> on the login screen.</li>
+        <li>If no prompt appears: in Edge, use menu → Apps → Install this site as an app; in Chrome, use menu → Cast, save, and share → Install page as app. Menu wording can vary.</li>
+        <li>Open <strong>Tool Tracker</strong> from Start. Pin it to the taskbar for easy access.</li>
+      </ol>
+    </details>
+    <details name="device">
+      <summary>Mac</summary>
+      <ol>
+        <li><a href="http://192.168.0.116:8081/tool-tracker-root-ca.crt">Download factory certificate (.crt)</a>. Open it in <strong>Keychain Access</strong> and add it to the login keychain.</li>
+        <li>Open <strong>Tool Tracker LAN Root CA</strong> in Keychain Access → Trust → When using this certificate → Always Trust. Confirm your Mac credentials.</li>
+        <li>Restart your browser. In <strong>Safari on macOS Sonoma or later</strong>, open Tool Tracker below → File → Add to Dock → Add.</li>
+        <li>Alternatively, open in <strong>Chrome</strong> and choose <strong>Install app</strong>. Launch Tool Tracker from the Dock or app launcher.</li>
+      </ol>
+    </details>
+    <h2 class="step" data-en="2. Open and install" data-si="2. App එක විවෘත කර install කරන්න">2. Open and install</h2>
+    <a class="open-app" href="https://tools.192.168.0.116.sslip.io:8444/" data-en="Open Tool Tracker" data-si="Tool Tracker විවෘත කරන්න">Open Tool Tracker</a>
+    <p class="note" data-en="Already installed? Open the Tool Tracker icon on your device. This link opens the website; installing adds the separate app window." data-si="දැනටමත් install කරලාද? Device එකේ Tool Tracker icon එකෙන් විවෘත කරන්න. මේ link එක website එක විවෘත කරනවා; install කළ පසු වෙනම app window එක ලැබෙනවා.">Already installed? Open the Tool Tracker icon on your device. This link opens the website; installing adds the separate app window.</p>
+    <footer>
+      <p data-en="Share this setup page with other factory users:" data-si="අනිත් factory users සමඟ මේ setup link එක බෙදාගන්න:">Share this setup page with other factory users:</p>
+      <a href="http://192.168.0.116:8081/install.html">http://192.168.0.116:8081/install.html</a>
+      <p class="note" data-en="Sign in with your assigned account after installation. Updates arrive from the factory server when you reopen the app. Devices and browsers must support installed web apps; a browser shortcut alone may still open a browser tab." data-si="Install කළ පසු ඔබට ලබාදුන් account එකෙන් login වෙන්න. App එක නැවත විවෘත කරන විට factory server එකෙන් updates ලැබෙනවා. Installed web apps සඳහා device/browser සහාය අවශ්‍යයි; සාමාන්‍ය shortcut එකක් browser tab එකක විවෘත විය හැකියි.">Sign in with your assigned account after installation. Updates arrive from the factory server when you reopen the app. Devices and browsers must support installed web apps; a browser shortcut alone may still open a browser tab.</p>
+      <details><summary>Certificate fingerprint</summary><p class="note">Tool Tracker LAN Root CA · SHA-256</p><code>19:9D:E9:3B:5F:2E:CF:FC:5F:7B:24:83:49:07:55:3C:C8:3E:9B:64:19:87:74:6A:FB:41:4A:F6:D5:F7:52:A7</code></details>
+      <p class="note">Installation reference: <a href="https://support.google.com/chrome/answer/9658361">Chrome</a> · <a href="https://support.apple.com/guide/iphone/open-as-web-app-iphea86e5236/ios">iPhone</a> · <a href="https://support.apple.com/104996">Mac</a></p>
+    </footer>
+  </main>
+  <script>
+    document.querySelectorAll('[data-language]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var lang = button.dataset.language;
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-en]').forEach(function(node) { node.textContent = node.dataset[lang]; });
+        document.querySelectorAll('[data-language]').forEach(function(item) { item.setAttribute('aria-pressed', String(item === button)); });
+      });
+    });
+  </script>
+</body>
+</html>
