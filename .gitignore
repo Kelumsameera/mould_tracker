@@ -4,3 +4,7 @@ Mould tracker.zip
 deploy/lan-certificates/
 deploy/tls/
 outputs/lan-https/
+outputs/native/
+outputs/migration/
+outputs/import/
+backend/uploads/
