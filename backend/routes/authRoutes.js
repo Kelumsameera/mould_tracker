@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
-import { changePassword, login, logout, me } from "../controllers/authController.js";
+import { changePassword, login, logout, me, setLanguage, updateProfile } from "../controllers/authController.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 import { asyncHandler } from "../middleware/errorMiddleware.js";
 import { validate } from "../middleware/validate.js";
-import { changePasswordSchema, loginSchema } from "../validators/schemas.js";
+import { changePasswordSchema, languageSchema, loginSchema, updateProfileSchema } from "../validators/schemas.js";
 import { passkeyRegistrationSchema, passkeyDeleteSchema, passkeyResponseSchema } from "../validators/schemas.js";
 import { requirePasskeyOrigin } from "../utils/passkeyConfig.js";
 import { capabilities, registrationOptions, registrationVerify, authenticationOptions, authenticationVerify, listPasskeys, deletePasskey } from "../controllers/passkeyController.js";
@@ -20,6 +20,8 @@ const enrollmentLimit = rateLimit({ windowMs: 10 * 60 * 1000, limit: 20,
 router.post("/login", loginLimit, validate(loginSchema), asyncHandler(login));
 router.post("/logout", logout);
 router.get("/me", requireAuth, me);
+router.patch("/me", requireAuth, loginLimit, validate(updateProfileSchema), asyncHandler(updateProfile));
+router.patch("/me/language", requireAuth, validate(languageSchema), asyncHandler(setLanguage));
 router.post("/password", requireAuth, validate(changePasswordSchema), asyncHandler(changePassword));
 router.get("/passkeys/capabilities", capabilities);
 router.get("/passkeys", requireAuth, asyncHandler(listPasskeys));

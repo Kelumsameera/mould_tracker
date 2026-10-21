@@ -1,16 +1,14 @@
-import { Router } from "express";
-import { createUser, listUsers, updateUser } from "../controllers/userController.js";
-import { requireAuth, requireRole } from "../middleware/authMiddleware.js";
-import { asyncHandler as h } from "../middleware/errorMiddleware.js";
-import { validate } from "../middleware/validate.js";
-import { createUserSchema, updateUserSchema } from "../validators/schemas.js";
+import { createUser, deleteUser, listUsers, updateUser } from "../controllers/userController.js";
+import { createUserSchema, reasonSchema, updateUserSchema } from "../validators/schemas.js";
+import { routerFrom } from "./table.js";
 
-const router = Router();
+const MANAGE = ["users.manage"]; // Admins too, but only Super Admins touch Super Admins (canManageUser)
 
-router.use(requireAuth, requireRole("admin"));
+export const userRouteTable = [
+  ["get", "/", MANAGE, listUsers],
+  ["post", "/", MANAGE, createUser, createUserSchema],
+  ["patch", "/:id", MANAGE, updateUser, updateUserSchema],
+  ["delete", "/:id", MANAGE, deleteUser, reasonSchema]
+];
 
-router.get("/", h(listUsers));
-router.post("/", validate(createUserSchema), h(createUser));
-router.patch("/:id", validate(updateUserSchema), h(updateUser));
-
-export default router;
+export default routerFrom(userRouteTable);

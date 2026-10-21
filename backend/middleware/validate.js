@@ -12,7 +12,9 @@ export function validate(schema, source = "body") {
         errors: z.flattenError(result.error)
       });
     }
-    req[source] = result.data;
+    // Express 5 makes req.query read-only, so validated query values go on req.validQuery.
+    if (source === "query") req.validQuery = result.data;
+    else req[source] = result.data;
     next();
   };
 }

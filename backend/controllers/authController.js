@@ -32,3 +32,21 @@ export async function changePassword(req, res) {
   await user.save();
   res.json({ success: true });
 }
+
+export async function updateProfile(req, res) {
+  const user = await User.findById(req.user._id);
+  if (!user || !(await bcrypt.compare(req.body.currentPassword, user.passwordHash))) {
+    throw new ApiError(400, "Current password is incorrect");
+  }
+  user.name = req.body.name;
+  user.email = req.body.email;
+  if (req.body.newPassword) user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
+  await user.save();
+  res.json({ success: true, user: userDTO(user) });
+}
+
+// PATCH /api/auth/me/language - the UI language follows the user to every device.
+export async function setLanguage(req, res) {
+  const user = await User.findByIdAndUpdate(req.user._id, { $set: { language: req.body.language } }, { new: true });
+  res.json({ success: true, user: userDTO(user) });
+}

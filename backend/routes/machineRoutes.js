@@ -1,11 +1,11 @@
-import { Router } from "express";
-import { listMachines } from "../controllers/machineController.js";
-import { requireAuth } from "../middleware/authMiddleware.js";
-import { asyncHandler as h } from "../middleware/errorMiddleware.js";
+import * as c from "../controllers/machineController.js";
+import { createMachineSchema, updateMachineSchema } from "../validators/schemas.js";
+import { routerFrom } from "./table.js";
 
-const router = Router();
+export const machineRouteTable = [
+  ["get", "/", ["moulds.view"], c.listMachines],
+  ["post", "/", ["moulds.manage"], c.createMachine, createMachineSchema],
+  ["patch", "/:id", ["moulds.manage"], c.updateMachine, updateMachineSchema]
+];
 
-// Machines are created automatically when a tool is sent to a new machine name.
-router.get("/", requireAuth, h(listMachines));
-
-export default router;
+export default routerFrom(machineRouteTable);
