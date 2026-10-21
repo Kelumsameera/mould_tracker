@@ -130,6 +130,7 @@ test("merge by Tool ID ignoring spaces: sheet wins, history and extra items stay
   assert.deepEqual(plan.heldBack, [{ sheetToolId: "L1/2", dbToolId: "L12", rows: [1] }]);
   assert.deepEqual(plan.dbOnly, ["OLD-9"]);
   assert.deepEqual(plan.machineRenames.map((r) => [r.from, r.to]), [["INJ_03", "INJ-03"]]); // INJ_04 would collide, left alone
+  assert.deepEqual(plan.machineRenameConflicts, [{ from: "INJ_04", to: "INJ-04" }]);
   assert.deepEqual(plan.machineCreates, []);
 
   const accepted = makePlan(sheet, db, { acceptPossible: true });
@@ -172,4 +173,14 @@ test("a near match is merged only when confirmed with --match", () => {
   assert.equal(ok.update[0].current.toolId, "A05 083");
   assert.deepEqual(ok.update[0].mouldChanged.toolId, { from: "A05 083", to: "A05-083" });
   assert.equal(makePlan(sheet, db, { matches: { [toolKey("A05-083")]: "OTHER" } }).heldBack.length, 1);
+});
+
+test("two machine records that normalize to the same code: one is renamed, the other is reported, never a duplicate", () => {
+  const db = { moulds: [], items: [], machines: [{ _id: oid(), code: "INJ_10" }, { _id: oid(), code: "INJ 10" }, { _id: oid(), code: "INJ-11" }], imageSource: () => undefined };
+  const plan = makePlan(sheetOf([]), db);
+  assert.deepEqual(plan.machineRenames.map((r) => [r.from, r.to]), [["INJ_10", "INJ-10"]]);
+  assert.deepEqual(plan.machineRenameConflicts, [{ from: "INJ 10", to: "INJ-10" }]);
+  // re-run after the first rename was applied: nothing left to rename, the clash is still reported
+  const after = makePlan(sheetOf([]), { ...db, machines: [{ _id: oid(), code: "INJ-10" }, { _id: oid(), code: "INJ 10" }] });
+  assert.deepEqual([after.machineRenames.length, after.machineRenameConflicts.length], [0, 1]);
 });

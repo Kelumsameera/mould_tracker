@@ -257,10 +257,19 @@ export function makePlan(sheet, db, { acceptPossible = false, matches: confirmed
   plan.dbOnly = db.moulds.filter((m) => !touched.has(String(m._id)) && !held.has(m.toolId) && !m.deletedAt).map((m) => m.toolId);
 
   // Machines: legacy codes like INJ_14 get the sheet spelling INJ-14 (same _id); new capable machines are created.
+  // Two records can normalize to the same code (e.g. "INJ_10" and "INJ 10"): the first rename wins and the
+  // other is left as it is and reported. Merging them is a decision for a person, not the importer.
   const existingCodes = new Set(db.machines.map((m) => m.code));
-  plan.machineRenames = db.machines
-    .map((m) => ({ id: m._id, from: m.code, to: normalizeMachineCode(m.code) }))
-    .filter((r) => r.from !== r.to && !existingCodes.has(r.to));
+  const claimed = new Set(existingCodes);
+  plan.machineRenames = [];
+  plan.machineRenameConflicts = [];
+  for (const m of db.machines) {
+    const to = normalizeMachineCode(m.code);
+    if (to === m.code) continue;
+    if (claimed.has(to)) { plan.machineRenameConflicts.push({ from: m.code, to }); continue; }
+    claimed.add(to);
+    plan.machineRenames.push({ id: m._id, from: m.code, to });
+  }
   const afterRename = new Set([...existingCodes].map(normalizeMachineCode));
   plan.machineCreates = [...new Set(sheet.moulds.flatMap((m) => m.capableMachines))].filter((c) => !afterRename.has(c)).sort();
   return plan;
@@ -279,7 +288,7 @@ export function summarize(plan, sheet, images) {
       keptNotInSheet: plan.legacyItemsKept.length
     },
     images: images.summary,
-    machines: { rename: plan.machineRenames.length, create: plan.machineCreates.length },
+    machines: { rename: plan.machineRenames.length, create: plan.machineCreates.length, renameConflicts: plan.machineRenameConflicts.length },
     owner: { FLK: all.filter((e) => e.next.owner === "FLK").length, unassigned: all.filter((e) => !e.next.owner).length },
     warnings: sheet.warnings.length
   };
@@ -422,7 +431,7 @@ async function main() {
       mode: opt.apply ? "apply" : "dry-run", database: mongoose.connection.db.databaseName, file: path.basename(opt.file), at: new Date().toISOString(), summary,
       unmatched: { dbOnly: plan.dbOnly, sheetOnlyCreated: plan.create.map((e) => e.sheet.toolId), heldBackPossibleMatches: plan.heldBack, ambiguous: plan.ambiguous, duplicatesLeftAlone: plan.duplicatesLeftAlone, matchedButDeleted: plan.deletedMatches },
       toolIdSpellingChanges: plan.update.filter((e) => e.mouldChanged.toolId).map((e) => e.mouldChanged.toolId),
-      machineRenames: plan.machineRenames.map(({ from, to }) => ({ from, to })), machineCreates: plan.machineCreates,
+      machineRenames: plan.machineRenames.map(({ from, to }) => ({ from, to })), machineRenameConflicts: plan.machineRenameConflicts, machineCreates: plan.machineCreates,
       itemsKeptNotInSheet: plan.legacyItemsKept, imageFailures: images.failed, warnings: sheet.warnings
     };
     const dir = path.resolve(BACKEND_DIR, "..", "outputs", "import");
