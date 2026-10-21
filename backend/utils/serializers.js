@@ -47,6 +47,7 @@ export function mouldDTO(m, refs = {}, summary = {}) {
   return {
     id: String(o._id),
     toolId: o.toolId,
+    toolType: o.toolType || "INJECTION_MOULD",
     toolSetCount: o.toolSetCount || "",
     size: o.size || "",
     owner: o.owner ?? null,

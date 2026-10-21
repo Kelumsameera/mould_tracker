@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-import { LOCATIONS, MOULD_STATUSES, mouldStateError } from "../lib/mouldState.js";
+import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
 
 // One Tool ID from the tools list. The products it makes are Item documents.
 const mouldSchema = new mongoose.Schema(
   {
     toolId: { type: String, required: true, unique: true, trim: true, uppercase: true, maxlength: 100 },
+    toolType: { type: String, enum: TOOL_TYPES, default: "INJECTION_MOULD", index: true },
     toolSetCount: { type: String, default: "", trim: true, maxlength: 50 },
     size: { type: String, default: "", trim: true, maxlength: 50 },
     owner: { type: String, default: null, trim: true, uppercase: true, maxlength: 10 }, // zone code, e.g. FLK

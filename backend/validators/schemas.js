@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ROLES } from "../lib/permissions.js";
-import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
+import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES } from "../lib/mouldState.js";
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid id");
 const password = z.string().min(8, "Password must be at least 8 characters").max(128);
@@ -74,9 +74,10 @@ const itemFields = {
   sortOrder: z.number().int().min(0).optional()
 };
 export const createItemSchema = z.object({ itemId: upperId("Item ID"), ...itemFields });
-export const updateItemSchema = z.object({ itemId: upperId("Item ID").optional(), ...itemFields });
+export const updateItemSchema = z.object({ itemId: upperId("Item ID").optional(), ...itemFields, photo: z.string().max(9_000_000).optional() });
 
 const mouldFields = {
+  toolType: z.enum(TOOL_TYPES).optional(),
   toolSetCount: optText(50),
   size: optText(50),
   owner: zoneCode.nullable().optional(),
@@ -87,7 +88,7 @@ const mouldFields = {
 export const createMouldSchema = z.object({
   toolId: upperId("Tool ID"),
   ...mouldFields,
-  location: z.enum(["MOULD_ROOM", "PRODUCTION_FLOOR", "WORKSHOP"]).default("MOULD_ROOM"),
+  location: z.enum(["MOULD_ROOM", "TOOL_ROOM", "PRODUCTION_FLOOR", "WORKSHOP"]).default("MOULD_ROOM"),
   rackId: objectId.optional(),
   overrideReason,
   items: z.array(createItemSchema).max(100).default([])
@@ -108,6 +109,7 @@ export const shotsSchema = z.object({ shots: z.number().int().min(1).max(10_000_
 export const reasonSchema = z.object({ reason: z.string().trim().max(1000).default("") });
 
 export const listMouldsQuery = z.object({
+  toolType: z.enum(TOOL_TYPES).optional(),
   q: z.string().trim().max(100).optional(),
   location: z.enum(LOCATIONS).optional(),
   status: z.enum(MOULD_STATUSES).optional(),

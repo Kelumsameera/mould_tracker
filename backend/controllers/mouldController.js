@@ -13,10 +13,12 @@ import { normalizeMachineCode } from "../lib/machines.js";
 import { planInitialLocation, planMove, planShots, planStatus, serviceDueChange } from "../lib/workflow.js";
 import { can } from "../lib/permissions.js";
 import { resolveProblem } from "./workLogController.js";
+import { photosFromDataUrls, saveRendered } from "../lib/images.js";
+import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
 
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
-const MOULD_FIELDS = ["toolId", "toolSetCount", "size", "owner", "capableMachines", "shotsToService", "notes"];
+const MOULD_FIELDS = ["toolId", "toolType", "toolSetCount", "size", "owner", "capableMachines", "shotsToService", "notes"];
 const ITEM_FIELDS = ["itemId", "description", "cavities", "qas", "materialId", "materialDescription", "masterbatchId", "masterbatchDescription", "notes", "sortOrder"];
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const toolKey = (s) => String(s).toUpperCase().replace(/\s+/g, "");
@@ -69,7 +71,7 @@ async function rackForMove(rackId, mouldId, session) {
 // GET /api/moulds - search by Tool ID, Item ID, item description, machine or rack, plus filters.
 export async function listMoulds(req, res) {
   const q = req.validQuery;
-  const filter = { deletedAt: q.deleted === "true" && can(req.user, "moulds.manage") ? { $ne: null } : null };
+  const filter = { ...toolTypeFilter(q.toolType), deletedAt: q.deleted === "true" && can(req.user, "moulds.manage") ? { $ne: null } : null };
   if (q.location) filter.location = q.location;
   if (q.status) filter.status = q.status;
   if (q.owner) filter.owner = q.owner.toUpperCase();
@@ -91,6 +93,7 @@ export async function listMoulds(req, res) {
     ]);
     filter.$or = [
       { toolId: compact },
+      { notes: rx },
       { _id: { $in: itemMoulds } },
       { machineId: { $in: machines.map((m) => m._id) } },
       { rackId: { $in: racks.map((r) => r._id) } },
@@ -121,7 +124,7 @@ export async function listMoulds(req, res) {
 
 // GET /api/moulds/stats - dashboard counts.
 export async function mouldStats(req, res) {
-  const live = { deletedAt: null };
+  const live = { deletedAt: null, ...toolTypeFilter(req.validQuery?.toolType) };
   const [byLocation, byStatus, awaitingRack, serviceDue, problems] = await Promise.all([
     Mould.aggregate([{ $match: live }, { $group: { _id: "$location", n: { $sum: 1 } } }]),
     Mould.aggregate([{ $match: live }, { $group: { _id: "$status", n: { $sum: 1 } } }]),
@@ -172,7 +175,7 @@ export async function createMould(req, res) {
   const id = await withTransaction(async (session) => {
     await assertToolIdFree(fields.toolId, null, session);
     const { rack, rackOccupancy } = await rackForMove(rackId, null, session);
-    const { set } = planInitialLocation({ user: req.user, location, rack, rackOccupancy, owner: fields.owner ?? null, overrideReason });
+    const { set } = planInitialLocation({ user: req.user, location, toolType: fields.toolType, rack, rackOccupancy, owner: fields.owner ?? null, overrideReason });
     const [mould] = await Mould.create([{ ...fields, ...set }], { session });
     if (items.length) await Item.create(items.map((it, i) => ({ sortOrder: i, ...it, mouldId: mould._id })), { session, ordered: true });
     await Movement.create([{ mouldId: mould._id, toolId: mould.toolId, type: "CREATED", toLocation: mould.location, toStatus: mould.status,
@@ -193,6 +196,8 @@ export async function updateMould(req, res) {
     if (fields.toolId && toolKey(fields.toolId) !== toolKey(mould.toolId)) await assertToolIdFree(fields.toolId, mould._id, session);
     const before = mould.toObject();
     Object.assign(mould, Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)));
+    const stateError = mouldStateError(mould);
+    if (stateError) fail(400, "INVALID_LOCATION", stateError);
     const diff = changes(before, mould.toObject(), MOULD_FIELDS);
     if (!diff.fields.length) fail(400, "NO_CHANGE", "Nothing changed");
 
@@ -341,12 +346,19 @@ export async function addItem(req, res) {
 }
 
 export async function updateItem(req, res) {
+  const { photo, ...fields } = req.body;
+  let rendered;
+  if (photo !== undefined) {
+    try { [rendered] = await photosFromDataUrls([photo], "items"); }
+    catch (e) { fail(400, "INVALID_PHOTO", e.message); }
+  }
   const id = await itemChange(req, req.params.id, (r) => `Item ${r.itemId} changed: ${r.fields.join(", ")}`, async (mould, session) => {
     const item = await Item.findOne({ _id: req.params.itemId, mouldId: mould._id, deletedAt: null }).session(session);
     if (!item) fail(404, "NOT_FOUND", "Item not found");
     const before = item.toObject();
-    Object.assign(item, Object.fromEntries(Object.entries(req.body).filter(([, v]) => v !== undefined)));
-    const diff = changes(before, item.toObject(), ITEM_FIELDS);
+    Object.assign(item, Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)));
+    if (rendered) item.images = [saveRendered(rendered), ...item.images.slice(1)];
+    const diff = changes(before, item.toObject(), [...ITEM_FIELDS, "images"]);
     if (!diff.fields.length) fail(400, "NO_CHANGE", "Nothing changed");
     await item.save({ session });
     await audit(req, { action: "item.updated", entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`, before: diff.before, after: diff.after }, session);

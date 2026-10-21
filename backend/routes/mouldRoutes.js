@@ -10,7 +10,7 @@ const MOVE = ["moves.machine", "moves.mouldRoom", "workshop.work"];
 
 export const mouldRouteTable = [
   ["get", "/", VIEW, c.listMoulds, null, s.listMouldsQuery],
-  ["get", "/stats", VIEW, c.mouldStats],
+  ["get", "/stats", VIEW, c.mouldStats, null, s.listMouldsQuery],
   ["get", "/:id", VIEW, c.getMould],
   ["get", "/:id/history", VIEW, c.getMouldHistory],
   ["post", "/", MANAGE, c.createMould, s.createMouldSchema],

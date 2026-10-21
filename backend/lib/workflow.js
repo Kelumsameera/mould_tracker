@@ -9,7 +9,7 @@
 //   8. totalShots >= shotsToService -> NEEDS_SERVICE.
 import { fail } from "../utils/ApiError.js";
 import { can } from "./permissions.js";
-import { LOCATIONS, MOULD_STATUSES } from "./mouldState.js";
+import { LOCATIONS, MOULD_STATUSES, isStorage, storageLocation } from "./mouldState.js";
 
 const id = (v) => (v == null ? null : String(v._id ?? v));
 const sameId = (a, b) => id(a) === id(b);
@@ -20,10 +20,10 @@ export const isServiceDue = (m) => Number(m.shotsToService) > 0 && Number(m.tota
 // Permissions a move needs; the user must hold one permission from every group.
 export function movePermissionGroups(from, to) {
   const groups = [];
-  if (from === "MOULD_ROOM" || to === "MOULD_ROOM") groups.push(["moves.mouldRoom"]); // take out of / put into the Mould Room
+  if (isStorage(from) || isStorage(to)) groups.push(["moves.mouldRoom"]);
   if (to === "MACHINE") groups.push(["moves.machine"]);
   if (to === "WORKSHOP") groups.push(["workshop.work"]);
-  if (to === "PRODUCTION_FLOOR" && from !== "MOULD_ROOM") groups.push(from === "WORKSHOP" ? ["moves.machine", "workshop.work"] : ["moves.machine"]);
+  if (to === "PRODUCTION_FLOOR" && !isStorage(from)) groups.push(from === "WORKSHOP" ? ["moves.machine", "workshop.work"] : ["moves.machine"]);
   return groups;
 }
 
@@ -40,6 +40,7 @@ function requireRemarks(remarks, what) {
 export function planMove({ mould, user, to, machine = null, occupant = null, rack = null, rackOccupancy = 0, remarks = "", overrideReason = "", status, now = new Date() }) {
   if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
   if (!LOCATIONS.includes(to)) fail(400, "INVALID_LOCATION", "Unknown location");
+  if (isStorage(to) && to !== storageLocation(mould.toolType)) fail(400, "INVALID_LOCATION", "Use the Tool Room for extrusion dies and the Mould Room for injection moulds");
   const from = mould.location;
   if (!canMove(user, from, to)) fail(403, "FORBIDDEN_MOVE", "You do not have permission to make this move");
   if (status !== undefined && to !== "WORKSHOP") fail(400, "STATUS_ONLY_AT_WORKSHOP", "A status can only be set when sending a mould to the Workshop");
@@ -99,6 +100,7 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
   }
 
   if (to === "PRODUCTION_FLOOR" && from === "PRODUCTION_FLOOR") fail(400, "NO_CHANGE", `${mould.toolId} is already on the Production Floor`);
+  if (to === "TOOL_ROOM" && from === "TOOL_ROOM") fail(400, "NO_CHANGE", `${mould.toolId} is already in the Tool Room`);
 
   set.lastMovedAt = now;
   set.lastMovedBy = user._id;
@@ -144,7 +146,7 @@ export function planShots({ mould, user, shots }) {
 // Rule 8 after shots or a new limit: GOOD moulds outside the Mould Room become NEEDS_SERVICE.
 // (In the Mould Room the status stays; mounting is then refused with SERVICE_DUE.)
 export function serviceDueChange(mould, user, reason) {
-  if (mould.status !== "GOOD" || mould.location === "MOULD_ROOM" || !isServiceDue(mould)) return { statusSet: null, movement: null };
+  if (mould.status !== "GOOD" || isStorage(mould.location) || !isServiceDue(mould)) return { statusSet: null, movement: null };
   return {
     statusSet: { status: "NEEDS_SERVICE" },
     movement: {
@@ -156,9 +158,9 @@ export function serviceDueChange(mould, user, reason) {
 }
 
 // Where a new mould may start: never on a machine (mount it afterwards), always GOOD.
-export function planInitialLocation({ user, location, rack = null, rackOccupancy = 0, owner = null, overrideReason = "" }) {
-  if (!["MOULD_ROOM", "PRODUCTION_FLOOR", "WORKSHOP"].includes(location)) fail(400, "INVALID_LOCATION", "A new mould starts in the Mould Room, on the Production Floor or at the Workshop");
-  const probe = { _id: null, toolId: "New mould", location: null, status: "GOOD", owner, capableMachines: [] };
+export function planInitialLocation({ user, location, toolType, rack = null, rackOccupancy = 0, owner = null, overrideReason = "" }) {
+  if (!["MOULD_ROOM", "TOOL_ROOM", "PRODUCTION_FLOOR", "WORKSHOP"].includes(location)) fail(400, "INVALID_LOCATION", "Choose a storage room, Production Floor or Workshop");
+  const probe = { _id: null, toolId: "New mould", toolType, location: null, status: "GOOD", owner, capableMachines: [] };
   const { set, warnings } = planMove({ mould: probe, user, to: location, rack, rackOccupancy, remarks: location === "WORKSHOP" ? "New mould" : "", overrideReason });
   return { set, warnings };
 }

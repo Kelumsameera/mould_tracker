@@ -98,7 +98,7 @@ export function planWorkLog({ mould, user, input, workers = [], corrected = null
       } else warnings.push("WORKSHOP_MOVE_NOT_ALLOWED");
     }
     if (!move) {
-      if (mould.location === "MOULD_ROOM") warnings.push("WORKSHOP_MOVE_REQUIRED"); // rule 2: never flagged in the Mould Room
+      if (["MOULD_ROOM", "TOOL_ROOM"].includes(mould.location)) warnings.push("WORKSHOP_MOVE_REQUIRED");
       else statusAfter = target; // on a machine / floor it is flagged in place and can only go to the Workshop
     }
   }

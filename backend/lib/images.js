@@ -26,7 +26,7 @@ export function saveRendered(r) {
 }
 
 // Photos arrive as data URLs from the phone (already shrunk in the browser); only real images are accepted.
-export async function photosFromDataUrls(list = []) {
+export async function photosFromDataUrls(list = [], folder = "worklogs") {
   const out = [];
   for (const url of list) {
     const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(url);
@@ -35,7 +35,7 @@ export async function photosFromDataUrls(list = []) {
     if (buffer.length > 6 * 1024 * 1024) throw Object.assign(new Error("Photo is too large"), { code: "INVALID_PHOTO" });
     const meta = await sharp(buffer, { failOn: "none" }).metadata().catch(() => null);
     if (!meta?.format) throw Object.assign(new Error("Photo could not be read"), { code: "INVALID_PHOTO" });
-    out.push(await renderImage(buffer, "worklogs"));
+    out.push(await renderImage(buffer, folder));
   }
   return out;
 }
