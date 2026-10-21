@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
+import { LEGACY_ROLE_ALIASES, ROLES } from "../lib/permissions.js";
 
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 120 },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ["admin", "operator", "viewer"], default: "operator" },
-    active: { type: Boolean, default: true }
+    // Legacy roles stay valid only so old documents load until the upgrade migration rewrites them.
+    role: { type: String, enum: [...ROLES, ...Object.keys(LEGACY_ROLE_ALIASES)], default: "mould_technician" },
+    language: { type: String, enum: ["en", "si"], default: "en" },
+    active: { type: Boolean, default: true },
+    deletedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
