@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Lang } from '@/lib/i18n';
+import { I18N, type Lang } from '@/lib/i18n';
 
 interface InstallPrompt extends Event {
   prompt(): Promise<void>;
@@ -16,7 +16,7 @@ export default function PwaProvider({ children }: { children: ReactNode }) {
   const [ios, setIos] = useState(false);
   useEffect(() => {
     const standalone = window.matchMedia('(display-mode: standalone)');
-    const update = () => setInstalled(standalone.matches || !!(navigator as Navigator & { standalone?: boolean }).standalone);
+    const update = () => setInstalled(standalone.matches || /ToolTrackerNative\//.test(navigator.userAgent) || !!(navigator as Navigator & { standalone?: boolean }).standalone);
     update();
     setIos(/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
     const beforeInstall = (event: Event) => { event.preventDefault(); setPrompt(event as InstallPrompt); };
@@ -48,10 +48,12 @@ export function PwaInstallButton({ lang, className = 'side-link' }: { lang: Lang
     catch { setHelp(true); }
     finally { clear(); setBusy(false); }
   }
+  const t = I18N[lang].install;
   return <>
-    <button type="button" className={className} disabled={busy} onClick={install}>{lang === 'si' ? 'App එක install කරන්න' : 'Install app'}</button>
-    {help && <p className="pwa-install-help" role="status">{ios
-      ? (lang === 'si' ? 'Safari එකේ Share → Add to Home Screen තෝරන්න.' : 'In Safari, choose Share → Add to Home Screen.')
-      : (lang === 'si' ? 'Chrome/Edge menu එකේ Install app හෝ Add to Home Screen තෝරන්න.' : 'In Chrome/Edge, choose Install app or Add to Home Screen from the browser menu.')}</p>}
+    <button type="button" className={className} disabled={busy} onClick={install}>{t.button}</button>
+    {help && <div className="pwa-install-help" role="status">
+      <p>{ios ? t.ios : t.other}</p>
+      <a className="pwa-help-link" href="/install.html">{t.guide}</a>
+    </div>}
   </>;
 }

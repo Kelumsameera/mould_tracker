@@ -2,9 +2,10 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: '/', name: 'Tool Tracker', short_name: 'Tool Tracker',
-    description: 'Find and manage tools in the store and on machines.',
+    id: '/', name: 'Mould Tracker', short_name: 'Moulds',
+    description: 'Find any mould: machine, production floor, workshop or Mould Room rack.',
     start_url: '/', scope: '/', display: 'standalone',
+    prefer_related_applications: false,
     background_color: '#1B2B35', theme_color: '#1B2B35',
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
