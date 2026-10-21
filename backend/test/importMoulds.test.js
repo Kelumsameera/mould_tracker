@@ -184,3 +184,44 @@ test("two machine records that normalize to the same code: one is renamed, the o
   const after = makePlan(sheetOf([]), { ...db, machines: [{ _id: oid(), code: "INJ-10" }, { _id: oid(), code: "INJ 10" }] });
   assert.deepEqual([after.machineRenames.length, after.machineRenameConflicts.length], [0, 1]);
 });
+
+test("extrusion machines: EX codes are recognised and spelled one way", () => {
+  assert.equal(normalizeMachineCode("ex 2"), "EX02");
+  assert.equal(normalizeMachineCode("EX_04"), "EX04");
+  assert.deepEqual(parseCapableMachines("EX02"), { codes: ["EX02"], unknown: [] });
+  assert.deepEqual(parseCapableMachines("EX01/EX03").codes, ["EX01", "EX03"]);
+  assert.deepEqual(parseCapableMachines("FLEXICARE LANKA - EXTRUSION TOOLS").codes, []);
+});
+
+test("extrusion sheet: title rows skipped, two-line Item IDs split, pin and service kept in notes, Tool Room type", async () => {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("EXTRUSION 01");
+  const head = ["Tool set count", "Die ID", "Pin ID", "Capable Machine", "Item ID", "Item Image", "Decription", "To Be Seravice", "QAS", "Material ID", "Material Description", "Masterbatch ID", "Masterbatch Description"];
+  ws.getRow(2).values = ["", "FLEXICARE LANKA - EXTRUSION TOOLS", "", "", "FLEXICARE LANKA - EXTRUSION TOOLS"];
+  ws.getRow(7).values = head;
+  ws.getRow(8).values = ["1", "LEX01D", "LEX01P", "EX02", "CP0000-052", null, "Tube 4mm", "6.0 ID / 7.0 OD", "QAS-1", "", "", "", ""];
+  ws.getRow(9).values = ["1", "LEX01D", "LEX01P", "EX02", "L 211 \nL 212", null, "Tube", "", "", "", "", "", ""];
+  ws.getRow(10).values = ["", "Prepared by", "", "", "Approved by"];
+  const back = new ExcelJS.Workbook();
+  await back.xlsx.load(await wb.xlsx.writeBuffer());
+  const sheet = back.getWorksheet("EXTRUSION 01");
+  const cfg = SHEETS["EXTRUSION 01"];
+  const parsed = parseSheet(sheet, cfg);
+  assert.deepEqual(parsed.missingHeaders, []);
+  assert.deepEqual(parsed.rows.map((r) => r.itemId), ["CP0000-052", "L 211", "L 212"]);
+  assert.equal(parsed.skipped.footerOrPartial, 1); // the signature row (the title row is above the header)
+  const { moulds } = groupMoulds(parsed.rows, cfg);
+  assert.equal(moulds.length, 1);
+  const [die] = moulds;
+  assert.deepEqual([die.toolId, die.toolType, die.notes, die.capableMachines, die.shotsToService], ["LEX01D", "EXTRUSION_DIE", "Source: EXTRUSION 01", ["EX02"], null]);
+  assert.equal(die.items[0].notes, "Pin: LEX01P\nService: 6.0 ID / 7.0 OD");
+  assert.equal(die.items[0].cavities, null);
+  assert.deepEqual(die.items.map((i) => i.itemId), ["CP0000-052", "L 211", "L 212"]);
+});
+
+test("the injection sheet is read exactly as before (no line splitting, injection type)", async () => {
+  const ws = await workbook();
+  const cfg = SHEETS["INJECTION MOULDING"];
+  const { moulds } = groupMoulds(parseSheet(ws, cfg).rows, cfg);
+  assert.ok(moulds.every((m) => m.toolType === "INJECTION_MOULD" && m.notes === ""));
+});

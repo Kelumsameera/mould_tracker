@@ -21,6 +21,7 @@ import User from "../models/User.js";
 import { normalizeMachineCode, parseCapableMachines } from "../lib/machines.js";
 import { UPLOAD_DIR } from "../lib/uploads.js";
 import { renderImage } from "../lib/images.js";
+import { storageLocation } from "../lib/mouldState.js";
 
 const BACKEND_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export { UPLOAD_DIR };
@@ -45,6 +46,32 @@ export const SHEETS = {
     },
     // Tool IDs starting with these letters belong to that Mould Room zone. Others stay unassigned.
     ownerPrefixes: { FLK: "FLK" }
+  },
+  // Extrusion dies: stored in the Tool Room (no rack). "To Be Seravice" is service guidance text, not a shot
+  // count, so it goes to the item notes together with the pin. Header spellings are the sheet's own.
+  "EXTRUSION 01": {
+    headers: {
+      toolSetCount: "Tool set count",
+      toolId: "Die ID",
+      pinId: "Pin ID",
+      capableMachines: "Capable Machine",
+      itemId: "Item ID",
+      image: "Item Image",
+      description: "Decription",
+      serviceNote: "To Be Seravice",
+      qas: "QAS",
+      materialId: "Material ID",
+      materialDescription: "Material Description",
+      masterbatchId: "Masterbatch ID",
+      masterbatchDescription: "Masterbatch Description"
+    },
+    toolType: "EXTRUSION_DIE",
+    // Title and signature rows fill both ID columns here; real die IDs look like LEX01D.
+    toolIdPattern: /^[A-Z]+\d+[A-Z]*$/i,
+    // One cell can list two items on separate lines ("L 211\nL 212"): each becomes its own item.
+    splitItemLines: true,
+    mouldNote: "Source: EXTRUSION 01",
+    ownerPrefixes: {}
   }
 };
 
@@ -110,6 +137,7 @@ export function parseSheet(ws, config) {
     if (item.formula || tool.formula) { skipped.formulaTotal++; continue; }
     if (!tool.text && !item.text) { skipped.blank++; continue; }
     if (!tool.text || !item.text) { skipped.footerOrPartial++; continue; }
+    if (config.toolIdPattern && !config.toolIdPattern.test(tool.text)) { skipped.footerOrPartial++; continue; }
     const row = { rowNumber: r };
     for (const field of Object.keys(config.headers)) {
       if (field === "image") continue;
@@ -119,6 +147,12 @@ export function parseSheet(ws, config) {
     }
     row.toolId = row.toolId.toUpperCase();
     row.itemId = row.itemId.toUpperCase();
+    if (config.splitItemLines) {
+      const cell = ws.getCell(r, cols.itemId);
+      const raw = (cell.isMerged ? cell.master : cell).value;
+      const ids = String(raw?.richText ? raw.richText.map((t) => t.text).join("") : raw ?? "").split(/\r?\n/).map((s) => clean(s.replace(/\s+/g, " ")) ?? "").filter(Boolean);
+      if (ids.length > 1) { for (const id of ids) rows.push({ ...row, itemId: id.toUpperCase() }); continue; }
+    }
     rows.push(row);
   }
   return { headerRow, missingHeaders: missing, rows, skipped, warnings };
@@ -149,7 +183,7 @@ export function groupMoulds(rows, config, images = new Map()) {
     let m = byKey.get(key);
     if (!m) {
       m = { key, toolId: row.toolId, toolSetCount: row.toolSetCount ?? "", capableMachines: [], shotsToService: parseCount(row.shotsToService).value,
-        owner: ownerFor(key, config.ownerPrefixes || {}), items: [], rows: [] };
+        owner: ownerFor(key, config.ownerPrefixes || {}), toolType: config.toolType ?? "INJECTION_MOULD", notes: config.mouldNote ?? "", items: [], rows: [] };
       byKey.set(key, m);
     } else {
       const shots = parseCount(row.shotsToService).value;
@@ -170,7 +204,7 @@ export function groupMoulds(rows, config, images = new Map()) {
       itemId: row.itemId,
       description: row.description ?? "",
       cavities: cav.value,
-      notes: cav.note ? `Cavities in tools list: ${cav.note}` : "",
+      notes: [cav.note && `Cavities in tools list: ${cav.note}`, row.pinId && `Pin: ${row.pinId}`, row.serviceNote && `Service: ${row.serviceNote}`].filter(Boolean).join("\n"),
       qas: row.qas,
       materialId: row.materialId,
       materialDescription: row.materialDescription,
@@ -366,8 +400,10 @@ async function applyPlan(plan, images, actor, sheetName) {
     await withTransaction(async (session) => {
       let mould = entry.current ? await Mould.findById(entry.current._id).session(session) : null;
       if (!mould) {
-        [mould] = await Mould.create([{ ...entry.next, location: "MOULD_ROOM", awaitingRack: true, lastMovedAt: new Date(), lastMovedBy: actor._id }], { session });
-        await Movement.create([{ mouldId: mould._id, toolId: mould.toolId, type: "IMPORTED", toLocation: "MOULD_ROOM", toStatus: mould.status, remarks, performedBy: actor._id }], { session });
+        // New moulds go to their storage room: injection moulds wait for a rack, extrusion dies sit in the Tool Room.
+        const location = storageLocation(entry.sheet.toolType);
+        [mould] = await Mould.create([{ ...entry.next, toolType: entry.sheet.toolType, notes: entry.sheet.notes, location, awaitingRack: location === "MOULD_ROOM", lastMovedAt: new Date(), lastMovedBy: actor._id }], { session });
+        await Movement.create([{ mouldId: mould._id, toolId: mould.toolId, type: "IMPORTED", toLocation: location, toStatus: mould.status, remarks, performedBy: actor._id }], { session });
       } else if (Object.keys(entry.mouldChanged).length) {
         Object.assign(mould, entry.next);
         mould.version += 1;
@@ -383,7 +419,9 @@ async function applyPlan(plan, images, actor, sheetName) {
           itemChanges.push({ itemId: p.item.itemId, created: true });
         } else if (Object.keys(p.changed).length || p.imagesChanged) {
           const set = Object.fromEntries(Object.entries(p.changed).map(([f, c]) => [f, c.to]));
-          set.images = [...(p.old.images || []).filter((i) => !fromSheet(i)), ...sheetImages]; // keep pictures not from the sheet
+          // Keep pictures not from the sheet, and keep a cleaned (background-removed) version of a sheet picture.
+          const current = new Map((p.old.images || []).filter(fromSheet).map((i) => [i.source, i]));
+          set.images = [...(p.old.images || []).filter((i) => !fromSheet(i)), ...sheetImages.map((img) => current.get(img.source) ?? img)];
           await Item.updateOne({ _id: p.old._id }, { $set: set }, { session });
           itemChanges.push({ itemId: p.item.itemId, changed: Object.keys(p.changed), images: p.imagesChanged });
         }
