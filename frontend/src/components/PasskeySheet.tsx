@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
 import { api, type PasskeyInfo } from '@/lib/api';
 import { passkeyText, passkeyError } from '@/lib/passkeyText';
-import type { Lang } from '@/lib/i18n';
+import { I18N, type Lang } from '@/lib/i18n';
 import Sheet from './Sheet';
 
 export default function PasskeySheet({ open, lang, onClose }: { open: boolean; lang: Lang; onClose: () => void }) {
@@ -42,7 +42,7 @@ export default function PasskeySheet({ open, lang, onClose }: { open: boolean; l
     finally { setBusy(false); }
   }
 
-  return <Sheet open={open} onClose={busy ? () => {} : onClose} label={p.title}>
+  return <Sheet open={open} onClose={busy ? () => {} : onClose} label={p.title} closeLabel={I18N[lang].close}>
     <h2 className="detail-name form-title">{p.title}</h2>
     <p>{p.description}</p>
     {!available && <p className="passkey-note">{p.https}</p>}

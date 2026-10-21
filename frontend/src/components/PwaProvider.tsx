@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { I18N, type Lang } from '@/lib/i18n';
+import Icon from './Icon';
 
 interface InstallPrompt extends Event {
   prompt(): Promise<void>;
@@ -50,7 +51,7 @@ export function PwaInstallButton({ lang, className = 'side-link' }: { lang: Lang
   }
   const t = I18N[lang].install;
   return <>
-    <button type="button" className={className} disabled={busy} onClick={install}>{t.button}</button>
+    <button type="button" className={className} disabled={busy} onClick={install} title={t.button} aria-label={t.button}><Icon name="install" size={20} /><span className="side-label">{t.button}</span></button>
     {help && <div className="pwa-install-help" role="status">
       <p>{ios ? t.ios : t.other}</p>
       <a className="pwa-help-link" href="/install.html">{t.guide}</a>

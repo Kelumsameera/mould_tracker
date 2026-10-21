@@ -3,6 +3,10 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '@/lib/api';
 import { locationName, type Dict, type Lang } from '@/lib/i18n';
 import { errorText, formatTime } from '@/lib/format';
+import { withToasts } from '@/lib/feedback';
+import { useConfirm } from './ConfirmHost';
+import Icon, { workIcon } from './Icon';
+import { EmptyState, SkeletonCards } from './MouldBits';
 import { STATUSES, WORK_TYPES, type DateRange, type Machine, type Person, type WorkFilter, type WorkLog, type WorkSummary, type WorkType } from '@/lib/types';
 
 const PAGE = 20;
@@ -27,6 +31,7 @@ function highlight(text: string, q: string | undefined): ReactNode {
 
 // Work log report (Super Admin / Admin). The server pages, searches, filters and counts; nothing is loaded all at once.
 export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict; lang: Lang; userId: string; onOpen: (mouldId: string) => void; toast: (m: string) => void }) {
+  const { confirm } = useConfirm();
   const [f, setF] = useState<Filters>(DEFAULT);
   const [searchText, setSearchText] = useState('');
   const [toolText, setToolText] = useState('');
@@ -67,8 +72,10 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
   const set = (patch: Partial<Filters>) => setF((c) => ({ ...c, ...patch }));
   const clearAll = () => { setSearchText(''); setToolText(''); setF(DEFAULT); };
   async function download(format: 'csv' | 'xlsx') {
+    if (exporting || !total || total > EXPORT_CAP) return;
+    if (!(await confirm({ title: t.confirm.exportTitle, message: t.confirm.export(total, format === 'xlsx' ? 'Excel' : 'CSV'), confirmText: t.confirm.exportBtn }))) return;
     setExporting(true);
-    try { await api.downloadWorkLogs(f, format); } catch (e) { toast(errorText(e, t)); } finally { setExporting(false); }
+    try { await withToasts(t, () => api.downloadWorkLogs(f, format), t.feedback.exported, t.report.exporting); } catch { /* the toast shows why */ } finally { setExporting(false); }
   }
 
   const rangeLabel = f.range === 'custom' ? [f.from || '…', f.to || '…'].join(' – ') : t.report.ranges[f.range ?? '7d'];
@@ -92,13 +99,13 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
   return (
     <main className="single">
       <div className="search-box">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="11" cy="11" r="7" stroke="#7B8794" strokeWidth="2" /><path d="m20 20-3.5-3.5" stroke="#7B8794" strokeWidth="2" strokeLinecap="round" /></svg>
-        <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder={t.report.search} aria-label={t.report.search} enterKeyHint="search" />
-        {searchText && <button className="clear-btn" aria-label={t.search.clear} onClick={() => setSearchText('')}>×</button>}
+        <Icon name="search" size={20} />
+        <input type="search" value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder={t.report.search} aria-label={t.report.search} enterKeyHint="search" />
+        {searchText && <button className="clear-btn" aria-label={t.search.clear} onClick={() => setSearchText('')}><Icon name="cancel" size={18} /></button>}
       </div>
 
       <div className="tabs date-chips" role="group" aria-label={t.report.from}>
-        {RANGES.map((r) => <button key={r} className={'tab' + (f.range === r ? ' active' : '')} onClick={() => set({ range: r })}>{t.report.ranges[r]}</button>)}
+        {RANGES.map((r) => <button key={r} className={'tab' + (f.range === r ? ' active' : '')} aria-pressed={f.range === r} onClick={() => set({ range: r })}>{r === 'custom' ? <Icon name="clock" size={15} /> : null}{t.report.ranges[r]}</button>)}
       </div>
       {f.range === 'custom' && (
         <div className="two-col">
@@ -108,7 +115,7 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
       )}
 
       <details className="more-filters">
-        <summary>{t.report.moreFilters}</summary>
+        <summary><Icon name="filters" size={16} />{t.report.moreFilters}</summary>
         <div className="report-filters">
           <div><label className="field-label" htmlFor="wr-tool">{t.report.mould}</label><input id="wr-tool" className="field-input" value={toolText} onChange={(e) => setToolText(e.target.value)} /></div>
           <div><label className="field-label" htmlFor="wr-person">{t.report.person}</label>
@@ -143,7 +150,7 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
 
       {active.length > 0 && (
         <div className="filter-chips">
-          {active.map((c) => <span key={c.key} className="filter-chip">{c.label}<button aria-label={t.report.remove} onClick={c.clear}>×</button></span>)}
+          {active.map((c) => <span key={c.key} className="filter-chip">{c.label}<button aria-label={`${t.report.remove}: ${c.label}`} title={t.report.remove} onClick={c.clear}><Icon name="cancel" size={14} /></button></span>)}
           <button className="link-btn inline" onClick={clearAll}>{t.report.clearAll}</button>
         </div>
       )}
@@ -151,8 +158,8 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
       <div className="report-actions">
         <span className="section-label flat">{t.report.showing(logs.length, total, rangeLabel)}</span>
         <span className="spacer" />
-        <button className="btn btn-outline small" disabled={exporting || !total || tooMany} onClick={() => download('csv')}>{exporting ? t.report.exporting : total ? `${t.report.exportCsv} (${total})` : t.report.exportNone}</button>
-        <button className="btn btn-outline small" disabled={exporting || !total || tooMany} onClick={() => download('xlsx')}>{exporting ? t.report.exporting : total ? `${t.report.exportXlsx} (${total})` : t.report.exportNone}</button>
+        <button className="btn btn-outline small" disabled={exporting || !total || tooMany} onClick={() => download('csv')}><Icon name="export" size={16} />{exporting ? t.report.exporting : total ? `${t.report.exportCsv} (${total})` : t.report.exportNone}</button>
+        <button className="btn btn-outline small" disabled={exporting || !total || tooMany} onClick={() => download('xlsx')}><Icon name="export" size={16} />{exporting ? t.report.exporting : total ? `${t.report.exportXlsx} (${total})` : t.report.exportNone}</button>
       </div>
       {tooMany && <div className="export-note">{t.report.exportCap(total, EXPORT_CAP)}</div>}
 
@@ -165,9 +172,9 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
               <tbody>
                 {summary.people.map((p) => (
                   <tr key={p.userId} className={f.userId === p.userId ? 'active' : ''} onClick={() => set({ userId: f.userId === p.userId ? undefined : p.userId })}>
-                    <td><b>{p.name}</b><small className="block muted">{t.roles[p.role] ?? p.role}</small></td>
-                    {shownTypes.map((w) => <td key={w}>{p.byType[w] ?? 0}</td>)}
-                    <td><b>{p.total}</b></td><td>{p.minutes || ''}</td>
+                    <td className="cell-main"><b>{p.name}</b><small className="block muted">{t.roles[p.role] ?? p.role}</small></td>
+                    {shownTypes.map((w) => <td key={w} data-label={t.work.types[w]}>{p.byType[w] ?? 0}</td>)}
+                    <td data-label={t.report.total}><b>{p.total}</b></td><td data-label={t.report.minutes}>{p.minutes || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -182,27 +189,37 @@ export default function WorkReport({ t, lang, userId, onOpen, toast }: { t: Dict
         </section>
       )}
 
-      {!logs.length && !loading && <p className="muted">{t.report.none}</p>}
-      {logs.map((w) => (
-        <div key={w.id} className={'report-row' + (w.corrected ? ' corrected' : '')} onClick={() => onOpen(w.mouldId)}>
-          <div className="report-row-head">
-            <span className="tool-id-badge">{highlight(w.toolId, f.q)}</span>
-            {w.problemReported ? <span className="work-badge warn">{t.problem.reportedEntry}</span> : <span className="work-badge">{t.work.types[w.type]}</span>}
-            {w.resolvesProblemId && <span className="work-badge soft">{t.problem.resolvesEntry}</span>}
-            {w.correctsId && <span className="work-badge soft">{t.work.correction}</span>}
-            {w.corrected && <span className="work-badge warn">{t.work.corrected}</span>}
-            <small>{formatTime(w.doneAt, lang)}</small>
-          </div>
-          <div className="work-who">{w.doneBy.map((p, i) => <span key={p.id}>{i ? ', ' : ''}{highlight(p.name, f.q)} ({t.roles[p.role] ?? p.role})</span>)}</div>
-          <div className="work-desc">{highlight(w.description, f.q)}</div>
-          <div className="history-note">
-            {highlight([locationName(w.location, t), w.machineCode, w.rackLocationId].filter(Boolean).join(' '), f.q)}
-            {w.partsUsed && <> · {highlight(w.partsUsed, f.q)}</>}
-            {w.timeSpentMinutes != null && <> · {t.work.minutesShort(w.timeSpentMinutes)}</>}
-            {w.recordedBy.id !== w.doneBy[0]?.id && <> · {t.work.recordedBy(w.recordedBy.name)}</>}
-          </div>
+      {!logs.length && loading && <SkeletonCards count={3} label={t.loading} />}
+      {!logs.length && !loading && <EmptyState icon="worklog" text={t.report.none} />}
+      {logs.length > 0 && (
+        // A table on wider screens; on phones each row becomes a stacked card (see .report-table in globals.css).
+        <div className="table-wrap">
+          <table className="report-table">
+            <thead><tr><th>{t.work.when}</th><th>{t.report.mould}</th><th>{t.report.type}</th><th>{t.work.who}</th><th>{t.work.what}</th><th>{t.report.location}</th></tr></thead>
+            <tbody>
+              {logs.map((w) => (
+                <tr key={w.id} className={w.corrected ? 'corrected' : ''} tabIndex={0} onClick={() => onOpen(w.mouldId)} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(w.mouldId); }}>
+                  <td data-label={t.work.when}>{formatTime(w.doneAt, lang)}</td>
+                  <td data-label={t.report.mould}><span className="tool-id-badge">{highlight(w.toolId, f.q)}</span></td>
+                  <td data-label={t.report.type}>
+                    <span className="card-tags">
+                      {w.problemReported ? <span className="work-badge warn"><Icon name="problem" size={12} />{t.problem.reportedEntry}</span> : <span className="work-badge"><Icon name={workIcon[w.type]} size={12} />{t.work.types[w.type]}</span>}
+                      {w.resolvesProblemId && <span className="work-badge soft">{t.problem.resolvesEntry}</span>}
+                      {w.correctsId && <span className="work-badge soft">{t.work.correction}</span>}
+                      {w.corrected && <span className="work-badge warn">{t.work.corrected}</span>}
+                    </span>
+                  </td>
+                  <td data-label={t.work.who}><b>{w.doneBy.map((p, i) => <span key={p.id}>{i ? ', ' : ''}{highlight(p.name, f.q)}</span>)}</b>
+                    {w.recordedBy.id !== w.doneBy[0]?.id && <small className="block muted">{t.work.recordedBy(w.recordedBy.name)}</small>}</td>
+                  <td className="cell-main"><div className="work-desc">{highlight(w.description, f.q)}</div>
+                    {(w.partsUsed || w.timeSpentMinutes != null) && <small className="muted">{w.partsUsed && highlight(w.partsUsed, f.q)}{w.partsUsed && w.timeSpentMinutes != null ? ' · ' : ''}{w.timeSpentMinutes != null && t.work.minutesShort(w.timeSpentMinutes)}</small>}</td>
+                  <td data-label={t.report.location}>{highlight([locationName(w.location, t), w.machineCode, w.rackLocationId].filter(Boolean).join(' '), f.q)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ))}
+      )}
       {logs.length < total && <button className="btn btn-outline" disabled={loading} onClick={() => setPage(page + 1)}>{loading ? t.loading : t.report.more}</button>}
     </main>
   );

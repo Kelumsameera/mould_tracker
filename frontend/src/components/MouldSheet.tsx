@@ -1,15 +1,18 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Sheet from './Sheet';
-import { LastWork, Lightbox, RackPicker, StatusBadge } from './MouldBits';
+import { LastWork, Lightbox, LocationLine, RackPicker, StatusBadge } from './MouldBits';
+import Icon, { locationIcon, type IconName } from './Icon';
 import WorkLogForm, { ProblemForm } from './WorkLogForm';
+import { useConfirm } from './ConfirmHost';
+import { withToasts } from '@/lib/feedback';
 import { api, ApiError, assetUrl } from '@/lib/api';
 import { locationName, type Dict, type Lang } from '@/lib/i18n';
 import { errorText, formatTime, locationLine, locationTone, movementText, relativeTime } from '@/lib/format';
 import { can, canMoveTo } from '@/lib/permissions';
 import { STATUSES, type Location, type Machine, type Mould, type MouldStatus, type Movement, type User, type WorkLog, type WorkOutcome, type Zone } from '@/lib/types';
 
-type Action = 'MACHINE' | 'PRODUCTION_FLOOR' | 'MOULD_ROOM' | 'WORKSHOP' | 'STATUS' | 'SHOTS';
+type Action = Location | 'STATUS' | 'SHOTS';
 type Entry = { kind: 'move'; at: string; m: Movement } | { kind: 'work'; at: string; w: WorkLog };
 
 export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onChanged, onEdit, toast }: {
@@ -25,6 +28,8 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
   const [problemOpen, setProblemOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'move' | 'work'>('all');
   const [image, setImage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const { confirm, ask } = useConfirm();
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -39,12 +44,12 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
   useEffect(() => { setMould(null); setHistory([]); setWorkLogs([]); setAction(null); setWork(null); setNotice(''); setFilter('all'); setProblemOpen(false); }, [id]);
   useEffect(() => { load(); }, [load, refreshKey]);
 
-  const updated = (m: Mould, message: string) => { setMould(m); setAction(null); setPreset({}); setNotice(''); toast(message); onChanged(); api.history(m.id).then((h) => setHistory(h.history)).catch(() => {}); };
+  // Success toasts come from withToasts at the action; this only refreshes.
+  const updated = (m: Mould) => { setMould(m); setAction(null); setPreset({}); setNotice(''); onChanged(); api.history(m.id).then((h) => setHistory(h.history)).catch(() => {}); };
 
   // After a work log: refresh, show any warning, and offer the Workshop move when the status could not be set in place.
   const workSaved = (warnings: string[], outcome: WorkOutcome | null, description: string) => {
     setWork(null);
-    toast(t.work.saved(mould?.toolId ?? ''));
     setNotice(warnings.map((w) => t.work.warnings[w] ?? w).join(' '));
     onChanged();
     load();
@@ -55,19 +60,23 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
   };
 
   async function remove() {
-    if (!mould || !confirm(t.detail.confirmDelete(mould.toolId))) return;
-    const reason = prompt(t.detail.deleteReason) ?? '';
-    try { await api.deleteMould(mould.id, reason); toast(t.detail.deleted(mould.toolId)); onChanged(); load(); } catch (e) { toast(errorText(e, t)); }
+    if (!mould || busy) return;
+    const reason = await ask({ title: t.confirm.deleteMouldTitle, message: t.confirm.deleteMould(mould.toolId), confirmText: t.confirm.deleteBtn, tone: 'danger', inputLabel: t.confirm.reason, maxLength: 1000 });
+    if (reason === null) return;
+    setBusy(true);
+    try { await withToasts(t, () => api.deleteMould(mould.id, reason), t.feedback.deleted); onChanged(); load(); } catch { /* toast shows why */ } finally { setBusy(false); }
   }
   async function restore() {
-    if (!mould) return;
-    try { const r = await api.restoreMould(mould.id); updated(r.mould, t.detail.restored(mould.toolId)); } catch (e) { toast(errorText(e, t)); }
+    if (!mould || busy) return;
+    if (!(await confirm({ title: t.confirm.restoreMouldTitle, message: t.confirm.restoreMould(mould.toolId), confirmText: t.confirm.restoreBtn }))) return;
+    setBusy(true);
+    try { const r = await withToasts(t, () => api.restoreMould(mould.id), t.feedback.restored); updated(r.mould); } catch { /* toast shows why */ } finally { setBusy(false); }
   }
 
   const m = mould;
   const canLog = Boolean(m && !m.deletedAt && can(user, 'worklog.create'));
   const canReport = Boolean(m && !m.deletedAt && can(user, 'problem.report'));
-  const problemSaved = () => { setProblemOpen(false); toast(t.problem.saved(m?.toolId ?? '')); onChanged(); load(); };
+  const problemSaved = () => { setProblemOpen(false); onChanged(); load(); };
   // "Resolve or act": open the Workshop move with the reported problem as the remark.
   const actOnProblem = () => {
     if (!m?.openProblem) return;
@@ -81,43 +90,53 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
   ].sort((a, b) => b.at.localeCompare(a.at));
   const workPlace = (w: WorkLog) => [locationName(w.location, t), w.machineCode, w.rackLocationId].filter(Boolean).join(' ');
   const actions: { key: Action; label: string }[] = [];
+  const actionIcon: Record<Action, IconName> = { MACHINE: 'machine', PRODUCTION_FLOOR: 'floor', MOULD_ROOM: 'mouldRoom', TOOL_ROOM: 'mouldRoom', WORKSHOP: 'workshop', STATUS: 'busy', SHOTS: 'shots' };
   if (m && !m.deletedAt) {
     const good = m.status === 'GOOD';
     if (good && canMoveTo(user, m.location, 'MACHINE')) actions.push({ key: 'MACHINE', label: m.location === 'MACHINE' ? t.act.changeMachine : t.act.mount });
     if (good && m.location !== 'PRODUCTION_FLOOR' && canMoveTo(user, m.location, 'PRODUCTION_FLOOR')) actions.push({ key: 'PRODUCTION_FLOOR', label: t.act.toFloor });
-    if (good && canMoveTo(user, m.location, 'MOULD_ROOM')) actions.push({ key: 'MOULD_ROOM', label: m.location === 'MOULD_ROOM' && m.rack ? t.act.changeRack : t.act.toMouldRoom(t.mouldRoom) });
+    if (m.toolType === 'EXTRUSION_DIE') {
+      if (good && m.location !== 'TOOL_ROOM' && canMoveTo(user, m.location, 'TOOL_ROOM')) actions.push({ key: 'TOOL_ROOM', label: t.act.toMouldRoom(t.loc.TOOL_ROOM) });
+    } else if (good && canMoveTo(user, m.location, 'MOULD_ROOM')) actions.push({ key: 'MOULD_ROOM', label: m.location === 'MOULD_ROOM' && m.rack ? t.act.changeRack : t.act.toMouldRoom(t.mouldRoom) });
     if (m.location !== 'WORKSHOP' && canMoveTo(user, m.location, 'WORKSHOP')) actions.push({ key: 'WORKSHOP', label: t.act.toWorkshop });
     if (m.location === 'WORKSHOP' && can(user, 'workshop.work')) actions.push({ key: 'STATUS', label: t.act.changeStatus });
     if (m.location === 'MACHINE' && (can(user, 'moves.machine') || can(user, 'workshop.work'))) actions.push({ key: 'SHOTS', label: t.act.recordShots });
   }
 
   return (
-    <Sheet open={Boolean(id)} onClose={onClose} label={m?.toolId ?? ''}>
-      {!m ? <p className="muted">{t.loading}</p> : (
+    <Sheet open={Boolean(id)} onClose={onClose} label={m?.toolId ?? ''} closeLabel={t.close}>
+      {!m ? (
+        <div role="status" aria-label={t.loading}>
+          <div className="skeleton sk-line w40" style={{ height: 28, marginBottom: 16 }} />
+          <div className="skeleton" style={{ height: 88, borderRadius: 16, marginBottom: 16 }} />
+          <div className="skeleton" style={{ height: 120, borderRadius: 16 }} />
+        </div>
+      ) : (
         <>
           <div className="detail-top">
             <span className="detail-id">{m.toolId}</span>
+            <span className="detail-size">{t.toolTypes[m.toolType]}</span>
             <StatusBadge status={m.status} t={t} />
             {m.owner && <span className="detail-size">{m.owner}</span>}
           </div>
           {m.deletedAt && <div className="form-error">{t.detail.deletedBanner}</div>}
 
           <div className={'where-panel ' + locationTone(m.location)}>
-            <div className="where-big">{locationLine(m, t)}</div>
-            {m.lastMovedAt && <div className="where-sub">{t.detail.lastMoved}: {relativeTime(m.lastMovedAt, lang)}{m.lastMovedBy ? ` · ${m.lastMovedBy.name}` : ''}</div>}
+            <LocationLine m={m} t={t} big />
+            {m.lastMovedAt && <div className="where-sub"><Icon name="clock" size={14} />{t.detail.lastMoved}: {relativeTime(m.lastMovedAt, lang)}{m.lastMovedBy ? ` · ${m.lastMovedBy.name}` : ''}</div>}
           </div>
           {m.lastWork && <LastWork m={m} t={t} lang={lang} />}
           {m.openProblem && (
             <div className="problem-box">
-              <div className="problem-title">{t.problem.open(m.openProblem.by.name, formatTime(m.openProblem.at, lang))}</div>
+              <div className="problem-title"><Icon name="problem" size={16} />{t.problem.open(m.openProblem.by.name, formatTime(m.openProblem.at, lang))}</div>
               <div className="problem-text">{m.openProblem.text}</div>
               {canLog && (
                 <>
                   <div className="box-title">{t.problem.act}</div>
                   <p className="passkey-note">{t.problem.actHint}</p>
                   <div className="action-grid">
-                    <button className="action-btn" onClick={() => { setWork({ correcting: null }); setAction(null); setProblemOpen(false); }}>{t.problem.logWork}</button>
-                    {m.location !== 'WORKSHOP' && canMoveTo(user, m.location, 'WORKSHOP') && <button className="action-btn" onClick={actOnProblem}>{t.problem.sendToWorkshop}</button>}
+                    <button className="action-btn" onClick={() => { setWork({ correcting: null }); setAction(null); setProblemOpen(false); }}><Icon name="worklog" />{t.problem.logWork}</button>
+                    {m.location !== 'WORKSHOP' && canMoveTo(user, m.location, 'WORKSHOP') && <button className="action-btn" onClick={actOnProblem}><Icon name="workshop" />{t.problem.sendToWorkshop}</button>}
                   </div>
                 </>
               )}
@@ -129,14 +148,14 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
           {(actions.length > 0 || canLog || canReport) && (
             <div className="action-box">
               <div className="box-title">{t.act.title}</div>
-              {canLog && <button className={'action-btn wide' + (work ? ' active' : '')} onClick={() => { setWork(work ? null : { correcting: null }); setAction(null); setProblemOpen(false); }}>{t.work.log}</button>}
-              {canReport && <button className={'action-btn wide problem' + (problemOpen ? ' active' : '')} onClick={() => { setProblemOpen(!problemOpen); setWork(null); setAction(null); }}>{t.problem.report}</button>}
+              {canLog && <button className={'action-btn wide' + (work ? ' active' : '')} onClick={() => { setWork(work ? null : { correcting: null }); setAction(null); setProblemOpen(false); }}><Icon name="worklog" size={20} />{t.work.log}</button>}
+              {canReport && <button className={'action-btn wide problem' + (problemOpen ? ' active' : '')} onClick={() => { setProblemOpen(!problemOpen); setWork(null); setAction(null); }}><Icon name="problem" size={20} />{t.problem.report}</button>}
               {problemOpen && <ProblemForm mould={m} t={t} onSaved={problemSaved} onCancel={() => setProblemOpen(false)} />}
               {work && <WorkLogForm key={work.correcting?.id ?? 'new'} mould={m} user={user} t={t} correcting={work.correcting} onSaved={workSaved} onCancel={() => setWork(null)} />}
               <div className="action-grid">
-                {actions.map((a) => <button key={a.key} className={'action-btn' + (action === a.key ? ' active' : '')} onClick={() => { setAction(action === a.key ? null : a.key); setPreset({}); setWork(null); setProblemOpen(false); }}>{a.label}</button>)}
+                {actions.map((a) => <button key={a.key} className={'action-btn' + (action === a.key ? ' active' : '')} onClick={() => { setAction(action === a.key ? null : a.key); setPreset({}); setWork(null); setProblemOpen(false); }}><Icon name={actionIcon[a.key]} size={20} />{a.label}</button>)}
               </div>
-              {action && <ActionPanel key={action + (preset.status ?? '')} action={action} mould={m} user={user} t={t} preset={preset} onDone={updated} onStale={load} onCancel={() => setAction(null)} toast={toast} />}
+              {action && <ActionPanel key={action + (preset.status ?? '')} action={action} mould={m} user={user} t={t} preset={preset} onDone={updated} onStale={load} onCancel={() => setAction(null)} />}
             </div>
           )}
 
@@ -152,13 +171,13 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
           </div>
 
           <div className="products-box">
-            <div className="products-title">{t.detail.items}</div>
+            <div className="products-title"><Icon name="mould" size={16} />{t.detail.items}</div>
             {!m.items?.length && <div className="history-empty">{t.detail.noItems}</div>}
             {m.items?.map((it) => (
               <div className="item-row" key={it.id}>
                 {it.images[0] ? (
                   <button className="item-thumb" onClick={() => setImage(assetUrl(it.images[0].url))} aria-label={t.detail.openImage}><img src={assetUrl(it.images[0].thumbUrl)} alt="" loading="lazy" /></button>
-                ) : <div className="item-thumb none" />}
+                ) : <div className="item-thumb none"><Icon name="image" size={22} /></div>}
                 <div className="item-text">
                   <b>{it.itemId}</b>{it.cavities != null && <small> · {t.detail.cavities(it.cavities)}</small>}
                   <div>{it.description}</div>
@@ -171,7 +190,7 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
 
           <div className="history-box">
             <div className="history-head">
-              <div className="history-title">{t.detail.history}</div>
+              <div className="history-title"><Icon name="history" size={16} />{t.detail.history}</div>
               <div className="mini-tabs">
                 {(['all', 'move', 'work'] as const).map((f) => (
                   <button key={f} className={'mini-tab' + (filter === f ? ' active' : '')} onClick={() => setFilter(f)}>
@@ -183,7 +202,7 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
             {!timeline.length && <div className="history-empty">{t.detail.historyEmpty}</div>}
             {timeline.map((e) => e.kind === 'move' ? (
               <div className="history-row" key={'m' + e.m.id}>
-                <span className={'history-dot ' + (e.m.toLocation ? locationTone(e.m.toLocation) : 'room')} />
+                <span className={'history-dot ' + (e.m.toLocation ? locationTone(e.m.toLocation) : '')}><Icon name={e.m.type === 'MOVED' && e.m.toLocation ? locationIcon[e.m.toLocation] : e.m.type === 'STATUS_CHANGED' ? 'busy' : 'history'} size={15} /></span>
                 <div className="history-text">
                   {movementText(e.m, t)}
                   {e.m.remarks && <div className="history-note">{e.m.remarks}</div>}
@@ -194,7 +213,7 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
               </div>
             ) : (
               <div className={'history-row work' + (e.w.corrected ? ' corrected' : '')} key={'w' + e.w.id}>
-                <span className="history-dot work" />
+                <span className="history-dot work"><Icon name={e.w.problemReported ? 'problem' : 'worklog'} size={15} /></span>
                 <div className="history-text">
                   {!e.w.problemReported && <span className="work-badge">{t.work.types[e.w.type]}</span>}
                   {e.w.problemReported && <span className="work-badge warn">{t.problem.reportedEntry}</span>}
@@ -214,10 +233,10 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
           </div>
 
           {can(user, 'moulds.manage') && (
-            m.deletedAt ? <button className="btn btn-outline" onClick={restore}>{t.detail.restore}</button> : (
+            m.deletedAt ? <button className="btn btn-outline" disabled={busy} onClick={restore}><Icon name="restore" />{t.detail.restore}</button> : (
               <>
-                <button className="btn btn-outline" onClick={() => onEdit(m)}>{t.detail.edit}</button>
-                {m.location !== 'MACHINE' && <button className="btn btn-outline danger" onClick={remove}>{t.detail.remove}</button>}
+                <button className="btn btn-outline" onClick={() => onEdit(m)}><Icon name="edit" />{t.detail.edit}</button>
+                {m.location !== 'MACHINE' && <button className="btn btn-outline danger" disabled={busy} onClick={remove}><Icon name="delete" />{t.detail.remove}</button>}
               </>
             )
           )}
@@ -231,10 +250,11 @@ export default function MouldSheet({ id, user, t, lang, refreshKey, onClose, onC
 const Fact = ({ label, value }: { label: string; value: string }) => <div className="fact"><span>{label}</span><b>{value}</b></div>;
 
 // The form for one action. Server rules decide; this only collects what the move needs.
-function ActionPanel({ action, mould, user, t, preset = {}, onDone, onStale, onCancel, toast }: {
+function ActionPanel({ action, mould, user, t, preset = {}, onDone, onStale, onCancel }: {
   action: Action; mould: Mould; user: User; t: Dict; preset?: { status?: MouldStatus; remarks?: string };
-  onDone: (m: Mould, msg: string) => void; onStale: () => void; onCancel: () => void; toast: (m: string) => void;
+  onDone: (m: Mould) => void; onStale: () => void; onCancel: () => void;
 }) {
+  const { confirm } = useConfirm();
   const [machines, setMachines] = useState<Machine[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [machineId, setMachineId] = useState<string | null>(null);
@@ -257,32 +277,46 @@ function ActionPanel({ action, mould, user, t, preset = {}, onDone, onStale, onC
   const needsRemarks = action === 'WORKSHOP' || action === 'STATUS';
   const canOverride = can(user, 'machines.override');
 
+  // Where the mould would go, in the same words as the location line ("Mould Room · FLK · A3").
+  function targetText() {
+    if (action === 'MACHINE') return `${locationName('MACHINE', t)} ${machine?.code ?? ''}`;
+    if (action === 'MOULD_ROOM') {
+      const code = zones.find((z) => z.code === rack?.zone)?.racks.find((r) => r.id === rack?.id)?.code ?? '';
+      return `${t.mouldRoom} · ${rack?.zone} · ${code}`;
+    }
+    if (action === 'WORKSHOP') return locationName('WORKSHOP', t) + (status ? ` – ${t.status[status]}` : '');
+    return locationName(action as Location, t);
+  }
+
   async function submit() {
+    if (busy) return; // no double submit
+    const override = (needsMachineReason || needsZoneReason) && reason.trim();
+    if (action === 'STATUS') {
+      if (!(await confirm({ title: t.confirm.statusTitle, message: t.confirm.status(mould.toolId, t.status[mould.status], t.status[status as MouldStatus]), confirmText: t.confirm.statusBtn }))) return;
+    } else if (action !== 'SHOTS') {
+      if (!(await confirm({
+        title: t.confirm.moveTitle, message: t.confirm.move(mould.toolId, locationLine(mould, t), targetText()), confirmText: t.confirm.moveBtn,
+        tone: override ? 'danger' : 'default', note: override ? t.confirm.overrideNote(reason.trim()) : undefined
+      }))) return;
+    }
     setBusy(true); setError('');
     try {
       const v = mould.version;
-      let res: { mould: Mould };
-      let msg: string;
-      if (action === 'STATUS') {
-        res = await api.setStatus(mould.id, status, remarks, v);
-        msg = t.act.statusChanged(mould.toolId, t.status[status as MouldStatus]);
-      } else if (action === 'SHOTS') {
-        res = await api.recordShots(mould.id, Number(shots), v);
-        msg = t.act.shotsRecorded(mould.toolId, Number(shots));
-      } else {
-        res = await api.move(mould.id, {
-          to: action as Location, version: v, remarks,
-          ...(action === 'MACHINE' ? { machineId: machineId ?? undefined } : {}),
-          ...(action === 'MOULD_ROOM' ? { rackId: rack?.id } : {}),
-          ...(action === 'WORKSHOP' && status ? { status } : {}),
-          ...((needsMachineReason || needsZoneReason) && reason ? { overrideReason: reason } : {})
-        });
-        msg = t.act.moved(mould.toolId, locationLine(res.mould, t));
-      }
-      onDone(res.mould, msg);
+      const res = action === 'STATUS'
+        ? await withToasts(t, () => api.setStatus(mould.id, status, remarks, v), t.feedback.statusChanged)
+        : action === 'SHOTS'
+          ? await withToasts(t, () => api.recordShots(mould.id, Number(shots), v), t.feedback.shots)
+          : await withToasts(t, () => api.move(mould.id, {
+            to: action as Location, version: v, remarks,
+            ...(action === 'MACHINE' ? { machineId: machineId ?? undefined } : {}),
+            ...(action === 'MOULD_ROOM' ? { rackId: rack?.id } : {}),
+            ...(action === 'WORKSHOP' && status ? { status } : {}),
+            ...(override ? { overrideReason: reason } : {})
+          }), t.feedback.moved);
+      onDone(res.mould);
     } catch (e) {
-      setError(errorText(e, t));
-      if (e instanceof ApiError && e.code === 'STALE') { toast(errorText(e, t)); onStale(); }
+      setError(errorText(e, t)); // the form stays open with the reason
+      if (e instanceof ApiError && e.code === 'STALE') onStale();
     } finally { setBusy(false); }
   }
 
@@ -347,8 +381,12 @@ function ActionPanel({ action, mould, user, t, preset = {}, onDone, onStale, onC
         </>
       )}
       {error && <div className="form-error" role="alert">{error}</div>}
-      <button className="btn btn-primary" disabled={!ready || busy} onClick={submit}>{busy ? t.act.saving : t.act.confirm}</button>
-      <button className="link-btn" type="button" onClick={onCancel}>{t.act.cancel}</button>
+      <div className="form-actions">
+      <button className="link-btn" type="button" onClick={onCancel}><Icon name="cancel" />{t.act.cancel}</button>
+      <button className="btn btn-primary" disabled={!ready || busy} onClick={submit}>
+        {busy ? t.act.saving : action === 'STATUS' ? t.confirm.statusBtn : action === 'SHOTS' ? t.act.recordShots : t.confirm.moveBtn}
+      </button>
+      </div>
     </div>
   );
 }

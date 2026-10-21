@@ -19,9 +19,9 @@ export const assignableRoles = (user: User | null | undefined): readonly Role[] 
 // Mirrors movePermissionGroups in backend/lib/workflow.js: one permission from every group is needed.
 export function canMoveTo(user: User | null | undefined, from: string, to: string) {
   const groups: Permission[][] = [];
-  if (from === 'MOULD_ROOM' || to === 'MOULD_ROOM') groups.push(['moves.mouldRoom']);
+  if (['MOULD_ROOM', 'TOOL_ROOM'].includes(from) || ['MOULD_ROOM', 'TOOL_ROOM'].includes(to)) groups.push(['moves.mouldRoom']);
   if (to === 'MACHINE') groups.push(['moves.machine']);
   if (to === 'WORKSHOP') groups.push(['workshop.work']);
-  if (to === 'PRODUCTION_FLOOR' && from !== 'MOULD_ROOM') groups.push(from === 'WORKSHOP' ? ['moves.machine', 'workshop.work'] : ['moves.machine']);
+  if (to === 'PRODUCTION_FLOOR' && !['MOULD_ROOM', 'TOOL_ROOM'].includes(from)) groups.push(from === 'WORKSHOP' ? ['moves.machine', 'workshop.work'] : ['moves.machine']);
   return groups.every((g) => g.some((p) => can(user, p)));
 }

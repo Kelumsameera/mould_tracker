@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, type ReactNode } from 'react';
+import Icon from './Icon';
 
-export default function Sheet({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: ReactNode; label: string }) {
+// Bottom sheet on phones, wide modal on tablets, side panel on desktop (see globals.css). Esc closes it.
+export default function Sheet({ open, onClose, children, label, closeLabel = 'Close' }: { open: boolean; onClose: () => void; children: ReactNode; label: string; closeLabel?: string }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -13,9 +15,7 @@ export default function Sheet({ open, onClose, children, label }: { open: boolea
     <>
       <div className={'sheet-backdrop' + (open ? ' open' : '')} onClick={onClose} />
       <div className={'sheet' + (open ? ' open' : '')} role="dialog" aria-modal="true" aria-label={label} aria-hidden={!open}>
-        <button className="sheet-close" onClick={onClose} aria-label="Close">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
-        </button>
+        <button className="sheet-close" onClick={onClose} aria-label={closeLabel} title={closeLabel}><Icon name="cancel" size={20} /></button>
         <div className="sheet-handle" />
         {open && children}
       </div>

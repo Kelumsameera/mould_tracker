@@ -1,10 +1,13 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MouldCard, StatusBadge } from './MouldBits';
+import { EmptyState, MouldCard, SkeletonCards, StatusBadge, rackTone } from './MouldBits';
+import Icon, { locationIcon, type IconName } from './Icon';
+import { useConfirm, type ConfirmOptions } from './ConfirmHost';
+import { withToasts } from '@/lib/feedback';
 import { api } from '@/lib/api';
 import { locationName, type Dict, type Lang } from '@/lib/i18n';
 import { errorText, formatTime } from '@/lib/format';
-import { LOCATIONS, SERVICE_STATUSES, type AuditEntry, type Location, type Mould, type Rack, type Stats, type Zone } from '@/lib/types';
+import { LOCATIONS, SERVICE_STATUSES, type AuditEntry, type Location, type Mould, type Rack, type Stats, type ToolType, type Zone } from '@/lib/types';
 
 const POLL_MS = 10_000;
 
@@ -20,7 +23,9 @@ function usePolling(load: () => void, key: unknown) {
 type Filter = { location?: Location; needsService?: boolean; awaitingRack?: boolean; problem?: boolean };
 
 // ---- Find a mould: one big search box, dashboard chips, results with the location line ----
-export function FindView({ t, lang, onOpen, refreshKey, onSync }: { t: Dict; lang: Lang; onOpen: (id: string) => void; refreshKey: number; onSync: (ok: boolean) => void }) {
+export function FindView({ t, lang, onOpen, refreshKey, onSync, toolType = 'INJECTION_MOULD' }: { t: Dict; lang: Lang; onOpen: (id: string) => void; refreshKey: number; onSync: (ok: boolean) => void; toolType?: ToolType }) {
+  const extrusion = toolType === 'EXTRUSION_DIE';
+  const placeholder = extrusion ? t.extrusionSearch : t.search.placeholder;
   const [query, setQuery] = useState('');
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>({});
@@ -32,47 +37,47 @@ export function FindView({ t, lang, onOpen, refreshKey, onSync }: { t: Dict; lan
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   const load = useCallback(() => {
-    Promise.all([api.moulds({ q, ...filter }), api.stats()])
+    Promise.all([api.moulds({ q, ...filter, toolType }), api.stats(toolType)])
       .then(([m, s]) => { setMoulds(m.moulds); setStats(s.stats); onSync(true); })
       .catch(() => onSync(false));
-  }, [q, filter, onSync]);
+  }, [q, filter, onSync, toolType]);
   usePolling(load, refreshKey);
 
   const toggle = (f: Filter) => setFilter((cur) => (JSON.stringify(cur) === JSON.stringify(f) ? {} : f));
-  const chips: { f: Filter; label: string; n: number; tone: string }[] = stats ? [
-    ...LOCATIONS.map((l) => ({ f: { location: l }, label: locationName(l, t), n: stats.byLocation[l] ?? 0, tone: l })),
-    { f: { needsService: true }, label: t.dash.attention, n: stats.needsAttention, tone: 'attention' },
-    { f: { awaitingRack: true }, label: t.dash.awaitingRack, n: stats.awaitingRack, tone: 'waiting' },
-    { f: { problem: true }, label: t.problem.filter, n: stats.problemsReported, tone: 'problem' }
+  const chips: { f: Filter; label: string; n: number; tone: string; icon: IconName }[] = stats ? [
+    ...LOCATIONS.filter(l => l !== (extrusion ? 'MOULD_ROOM' : 'TOOL_ROOM')).map((l) => ({ f: { location: l }, label: locationName(l, t), n: stats.byLocation[l] ?? 0, tone: l, icon: locationIcon[l] })),
+    { f: { needsService: true }, label: t.dash.attention, n: stats.needsAttention, tone: 'attention', icon: 'attention' as const },
+    ...(!extrusion ? [{ f: { awaitingRack: true }, label: t.dash.awaitingRack, n: stats.awaitingRack, tone: 'waiting', icon: 'rack' as const }] : []),
+    { f: { problem: true }, label: t.problem.filter, n: stats.problemsReported, tone: 'problem', icon: 'problem' as const }
   ] : [];
 
   return (
     <>
       <div className="search-wrap find">
         <div className="search-box big">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="11" cy="11" r="7" stroke="#7B8794" strokeWidth="2" /><path d="m20 20-3.5-3.5" stroke="#7B8794" strokeWidth="2" strokeLinecap="round" /></svg>
-          <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.search.placeholder} aria-label={t.search.placeholder} autoComplete="off" enterKeyHint="search" />
+          <Icon name="search" size={22} />
+          <input ref={inputRef} type="search" inputMode="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={placeholder} aria-label={placeholder} autoComplete="off" enterKeyHint="search" />
           {query && <button className="clear-btn" aria-label={t.search.clear} onClick={() => setQuery('')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="#52606D" strokeWidth="2.2" strokeLinecap="round" /></svg>
+            <Icon name="cancel" size={18} />
           </button>}
         </div>
       </div>
       <main>
         <div className="stats-row wrap">
           {chips.map((c) => (
-            <button key={c.tone} className={'stat-chip' + (JSON.stringify(filter) === JSON.stringify(c.f) ? ' active' : '')} onClick={() => toggle(c.f)}>
-              <div className="stat-count">{c.n}</div>
-              <div className="stat-label"><span className={'stat-dot ' + c.tone} /><span>{c.label}</span></div>
+            <button key={c.tone} className={'stat-chip' + (JSON.stringify(filter) === JSON.stringify(c.f) ? ' active' : '')} aria-pressed={JSON.stringify(filter) === JSON.stringify(c.f)} onClick={() => toggle(c.f)}>
+              <div className={'stat-count tone-' + c.tone}><Icon name={c.icon} size={18} />{c.n}</div>
+              <div className="stat-label">{c.label}</div>
             </button>
           ))}
         </div>
         <div className="section-label">
-          {q || Object.keys(filter).length ? t.search.results(moulds?.length ?? 0) : t.search.allMoulds}
+          {q || Object.keys(filter).length ? (extrusion ? t.extrusionResults : t.search.results)(moulds?.length ?? 0) : extrusion ? t.toolTypes.EXTRUSION_DIE : t.search.allMoulds}
           {stats && !q && !Object.keys(filter).length && <span className="count-pill">{stats.total}</span>}
           {Object.keys(filter).length > 0 && <button className="link-btn inline" onClick={() => setFilter({})}>{t.dash.clearFilter}</button>}
         </div>
-        {moulds === null ? <p className="muted">{t.loading}</p>
-          : !moulds.length ? <div className="empty-state"><p>{q ? t.search.noMatch : t.search.empty}</p></div>
+        {moulds === null ? <SkeletonCards label={t.loading} />
+          : !moulds.length ? <EmptyState icon={q ? 'search' : 'mould'} text={extrusion ? t.extrusionEmpty : q ? t.search.noMatch : t.search.empty} />
             : <div className="card-grid">{moulds.map((m) => <MouldCard key={m.id} m={m} t={t} lang={lang} onOpen={onOpen} />)}</div>}
       </main>
     </>
@@ -85,8 +90,9 @@ export function RackView({ t, onOpen, refreshKey, toast }: { t: Dict; onOpen: (i
   const [waiting, setWaiting] = useState<{ id: string; toolId: string }[]>([]);
   const [zone, setZone] = useState('');
   const [open, setOpen] = useState<Rack | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const load = useCallback(() => {
-    api.racks().then((d) => { setZones(d.zones); setWaiting(d.awaitingRack); }).catch((e) => toast(errorText(e, t)));
+    api.racks().then((d) => { setZones(d.zones); setWaiting(d.awaitingRack); setLoaded(true); }).catch((e) => toast(errorText(e, t)));
   }, [t, toast]);
   usePolling(load, refreshKey);
 
@@ -94,19 +100,24 @@ export function RackView({ t, onOpen, refreshKey, toast }: { t: Dict; onOpen: (i
   return (
     <main className="single">
       <div className="tabs">
-        <button className={'tab' + (!zone ? ' active' : '')} onClick={() => setZone('')}>{t.racks.all}</button>
-        {zones.map((z) => <button key={z.code} className={'tab' + (zone === z.code ? ' active' : '')} onClick={() => setZone(z.code)}>{t.racks.zone(z.code)}</button>)}
+        <button className={'tab' + (!zone ? ' active' : '')} aria-pressed={!zone} onClick={() => setZone('')}><Icon name="rack" size={15} />{t.racks.all}</button>
+        {zones.map((z) => <button key={z.code} className={'tab' + (zone === z.code ? ' active' : '')} aria-pressed={zone === z.code} onClick={() => setZone(z.code)}><Icon name="mouldRoom" size={15} />{t.racks.zone(z.code)}</button>)}
       </div>
-      <div className="legend"><span className="rack-tile empty mini" /> {t.racks.legendEmpty} <span className="rack-tile used mini" /> {t.racks.legendUsed}</div>
+      <div className="legend">
+        <span><span className="rack-tile empty mini" />{t.racks.legendEmpty}</span>
+        <span><span className="rack-tile used mini" />{t.racks.legendUsed}</span>
+        <span><span className="rack-tile full mini" />{t.racks.legendFull}</span>
+      </div>
+      {!loaded && <div className="skeleton" style={{ height: 220, borderRadius: 16 }} role="status" aria-label={t.loading} />}
       {shown.map((z) => (
         <section key={z.code} className="zone-block">
-          <h2 className="zone-title">{t.mouldRoom} · {t.racks.zone(z.code)}{!z.active && <small> ({t.racks.inactive})</small>}</h2>
+          <h2 className="zone-title"><Icon name="mouldRoom" size={20} />{t.mouldRoom} · {t.racks.zone(z.code)}{!z.active && <small className="muted"> ({t.racks.inactive})</small>}</h2>
           <RackRows racks={z.racks} t={t} onPick={setOpen} selected={open?.id} />
         </section>
       ))}
       {open && (
         <div className="rack-detail">
-          <div className="box-title">{t.racks.mouldsOn(open.locationId)}</div>
+          <div className="box-title"><Icon name="rack" size={14} />{t.racks.mouldsOn(open.locationId)}</div>
           {!open.moulds.length ? <p className="muted">{t.racks.noMoulds}</p> : open.moulds.map((m) => (
             <button key={m.id} className="chip-row" onClick={() => onOpen(m.id)}><b>{m.toolId}</b><StatusBadge status={m.status} t={t} /></button>
           ))}
@@ -114,7 +125,7 @@ export function RackView({ t, onOpen, refreshKey, toast }: { t: Dict; onOpen: (i
       )}
       {waiting.length > 0 && (
         <section className="zone-block">
-          <h2 className="zone-title">{t.racks.waiting} <span className="count-pill">{waiting.length}</span></h2>
+          <h2 className="zone-title"><Icon name="clock" size={20} />{t.racks.waiting} <span className="count-pill">{waiting.length}</span></h2>
           <p className="passkey-note">{t.racks.waitingHint}</p>
           <div className="quick-machines">{waiting.map((m) => <button key={m.id} className="quick-chip" onClick={() => onOpen(m.id)}>{m.toolId}</button>)}</div>
         </section>
@@ -136,7 +147,7 @@ function RackRows({ racks, t, onPick, selected }: { racks: Rack[]; t: Dict; onPi
           <div className="rack-row-label">{row}</div>
           <div className="rack-row-grid wide">
             {list.map((r) => (
-              <button key={r.id} className={'rack-tile' + (r.occupancy ? ' used' : ' empty') + (r.active ? '' : ' off') + (selected === r.id ? ' selected' : '')} onClick={() => onPick(r)}>
+              <button key={r.id} className={'rack-tile ' + rackTone(r) + (r.active ? '' : ' off') + (selected === r.id ? ' selected' : '')} aria-pressed={selected === r.id} aria-label={`${r.locationId} · ${r.occupancy}`} onClick={() => onPick(r)}>
                 <b>{r.code}</b>
                 <small>{!r.active ? t.racks.inactive : r.occupancy ? r.moulds.slice(0, 2).map((m) => m.toolId).join(' ') + (r.occupancy > 2 ? ` +${r.occupancy - 2}` : '') : t.racks.empty}</small>
               </button>
@@ -153,9 +164,10 @@ export function WorkshopView({ t, lang, onOpen, refreshKey, toast }: { t: Dict; 
   const [atShop, setAtShop] = useState<Mould[]>([]);
   const [flagged, setFlagged] = useState<Mould[]>([]);
   const [problems, setProblems] = useState<Mould[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const load = useCallback(() => {
     Promise.all([api.moulds({ location: 'WORKSHOP' }), api.moulds({ needsService: true }), api.moulds({ problem: true })])
-      .then(([a, b, c]) => { setAtShop(a.moulds); setFlagged(b.moulds.filter((m) => m.location !== 'WORKSHOP')); setProblems(c.moulds); })
+      .then(([a, b, c]) => { setAtShop(a.moulds); setFlagged(b.moulds.filter((m) => m.location !== 'WORKSHOP')); setProblems(c.moulds); setLoaded(true); })
       .catch((e) => toast(errorText(e, t)));
   }, [t, toast]);
   usePolling(load, refreshKey);
@@ -164,12 +176,13 @@ export function WorkshopView({ t, lang, onOpen, refreshKey, toast }: { t: Dict; 
   const sorted = [...atShop].sort((a, b) => order(a) - order(b));
   return (
     <main>
-      {!atShop.length && !flagged.length && !problems.length && <div className="empty-state"><p>{t.workshop.none}</p></div>}
-      {problems.length > 0 && <div className="section-label">{t.problem.filter} <span className="count-pill">{problems.length}</span></div>}
+      {!loaded && <SkeletonCards count={4} label={t.loading} />}
+      {loaded && !atShop.length && !flagged.length && !problems.length && <EmptyState icon="good" text={t.workshop.none} />}
+      {problems.length > 0 && <div className="section-label"><Icon name="problem" size={16} />{t.problem.filter} <span className="count-pill">{problems.length}</span></div>}
       {problems.length > 0 && <div className="card-grid">{problems.map((m) => <MouldCard key={m.id} m={m} t={t} lang={lang} onOpen={onOpen} />)}</div>}
-      {flagged.length > 0 && <div className="section-label">{t.workshop.flagged} <span className="count-pill">{flagged.length}</span></div>}
+      {flagged.length > 0 && <div className="section-label"><Icon name="attention" size={16} />{t.workshop.flagged} <span className="count-pill">{flagged.length}</span></div>}
       {flagged.length > 0 && <div className="card-grid">{flagged.map((m) => <MouldCard key={m.id} m={m} t={t} lang={lang} onOpen={onOpen} />)}</div>}
-      {atShop.length > 0 && <div className="section-label">{t.workshop.atWorkshop} <span className="count-pill">{atShop.length}</span></div>}
+      {atShop.length > 0 && <div className="section-label"><Icon name="workshop" size={16} />{t.workshop.atWorkshop} <span className="count-pill">{atShop.length}</span></div>}
       {sorted.length > 0 && <div className="card-grid">{sorted.map((m) => <MouldCard key={m.id} m={m} t={t} lang={lang} onOpen={onOpen} />)}</div>}
     </main>
   );
@@ -195,7 +208,7 @@ export function AuditView({ t, lang, toast }: { t: Dict; lang: Lang; toast: (m: 
         {types.map((x) => <button key={x} className={'tab' + (type === x ? ' active' : '')} onClick={() => { setType(x); setPage(1); }}>{t.audit.types[x]}</button>)}
       </div>
       <div className="section-label">{t.audit.count(entries.length, total)}</div>
-      {!entries.length && <p className="muted">{t.audit.empty}</p>}
+      {!entries.length && <EmptyState icon="audit" text={t.audit.empty} />}
       {entries.map((e) => (
         <div key={e.id} className="audit-row" onClick={() => setOpenId(openId === e.id ? null : e.id)}>
           <div className="audit-head"><b>{e.action}</b><span>{e.entityLabel}</span><small>{formatTime(e.createdAt, lang)} · {e.actor.name}</small></div>
@@ -215,6 +228,7 @@ export function AuditView({ t, lang, toast }: { t: Dict; lang: Lang; toast: (m: 
 
 // ---- Rack management (Super Admin; Admin sees it read-only) ----
 export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean; toast: (m: string) => void }) {
+  const { confirm, ask } = useConfirm();
   const [zones, setZones] = useState<Zone[]>([]);
   const [editRack, setEditRack] = useState<Rack | null>(null);
   const [bulk, setBulk] = useState({ zone: '', rowFrom: 'A', rowTo: 'C', from: '1', to: '10', capacity: '' });
@@ -230,10 +244,26 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
   }).catch((e) => toast(errorText(e, t))), [t, toast]);
   useEffect(() => { load(); }, [load]);
 
-  async function run(work: () => Promise<unknown>, done?: string) {
+  // Optional confirm first, then loading -> success/error toasts. Nothing runs twice while busy.
+  async function run(work: () => Promise<unknown>, done?: string, ask?: ConfirmOptions) {
+    if (busy || (ask && !(await confirm(ask)))) return false;
     setBusy(true);
-    try { await work(); if (done) toast(done); await load(); return true; } catch (e) { toast(errorText(e, t)); return false; } finally { setBusy(false); }
+    try {
+      if (done) await withToasts(t, work, done); else await work();
+      await load();
+      return true;
+    } catch (e) { if (!done) toast(errorText(e, t)); return false; } finally { setBusy(false); }
   }
+  // Rename / new code: the dialog asks for the value itself, so it is the one confirmation.
+  async function rename(z: Zone) {
+    const name = await ask({ title: t.confirm.renameZoneTitle, message: t.confirm.renameZone(z.code), confirmText: t.confirm.saveBtn, inputLabel: t.confirm.newName, initial: z.name, required: true, maxLength: 100 });
+    if (name && name !== z.name) run(() => api.updateZone(z.id, { name }), t.feedback.saved);
+  }
+  async function recode(z: Zone) {
+    const code = await ask({ title: t.confirm.codeZoneTitle, message: t.confirm.codeZone(z.code), confirmText: t.confirm.saveBtn, tone: 'danger', inputLabel: t.confirm.newCode, initial: z.code, required: true, maxLength: 10 });
+    if (code && code.toUpperCase() !== z.code) run(() => api.updateZone(z.id, { code: code.toUpperCase() }), t.feedback.saved);
+  }
+  const danger = (title: string, message: string, code: string): ConfirmOptions => ({ title, message, confirmText: t.confirm.deleteBtn, tone: 'danger', typeToConfirm: code });
   const capacity = (s: string) => (s.trim() === '' ? null : Math.max(1, Math.floor(Number(s))));
   const bulkBody = (previewOnly: boolean) => ({ zone: bulk.zone, rowFrom: bulk.rowFrom, rowTo: bulk.rowTo, from: Number(bulk.from), to: Number(bulk.to), capacity: capacity(bulk.capacity), preview: previewOnly });
 
@@ -241,16 +271,18 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
     <main className="single">
       {!canEdit && <div className="warn-box">{t.rackAdmin.readOnly}</div>}
       <fieldset disabled={!canEdit || busy} className="plain">
-        <h2 className="zone-title">{t.rackAdmin.zones}</h2>
+        <h2 className="zone-title"><Icon name="mouldRoom" size={20} />{t.rackAdmin.zones}</h2>
         {zones.map((z) => (
           <div key={z.id} className="zone-admin">
             <div className="zone-admin-head">
               <b>{z.code}</b><span>{z.name}</span>{!z.active && <span className="status-badge warn">{t.rackAdmin.disabled}</span>}
               {canEdit && <span className="row-actions">
-                <button className="link-btn" onClick={() => { const name = prompt(t.rackAdmin.name, z.name); if (name) run(() => api.updateZone(z.id, { name }), t.rackAdmin.saved); }}>{t.rackAdmin.rename}</button>
-                <button className="link-btn" onClick={() => { const code = prompt(t.rackAdmin.code, z.code); if (code && code !== z.code) run(() => api.updateZone(z.id, { code }), t.rackAdmin.saved); }}>{t.rackAdmin.changeCode}</button>
-                <button className="link-btn" onClick={() => run(() => api.updateZone(z.id, { active: !z.active }), t.rackAdmin.saved)}>{z.active ? t.rackAdmin.disable : t.rackAdmin.enable}</button>
-                <button className="link-btn danger" onClick={() => { if (confirm(t.rackAdmin.confirmZoneDelete(z.code))) run(() => api.deleteZone(z.id), t.rackAdmin.saved); }}>{t.rackAdmin.remove}</button>
+                <button className="link-btn" onClick={() => rename(z)}>{t.rackAdmin.rename}</button>
+                <button className="link-btn" onClick={() => recode(z)}>{t.rackAdmin.changeCode}</button>
+                <button className="link-btn" onClick={() => run(() => api.updateZone(z.id, { active: !z.active }), t.feedback.saved, z.active
+                  ? { title: t.confirm.zoneDisableTitle, message: t.confirm.zoneDisable(z.code), confirmText: t.rackAdmin.disable, tone: 'danger' }
+                  : { title: t.confirm.zoneEnableTitle, message: t.confirm.zoneEnable(z.code), confirmText: t.rackAdmin.enable })}>{z.active ? t.rackAdmin.disable : t.rackAdmin.enable}</button>
+                <button className="link-btn danger" onClick={() => run(() => api.deleteZone(z.id), t.feedback.deleted, danger(t.confirm.zoneDeleteTitle, t.confirm.zoneDelete(z.code), z.code))}>{t.rackAdmin.remove}</button>
               </span>}
             </div>
             {[...new Set(z.racks.map((r) => r.row))].map((row) => (
@@ -258,11 +290,11 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
                 <div className="rack-row-label">{row}</div>
                 <div className="rack-row-grid wide">
                   {z.racks.filter((r) => r.row === row).map((r) => (
-                    <button key={r.id} className={'rack-tile' + (r.occupancy ? ' used' : ' empty') + (r.active ? '' : ' off')} onClick={() => canEdit && setEditRack(r)}>
+                    <button key={r.id} className={'rack-tile ' + rackTone(r) + (r.active ? '' : ' off') + (editRack?.id === r.id ? ' selected' : '')} aria-label={r.locationId} onClick={() => canEdit && setEditRack(r)}>
                       <b>{r.code}</b><small>{r.active ? (r.capacity ? `${r.occupancy}/${r.capacity}` : r.occupancy) : t.racks.inactive}</small>
                     </button>
                   ))}
-                  {canEdit && <button className="link-btn danger small" onClick={() => { if (confirm(t.rackAdmin.confirmRowDelete(z.code, row))) run(() => api.removeRow(z.code, row), t.rackAdmin.saved); }}>{t.rackAdmin.removeRow(row)}</button>}
+                  {canEdit && <button className="link-btn danger small" onClick={() => run(() => api.removeRow(z.code, row), t.feedback.deleted, danger(t.confirm.rowDeleteTitle, t.confirm.rowDelete(z.code, row), `${z.code}-${row}`))}>{t.rackAdmin.removeRow(row)}</button>}
                 </div>
               </div>
             ))}
@@ -281,8 +313,8 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
             <label className="field-label">{t.rackAdmin.note}</label>
             <input className="field-input" value={editRack.note} maxLength={300} onChange={(e) => setEditRack({ ...editRack, note: e.target.value })} />
             <label className="check"><input type="checkbox" checked={editRack.active} onChange={(e) => setEditRack({ ...editRack, active: e.target.checked })} /> {t.rackAdmin.active}</label>
-            <button className="btn btn-primary" onClick={async () => { if (await run(() => api.updateRack(editRack.id, { row: editRack.row, number: editRack.number, capacity: editRack.capacity, note: editRack.note, active: editRack.active }), t.rackAdmin.saved)) setEditRack(null); }}>{t.rackAdmin.save}</button>
-            <button className="btn btn-outline danger" onClick={async () => { if (confirm(t.rackAdmin.confirmRackDelete(editRack.locationId)) && await run(() => api.deleteRack(editRack.id), t.rackAdmin.saved)) setEditRack(null); }}>{t.rackAdmin.remove}</button>
+            <button className="btn btn-primary" onClick={async () => { if (await run(() => api.updateRack(editRack.id, { row: editRack.row, number: editRack.number, capacity: editRack.capacity, note: editRack.note, active: editRack.active }), t.feedback.saved)) setEditRack(null); }}>{t.rackAdmin.save}</button>
+            <button className="btn btn-outline danger" onClick={async () => { if (await run(() => api.deleteRack(editRack.id), t.feedback.deleted, danger(t.confirm.rackDeleteTitle, t.confirm.rackDelete(editRack.locationId), editRack.locationId))) setEditRack(null); }}>{t.rackAdmin.remove}</button>
             <button className="link-btn" onClick={() => setEditRack(null)}>{t.cancel}</button>
           </div>
         )}
@@ -307,7 +339,10 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
                   <div>{t.rackAdmin.willCreate(preview.create.length)} · {t.rackAdmin.willRevive(preview.revive.length)} · {t.rackAdmin.exist(preview.existing.length)}</div>
                   <small className="muted">{[...preview.create, ...preview.revive].join(', ') || t.rackAdmin.nothingToDo}</small>
                   {preview.create.length + preview.revive.length > 0 && (
-                    <button className="btn btn-primary" onClick={async () => { if (await run(() => api.bulkRacks(bulkBody(false)), t.rackAdmin.created(preview.create.length + preview.revive.length))) setPreview(null); }}>
+                    <button className="btn btn-primary" onClick={async () => {
+                      const n = preview.create.length + preview.revive.length;
+                      if (await run(() => api.bulkRacks(bulkBody(false)), t.rackAdmin.created(n), { title: t.confirm.bulkTitle, message: t.confirm.bulk(n, bulk.zone), confirmText: t.confirm.bulkBtn(n) })) setPreview(null);
+                    }}>
                       {t.rackAdmin.create(preview.create.length + preview.revive.length)}
                     </button>
                   )}
@@ -323,7 +358,7 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
                 <div><label className="field-label">{t.rackAdmin.number}</label><input className="field-input" type="number" min={1} value={one.number} onChange={(e) => setOne({ ...one, number: e.target.value })} /></div>
                 <div><label className="field-label">{t.rackAdmin.capacity}</label><input className="field-input" type="number" min={1} placeholder={t.rackAdmin.unlimited} value={one.capacity} onChange={(e) => setOne({ ...one, capacity: e.target.value })} /></div>
               </div>
-              <button className="btn btn-primary" onClick={() => run(() => api.createRack({ zone: one.zone, row: one.row, number: Number(one.number), capacity: capacity(one.capacity), note: one.note }), t.rackAdmin.saved)}>{t.rackAdmin.addRack}</button>
+              <button className="btn btn-primary" onClick={() => run(() => api.createRack({ zone: one.zone, row: one.row, number: Number(one.number), capacity: capacity(one.capacity), note: one.note }), t.feedback.created)}>{t.rackAdmin.addRack}</button>
             </div>
 
             <div className="action-panel">
@@ -332,7 +367,7 @@ export function RackAdminView({ t, canEdit, toast }: { t: Dict; canEdit: boolean
                 <div><label className="field-label">{t.rackAdmin.code}</label><input className="field-input" maxLength={10} value={newZone.code} onChange={(e) => setNewZone({ ...newZone, code: e.target.value.toUpperCase() })} /></div>
                 <div><label className="field-label">{t.rackAdmin.name}</label><input className="field-input" maxLength={100} value={newZone.name} onChange={(e) => setNewZone({ ...newZone, name: e.target.value })} /></div>
               </div>
-              <button className="btn btn-primary" disabled={!newZone.code || !newZone.name} onClick={async () => { if (await run(() => api.createZone({ ...newZone, sortOrder: zones.length + 1 }), t.rackAdmin.saved)) setNewZone({ code: '', name: '' }); }}>{t.rackAdmin.addZone}</button>
+              <button className="btn btn-primary" disabled={!newZone.code || !newZone.name} onClick={async () => { if (await run(() => api.createZone({ ...newZone, sortOrder: zones.length + 1 }), t.feedback.created)) setNewZone({ code: '', name: '' }); }}>{t.rackAdmin.addZone}</button>
             </div>
           </>
         )}

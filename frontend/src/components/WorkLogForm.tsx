@@ -3,21 +3,13 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { Dict } from '@/lib/i18n';
 import { errorText } from '@/lib/format';
+import { withToasts } from '@/lib/feedback';
+import { useConfirm } from './ConfirmHost';
+import Icon from './Icon';
+import { shrink } from '@/lib/imageUpload';
 import { WORK_TYPES, type Mould, type Person, type User, type WorkLog, type WorkOutcome, type WorkType } from '@/lib/types';
 
 const MAX_PHOTOS = 3;
-
-// Phone photos are large: shrink to 1600px JPEG in the browser before upload (the server makes the final WebP).
-export async function shrink(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas.toDataURL('image/jpeg', 0.85);
-}
 
 // "2026-10-21T14:05" in local time, for <input type="datetime-local">.
 const localInput = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
@@ -26,6 +18,7 @@ export default function WorkLogForm({ mould, user, t, correcting, onSaved, onCan
   mould: Mould; user: User; t: Dict; correcting: WorkLog | null;
   onSaved: (warnings: string[], outcome: WorkOutcome | null, description: string) => void; onCancel: () => void;
 }) {
+  const { confirm } = useConfirm();
   const [workers, setWorkers] = useState<Person[]>([]);
   const [type, setType] = useState<WorkType>(correcting?.type ?? 'REPAIR');
   const [description, setDescription] = useState(correcting?.description ?? '');
@@ -38,6 +31,7 @@ export default function WorkLogForm({ mould, user, t, correcting, onSaved, onCan
   const [sendToWorkshop, setSendToWorkshop] = useState(true);
   const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [tried, setTried] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => { api.workers().then((d) => setWorkers(d.workers)).catch((e) => setError(errorText(e, t))); }, [t]);
@@ -53,15 +47,24 @@ export default function WorkLogForm({ mould, user, t, correcting, onSaved, onCan
 
   const needsWork = outcome === 'NEEDS_REPAIR' || outcome === 'NEEDS_SERVICE';
   async function submit() {
+    if (busy) return;
+    setTried(true);
+    if (!description.trim()) return; // shown under the field
+    const names = people.filter((p) => doneBy.includes(p.id)).map((p) => p.name).join(', ');
+    const moving = needsWork && sendToWorkshop && mould.location !== 'WORKSHOP';
+    if (!(await confirm({
+      title: t.confirm.workTitle, message: t.confirm.work(mould.toolId, t.work.types[type], names), confirmText: t.confirm.workBtn,
+      note: [correcting && t.confirm.workCorrection, moving && t.confirm.workMove].filter(Boolean).join(' ') || undefined
+    }))) return;
     setBusy(true); setError('');
     try {
-      const res = await api.createWorkLog(mould.id, {
+      const res = await withToasts(t, () => api.createWorkLog(mould.id, {
         type, description, partsUsed: parts, doneBy, doneAt: new Date(when).toISOString(),
         timeSpentMinutes: minutes.trim() === '' ? null : Math.max(0, Math.floor(Number(minutes))),
         shots: shots.trim() === '' ? null : Math.max(0, Math.floor(Number(shots))),
         outcome, sendToWorkshop: needsWork && sendToWorkshop, photos, version: mould.version,
         ...(correcting ? { correctsId: correcting.id } : {})
-      });
+      }), t.feedback.saved);
       onSaved(res.warnings, outcome, description);
     } catch (e) { setError(errorText(e, t)); }
     finally { setBusy(false); }
@@ -77,7 +80,8 @@ export default function WorkLogForm({ mould, user, t, correcting, onSaved, onCan
         {WORK_TYPES.map((w) => <button type="button" key={w} className={'quick-chip' + (type === w ? ' selected' : '')} onClick={() => setType(w)}>{t.work.types[w]}</button>)}
       </div>
       <label className="field-label" htmlFor="wl-what">{t.work.what} *</label>
-      <textarea id="wl-what" className="field-input" rows={3} maxLength={2000} placeholder={t.work.whatPh} value={description} onChange={(e) => setDescription(e.target.value)} />
+      <textarea id="wl-what" className="field-input" rows={3} maxLength={2000} placeholder={t.work.whatPh} value={description} aria-invalid={tried && !description.trim()} onChange={(e) => setDescription(e.target.value)} />
+      {tried && !description.trim() && <p className="field-error" role="alert"><Icon name="error" size={14} />{t.form.required}</p>}
 
       <label className="field-label">{t.work.who} *</label>
       <p className="passkey-note">{t.work.whoHint}</p>
@@ -110,7 +114,7 @@ export default function WorkLogForm({ mould, user, t, correcting, onSaved, onCan
       {needsWork && mould.location !== 'WORKSHOP' && (
         <>
           <label className="check"><input type="checkbox" checked={sendToWorkshop} onChange={(e) => setSendToWorkshop(e.target.checked)} /> {t.work.sendToWorkshop}</label>
-          <p className="passkey-note">{mould.location === 'MOULD_ROOM' ? t.work.roomHint(t.mouldRoom) : t.work.stayHint}</p>
+          <p className="passkey-note">{['MOULD_ROOM', 'TOOL_ROOM'].includes(mould.location) ? t.work.roomHint(mould.location === 'TOOL_ROOM' ? t.loc.TOOL_ROOM : t.mouldRoom) : t.work.stayHint}</p>
         </>
       )}
 
@@ -120,22 +124,26 @@ export default function WorkLogForm({ mould, user, t, correcting, onSaved, onCan
           <button type="button" key={i} className="photo-thumb" aria-label={t.work.removePhoto} onClick={() => setPhotos(photos.filter((_, j) => j !== i))}><img src={p} alt="" /><span>×</span></button>
         ))}
         {photos.length < MAX_PHOTOS && (
-          <label className="photo-add">{t.work.addPhoto}<input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} /></label>
+          <label className="photo-add"><Icon name="camera" size={22} />{t.work.addPhoto}<input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} /></label>
         )}
       </div>
 
       {error && <div className="form-error" role="alert">{error}</div>}
-      <button className="btn btn-primary" disabled={busy || !description.trim() || !doneBy.length || !when} onClick={submit}>{busy ? t.work.saving : t.work.save}</button>
-      <button className="link-btn" type="button" onClick={onCancel}>{t.cancel}</button>
+      <div className="form-actions">
+        <button className="link-btn" type="button" onClick={onCancel}><Icon name="cancel" />{t.cancel}</button>
+        <button className="btn btn-primary" disabled={busy || !doneBy.length || !when} onClick={submit}><Icon name="worklog" />{busy ? t.work.saving : t.work.save}</button>
+      </div>
     </div>
   );
 }
 
 // "Report a problem": anyone may send it; it never moves the mould or changes its status.
 export function ProblemForm({ mould, t, onSaved, onCancel }: { mould: Mould; t: Dict; onSaved: () => void; onCancel: () => void }) {
+  const { confirm } = useConfirm();
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [tried, setTried] = useState(false);
   const [error, setError] = useState('');
   async function addPhotos(files: FileList | null) {
     if (!files) return;
@@ -143,8 +151,10 @@ export function ProblemForm({ mould, t, onSaved, onCancel }: { mould: Mould; t: 
     catch { setError(t.errors.INVALID_PHOTO()); }
   }
   async function submit() {
+    setTried(true);
+    if (busy || !description.trim() || !(await confirm({ title: t.confirm.problemTitle, message: t.confirm.problem(mould.toolId), confirmText: t.confirm.problemBtn }))) return;
     setBusy(true); setError('');
-    try { await api.reportProblem(mould.id, { description, photos, version: mould.version }); onSaved(); }
+    try { await withToasts(t, () => api.reportProblem(mould.id, { description, photos, version: mould.version }), t.feedback.reported); onSaved(); }
     catch (e) { setError(errorText(e, t)); }
     finally { setBusy(false); }
   }
@@ -152,15 +162,18 @@ export function ProblemForm({ mould, t, onSaved, onCancel }: { mould: Mould; t: 
     <div className="action-panel">
       <p className="passkey-note">{t.problem.hint}</p>
       <label className="field-label" htmlFor="pr-what">{t.problem.what} *</label>
-      <textarea id="pr-what" className="field-input" rows={3} maxLength={2000} placeholder={t.problem.whatPh} value={description} onChange={(e) => setDescription(e.target.value)} />
+      <textarea id="pr-what" className="field-input" rows={3} maxLength={2000} placeholder={t.problem.whatPh} value={description} aria-invalid={tried && !description.trim()} onChange={(e) => setDescription(e.target.value)} />
+      {tried && !description.trim() && <p className="field-error" role="alert"><Icon name="error" size={14} />{t.form.required}</p>}
       <label className="field-label">{t.work.photos}</label>
       <div className="photo-row">
         {photos.map((p, i) => <button type="button" key={i} className="photo-thumb" aria-label={t.work.removePhoto} onClick={() => setPhotos(photos.filter((_, j) => j !== i))}><img src={p} alt="" /><span>×</span></button>)}
-        {photos.length < MAX_PHOTOS && <label className="photo-add">{t.work.addPhoto}<input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} /></label>}
+        {photos.length < MAX_PHOTOS && <label className="photo-add"><Icon name="camera" size={22} />{t.work.addPhoto}<input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => { addPhotos(e.target.files); e.target.value = ''; }} /></label>}
       </div>
       {error && <div className="form-error" role="alert">{error}</div>}
-      <button className="btn btn-primary" disabled={busy || !description.trim()} onClick={submit}>{busy ? t.work.saving : t.problem.save}</button>
-      <button className="link-btn" type="button" onClick={onCancel}>{t.cancel}</button>
+      <div className="form-actions">
+        <button className="link-btn" type="button" onClick={onCancel}><Icon name="cancel" />{t.cancel}</button>
+        <button className="btn btn-primary" disabled={busy} onClick={submit}><Icon name="send" />{busy ? t.work.saving : t.problem.save}</button>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { passkeyText } from '@/lib/passkeyText';
 import { PwaInstallButton } from './PwaProvider';
+import { ThemeToggle } from './ThemeProvider';
 
 export default function LoginForm({ lang, onLang, onLogin, onPasskey, error }: {
   lang: Lang; onLang: (l: Lang) => void; onLogin: (email: string, password: string) => Promise<void>; onPasskey: () => Promise<void>; error: string;
@@ -28,10 +29,10 @@ export default function LoginForm({ lang, onLang, onLogin, onPasskey, error }: {
   return (
     <div className="login">
       <form onSubmit={submit}>
-        <div className="lang-toggle dark">
+        <div className="login-controls"><ThemeToggle t={t} /><div className="lang-toggle dark">
           <button type="button" className={'lang-btn' + (lang === 'en' ? ' active' : '')} onClick={() => onLang('en')}>EN</button>
           <button type="button" className={'lang-btn' + (lang === 'si' ? ' active' : '')} onClick={() => onLang('si')}>සිං</button>
-        </div>
+        </div></div>
         <h1>{t.brandTitle}</h1>
         <p>{t.loginSub}</p>
         <label className="field-label">{t.email}</label>

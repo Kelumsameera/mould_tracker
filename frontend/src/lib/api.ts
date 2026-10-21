@@ -18,7 +18,12 @@ export class ApiError extends Error {
 }
 
 // Full URL for a server path such as an item picture ("/uploads/items/x.webp").
-export const assetUrl = (path: string | null | undefined) => (path ? BASE + path : '');
+export const assetUrl = (path: string | null | undefined) => {
+  if (!path) return '';
+  // Existing cutouts were repaired in place; bypass the old immutable browser cache once.
+  const revision = path.startsWith('/uploads/items/') ? `${path.includes('?') ? '&' : '?'}v=cutouts-20261022-2` : '';
+  return BASE + path + revision;
+};
 const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
@@ -59,9 +64,9 @@ export const api = {
 
   setLanguage: (language: 'en' | 'si') => request<{ user: User }>("/auth/me/language", "PATCH", { language }),
 
-  moulds: (filter: { q?: string; location?: string; status?: string; owner?: string; zone?: string; awaitingRack?: boolean; needsService?: boolean; problem?: boolean; deleted?: boolean } = {}) =>
+  moulds: (filter: { toolType?: import('./types').ToolType; q?: string; location?: string; status?: string; owner?: string; zone?: string; awaitingRack?: boolean; needsService?: boolean; problem?: boolean; deleted?: boolean } = {}) =>
     request<{ moulds: Mould[] }>(`/moulds${qs(filter)}`),
-  stats: () => request<{ stats: Stats }>("/moulds/stats"),
+  stats: (toolType?: import('./types').ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
   mould: (id: string) => request<{ mould: Mould }>(`/moulds/${id}`),
   history: (id: string) => request<{ history: Movement[] }>(`/moulds/${id}/history`),
   createMould: (input: MouldInput & { toolId: string; location: string; rackId?: string; items: ItemInput[] }) => request<{ mould: Mould }>("/moulds", "POST", input),

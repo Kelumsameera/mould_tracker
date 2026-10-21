@@ -6,6 +6,9 @@ import './globals.css';
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
 import PwaProvider from '@/components/PwaProvider';
+import { ConfirmProvider } from '@/components/ConfirmHost';
+import ThemeProvider from '@/components/ThemeProvider';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Mould Tracker', description: 'Find any mould: machine, production floor, workshop or Mould Room rack', manifest: '/manifest.webmanifest',
@@ -15,5 +18,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#1B2B35' };
 
 export default function Layout({ children }: { children: ReactNode }) {
-  return <html lang="en"><body><PwaProvider>{children}</PwaProvider></body></html>;
+  return <html lang="en" suppressHydrationWarning><body><Script id="theme-initializer" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('mould-tracker-theme');document.documentElement.dataset.theme=t==='light'||t==='dark'?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}` }} /><ThemeProvider><PwaProvider><ConfirmProvider>{children}</ConfirmProvider></PwaProvider></ThemeProvider></body></html>;
 }

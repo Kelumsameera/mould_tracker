@@ -4,13 +4,17 @@ import Sheet from './Sheet';
 import { api } from '@/lib/api';
 import type { Dict } from '@/lib/i18n';
 import { errorText } from '@/lib/format';
+import { withToasts } from '@/lib/feedback';
+import { useConfirm, type ConfirmOptions } from './ConfirmHost';
+import Icon from './Icon';
 import { assignableRoles } from '@/lib/permissions';
 import type { Role, User } from '@/lib/types';
 
 export function PasswordSheet({ open, t, user, onUpdated, onClose, onDone, onError }: {
   open: boolean; t: Dict; user: User; onUpdated: (user: User) => void;
-  onClose: () => void; onDone: (m: string) => void; onError: (m: string) => void;
+  onClose: () => void; onDone: () => void; onError: (m: string) => void;
 }) {
+  const { confirm } = useConfirm();
   const [name, setName] = useState(user.name); const [email, setEmail] = useState(user.email);
   const [cur, setCur] = useState(''); const [next, setNext] = useState(''); const [again, setAgain] = useState('');
   const [busy, setBusy] = useState(false);
@@ -21,17 +25,18 @@ export function PasswordSheet({ open, t, user, onUpdated, onClose, onDone, onErr
     e.preventDefault();
     if (busy) return;
     if (next !== again) return onError(t.pwMismatch);
+    if (!(await confirm({ title: t.confirm.accountTitle, message: next ? t.confirm.password : t.confirm.account, confirmText: t.confirm.accountBtn }))) return;
     setBusy(true);
     try {
-      const result = await api.updateProfile({ name, email, currentPassword: cur, ...(next ? { newPassword: next } : {}) });
+      const result = await withToasts(t, () => api.updateProfile({ name, email, currentPassword: cur, ...(next ? { newPassword: next } : {}) }), t.accountSaved);
       onUpdated(result.user);
       setCur(''); setNext(''); setAgain('');
-      onDone(t.accountSaved);
-    } catch (e) { onError(errorText(e, t)); }
+      onDone();
+    } catch { /* the toast shows why; the form stays open */ }
     finally { setBusy(false); }
   }
   return (
-    <Sheet open={open} onClose={onClose} label={t.accountTitle}>
+    <Sheet open={open} onClose={onClose} label={t.accountTitle} closeLabel={t.close}>
       <h2 className="detail-name form-title">{t.accountTitle}</h2>
       <form onSubmit={submit}>
         <fieldset disabled={busy} className="plain">
@@ -45,17 +50,22 @@ export function PasswordSheet({ open, t, user, onUpdated, onClose, onDone, onErr
           <label className="field-label" htmlFor="account-new">{t.newPassword}</label>
           <input id="account-new" className="field-input" type="password" autoComplete="new-password" minLength={8} maxLength={128} value={next} onChange={(e) => setNext(e.target.value)} />
           <label className="field-label" htmlFor="account-repeat">{t.repeatPassword}</label>
-          <input id="account-repeat" className="field-input" type="password" autoComplete="new-password" required={!!next} maxLength={128} value={again} onChange={(e) => setAgain(e.target.value)} />
-          <button className="btn btn-primary" type="submit">{busy ? '…' : t.saveBtn}</button>
+          <input id="account-repeat" className="field-input" type="password" autoComplete="new-password" required={!!next} maxLength={128} value={again} aria-invalid={Boolean(again) && again !== next} onChange={(e) => setAgain(e.target.value)} />
+          {Boolean(again) && again !== next && <p className="field-error" role="alert"><Icon name="error" size={14} />{t.pwMismatch}</p>}
+          <div className="form-actions">
+            <button className="link-btn" type="button" onClick={onClose}><Icon name="cancel" />{t.cancel}</button>
+            <button className="btn btn-primary" type="submit"><Icon name="confirm" />{busy ? '…' : t.saveBtn}</button>
+          </div>
         </fieldset>
       </form>
     </Sheet>
   );
 }
 
-export function UsersSheet({ open, t, me, onUpdated, onClose, onError, onDone }: {
-  open: boolean; t: Dict; me: User; onUpdated: (user: User) => void; onClose: () => void; onError: (m: string) => void; onDone: (m: string) => void;
+export function UsersSheet({ open, t, me, onUpdated, onClose, onError }: {
+  open: boolean; t: Dict; me: User; onUpdated: (user: User) => void; onClose: () => void; onError: (m: string) => void;
 }) {
+  const { confirm } = useConfirm();
   const [editing, setEditing] = useState<User | null>(null);
   const [editPassword, setEditPassword] = useState('');
   const [saving, setSaving] = useState(false);
@@ -70,9 +80,11 @@ export function UsersSheet({ open, t, me, onUpdated, onClose, onError, onDone }:
   const load = useCallback(() => api.users().then((d) => setUsers(d.users)).catch((e) => onError(errorText(e, t))), [onError, t]);
   useEffect(() => { if (open) load(); }, [open, load]);
 
-  async function run(work: () => Promise<unknown>, done: string) {
+  // One confirm (when asked for), then loading -> success/error toasts; no double submit while saving.
+  async function run(work: () => Promise<unknown>, done: string, ask?: ConfirmOptions) {
+    if (saving || (ask && !(await confirm(ask)))) return false;
     setSaving(true);
-    try { await work(); onDone(done); await load(); return true; } catch (e) { onError(errorText(e, t)); return false; } finally { setSaving(false); }
+    try { await withToasts(t, work, done); await load(); return true; } catch { return false; } finally { setSaving(false); }
   }
   async function saveUser(e: React.FormEvent) {
     e.preventDefault();
@@ -80,12 +92,12 @@ export function UsersSheet({ open, t, me, onUpdated, onClose, onError, onDone }:
     const ok = await run(async () => {
       const { user } = await api.updateUser(editing.id, { name: editing.name, email: editing.email, ...(editPassword ? { password: editPassword } : {}) });
       if (user.id === me.id) onUpdated(user);
-    }, t.userSaved);
+    }, t.userSaved, editPassword ? { title: t.confirm.accountTitle, message: t.confirm.userPassword(editing.name), confirmText: t.confirm.accountBtn } : undefined);
     if (ok) { setEditing(null); setEditPassword(''); }
   }
 
   return (
-    <Sheet open={open} onClose={onClose} label={t.users}>
+    <Sheet open={open} onClose={onClose} label={t.users} closeLabel={t.close}>
       <h2 className="detail-name form-title">{t.users}</h2>
       <p className="passkey-note">{t.rolesHelp}</p>
       {editing && <form onSubmit={saveUser}>
@@ -96,8 +108,10 @@ export function UsersSheet({ open, t, me, onUpdated, onClose, onError, onDone }:
         <input id="edit-user-email" className="field-input" type="email" required disabled={saving} value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} />
         <label className="field-label" htmlFor="edit-user-password">{t.newPassword}</label>
         <input id="edit-user-password" className="field-input" type="password" autoComplete="new-password" minLength={8} maxLength={128} disabled={saving} value={editPassword} onChange={(e) => setEditPassword(e.target.value)} />
-        <button className="btn btn-primary" disabled={saving}>{t.saveBtn}</button>
-        <button className="link-btn" type="button" disabled={saving} onClick={() => { setEditing(null); setEditPassword(''); }}>{t.cancel}</button>
+        <div className="form-actions">
+          <button className="link-btn" type="button" disabled={saving} onClick={() => { setEditing(null); setEditPassword(''); }}><Icon name="cancel" />{t.cancel}</button>
+          <button className="btn btn-primary" disabled={saving}><Icon name="confirm" />{t.saveBtn}</button>
+        </div>
       </form>}
       <div className="user-list">
         {users.map((u) => (
@@ -105,13 +119,15 @@ export function UsersSheet({ open, t, me, onUpdated, onClose, onError, onDone }:
             <div className="user-main"><b>{u.name}</b><small>{u.email}</small>
               <span>
                 <button className="link-btn" disabled={saving || (locked(u) && u.id !== me.id)} onClick={() => { setEditing(u); setEditPassword(''); }}>{t.editUser}</button>
-                {!locked(u) && <button className="link-btn danger" disabled={saving} onClick={() => { if (confirm(t.confirmDeleteUser(u.name))) run(() => api.deleteUser(u.id), t.userDeleted); }}>{t.deleteUser}</button>}
+                {!locked(u) && <button className="link-btn danger" disabled={saving} onClick={() => run(() => api.deleteUser(u.id), t.userDeleted, { title: t.confirm.deleteUserTitle, message: t.confirm.deleteUser(u.name), confirmText: t.confirm.deleteBtn, tone: 'danger' })}>{t.deleteUser}</button>}
               </span>
             </div>
-            <select aria-label={t.role} value={u.role} disabled={saving || locked(u)} onChange={(e) => run(() => api.updateUser(u.id, { role: e.target.value as Role }), t.userSaved)}>
+            <select aria-label={t.role} value={u.role} disabled={saving || locked(u)} onChange={(e) => { const role = e.target.value as Role; run(() => api.updateUser(u.id, { role }), t.userSaved, { title: t.confirm.roleTitle, message: t.confirm.role(u.name, t.roles[u.role], t.roles[role]), confirmText: t.confirm.roleBtn, tone: role === 'super_admin' ? 'danger' : 'default' }); }}>
               {roleOptions(u.role)}
             </select>
-            <button className="link-btn" disabled={saving || locked(u)} onClick={() => run(() => api.updateUser(u.id, { active: !u.active }), t.userSaved)}>{u.active ? t.active : t.disabled}</button>
+            <button className="link-btn" disabled={saving || locked(u)} onClick={() => run(() => api.updateUser(u.id, { active: !u.active }), t.userSaved, u.active
+              ? { title: t.confirm.disableUserTitle, message: t.confirm.disableUser(u.name), confirmText: t.confirm.disableBtn, tone: 'danger' }
+              : { title: t.confirm.enableUserTitle, message: t.confirm.enableUser(u.name), confirmText: t.confirm.enableBtn })}>{u.active ? t.active : t.disabled}</button>
           </div>
         ))}
       </div>
@@ -122,7 +138,7 @@ export function UsersSheet({ open, t, me, onUpdated, onClose, onError, onDone }:
       <select className="field-input mt" aria-label={t.role} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
         {roleOptions()}
       </select>
-      <button className="btn btn-primary" disabled={saving} onClick={async () => { if (await run(() => api.createUser(form), t.userAdded)) setForm({ name: '', email: '', password: '', role: 'mould_technician' }); }}>{t.addUser}</button>
+      <button className="btn btn-primary" disabled={saving} onClick={async () => { if (await run(() => api.createUser(form), t.userAdded)) setForm({ name: '', email: '', password: '', role: 'mould_technician' }); }}><Icon name="add" />{t.addUser}</button>
     </Sheet>
   );
 }

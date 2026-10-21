@@ -1,9 +1,10 @@
 import type { Permission, Role } from './permissions';
 
 export type { Role };
-export type Location = 'MACHINE' | 'PRODUCTION_FLOOR' | 'WORKSHOP' | 'MOULD_ROOM';
+export type Location = 'MACHINE' | 'PRODUCTION_FLOOR' | 'WORKSHOP' | 'MOULD_ROOM' | 'TOOL_ROOM';
+export type ToolType = 'INJECTION_MOULD' | 'EXTRUSION_DIE';
 export type MouldStatus = 'GOOD' | 'NEEDS_SERVICE' | 'NEEDS_REPAIR' | 'IN_SERVICE' | 'IN_REPAIR';
-export const LOCATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'MOULD_ROOM', 'WORKSHOP'];
+export const LOCATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'MOULD_ROOM', 'TOOL_ROOM', 'WORKSHOP'];
 export const STATUSES: MouldStatus[] = ['GOOD', 'NEEDS_SERVICE', 'NEEDS_REPAIR', 'IN_SERVICE', 'IN_REPAIR'];
 export const SERVICE_STATUSES: MouldStatus[] = ['NEEDS_SERVICE', 'NEEDS_REPAIR', 'IN_SERVICE', 'IN_REPAIR'];
 
@@ -20,6 +21,7 @@ export interface Item {
 }
 
 export interface Mould {
+  toolType: ToolType;
   id: string; toolId: string; toolSetCount: string; size: string; owner: string | null; capableMachines: string[];
   status: MouldStatus; location: Location; machine: MachineRef | null; rack: RackRef | null; awaitingRack: boolean;
   shotsToService: number | null; totalShots: number; serviceDue: boolean; lastServicedAt: string | null;
@@ -57,9 +59,10 @@ export interface AuditEntry {
 }
 
 export interface MouldInput {
+  toolType?: ToolType;
   toolId?: string; toolSetCount?: string; size?: string; owner?: string | null; capableMachines?: string[]; shotsToService?: number | null; notes?: string;
 }
-export type ItemInput = Partial<Omit<Item, 'id' | 'images'>> & { itemId?: string };
+export type ItemInput = Partial<Omit<Item, 'id' | 'images'>> & { itemId?: string; photo?: string };
 export interface MoveInput {
   to: Location; machineId?: string; rackId?: string; status?: MouldStatus; remarks?: string; overrideReason?: string; version?: number;
 }

@@ -34,7 +34,7 @@ export function movementText(m: Movement, t: Dict): string {
 }
 
 export const statusTone = (s: MouldStatus) => (s === 'GOOD' ? 'good' : s.startsWith('IN_') ? 'busy' : 'warn');
-export const locationTone = (l: Location) => ({ MACHINE: 'machine', PRODUCTION_FLOOR: 'floor', WORKSHOP: 'workshop', MOULD_ROOM: 'room' })[l];
+export const locationTone = (l: Location) => ({ MACHINE: 'machine', PRODUCTION_FLOOR: 'floor', WORKSHOP: 'workshop', MOULD_ROOM: 'room', TOOL_ROOM: 'room' })[l];
 
 export function formatTime(iso: string | null | undefined, lang: Lang) {
   if (!iso) return '';
