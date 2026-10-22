@@ -7,12 +7,12 @@ private let factoryURL = URL(string: "https://tools.192.168.0.116.sslip.io:8444/
 struct ToolTrackerApp: App {
     @StateObject private var connection = FactoryConnection()
     var body: some Scene {
-        WindowGroup("Tool Tracker") {
+        WindowGroup("Mould Tracker") {
             ZStack {
                 FactoryWebView(connection: connection)
                 if connection.loading || connection.failed {
                     VStack(spacing: 20) {
-                        Text("Tool Tracker").font(.title)
+                        Text("Mould Tracker").font(.title)
                         if connection.failed {
                             Text("Connect to the factory Wi-Fi or LAN and make sure the server is running. On a new device, install and trust the factory certificate first.")
                             Text("Setup: http://192.168.0.116:8081/install.html").textSelection(.enabled)
@@ -38,7 +38,7 @@ final class FactoryConnection: NSObject, ObservableObject, WKNavigationDelegate 
     let webView: WKWebView
     override init() {
         let config = WKWebViewConfiguration()
-        config.applicationNameForUserAgent = "ToolTrackerNative/2.1.0"
+        config.applicationNameForUserAgent = "ToolTrackerNative/2.2.0"
         webView = WKWebView(frame: .zero, configuration: config)
         super.init()
         webView.navigationDelegate = self

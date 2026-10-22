@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
     WebSettings settings = web.getSettings();
     settings.setJavaScriptEnabled(true);
     settings.setDomStorageEnabled(true);
-    settings.setUserAgentString(settings.getUserAgentString() + " ToolTrackerNative/2.1.0");
+    settings.setUserAgentString(settings.getUserAgentString() + " ToolTrackerNative/2.2.0");
     settings.setAllowFileAccess(false);
     settings.setAllowContentAccess(false);
     settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -68,8 +68,8 @@ public class MainActivity extends Activity {
     });
     setContentView(root); load();
   }
-  private void load() { failed = false; status.setText("Connecting to Tool Tracker…"); message.setVisibility(View.VISIBLE); web.loadUrl(URL); }
-  private void offline() { failed = true; status.setText("Cannot connect to Tool Tracker.\n\nConnect to the factory Wi-Fi or LAN and check that the server is running. If the factory certificate has changed, ask the administrator for an updated app."); message.setVisibility(View.VISIBLE); }
+  private void load() { failed = false; status.setText("Connecting to Mould Tracker…"); message.setVisibility(View.VISIBLE); web.loadUrl(URL); }
+  private void offline() { failed = true; status.setText("Cannot connect to Mould Tracker.\n\nConnect to the factory Wi-Fi or LAN and check that the server is running. If the factory certificate has changed, ask the administrator for an updated app."); message.setVisibility(View.VISIBLE); }
   @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
   @Override public void onPause() { CookieManager.getInstance().flush(); super.onPause(); }
   @Override public void onDestroy() { web.destroy(); super.onDestroy(); }

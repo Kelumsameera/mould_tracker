@@ -42,7 +42,7 @@ with zipfile.ZipFile(BUILD / "unsigned.apk", "a", zipfile.ZIP_DEFLATED) as apk:
     for dex in (BUILD / "dex").glob("*.dex"):
         apk.write(dex, dex.name)
 run(TOOLS / "zipalign.exe", "-f", "-p", "4", BUILD / "unsigned.apk", BUILD / "aligned.apk")
-target = OUT / "Tool-Tracker-2.1.0-android.apk"
+target = OUT / "Mould-Tracker-2.2.0-android.apk"
 run("java", "-jar", TOOLS / "lib/apksigner.jar", "sign", "--ks", keystore, "--ks-key-alias", "tool-tracker", "--ks-pass", "env:TOOL_TRACKER_STORE_PASSWORD", "--key-pass", "env:TOOL_TRACKER_STORE_PASSWORD", "--out", target, BUILD / "aligned.apk", env=env)
 run("java", "-jar", TOOLS / "lib/apksigner.jar", "verify", "--verbose", target)
 print(f"APK ready: {target}")

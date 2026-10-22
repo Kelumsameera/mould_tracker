@@ -7,8 +7,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.1.0"
-    CURRENT_PROJECT_VERSION: "20100"
+    MARKETING_VERSION: "2.2.0"
+    CURRENT_PROJECT_VERSION: "20200"
     CODE_SIGN_STYLE: Automatic
 targets:
   ToolTrackerIOS:
@@ -23,9 +23,9 @@ targets:
     info:
       path: build/iOS-Info.plist
       properties:
-        CFBundleDisplayName: Tool Tracker
+        CFBundleDisplayName: Mould Tracker
         UILaunchScreen: {}
-        NSLocalNetworkUsageDescription: Connect to the Tool Tracker server on your factory network.
+        NSLocalNetworkUsageDescription: Connect to the Mould Tracker server on your factory network.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
   ToolTrackerMac:
@@ -40,7 +40,7 @@ targets:
     info:
       path: build/macOS-Info.plist
       properties:
-        CFBundleDisplayName: Tool Tracker
-        NSLocalNetworkUsageDescription: Connect to the Tool Tracker server on your factory network.
+        CFBundleDisplayName: Mould Tracker
+        NSLocalNetworkUsageDescription: Connect to the Mould Tracker server on your factory network.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

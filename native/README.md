@@ -1,4 +1,4 @@
-# Native Tool Tracker packages
+# Native Mould Tracker packages
 
 All shells open `https://tools.192.168.0.116.sslip.io:8444/`. They need the
 factory LAN and the existing server. They do not bundle or expose the database,
@@ -20,7 +20,7 @@ signing certificate to distribute a publisher-signed release.
 
 Requires Java 21, Android SDK platform `android-37.0`, build-tools `36.0.0` and
 Python. Set `ANDROID_HOME` if needed and run `python native/android/build.py`
-on Windows. Output: `outputs/native/Tool-Tracker-2.1.0-android.apk`.
+on Windows. Output: `outputs/native/Mould-Tracker-2.2.0-android.apk`.
 Minimum Android version: Android 8 / API 26. The factory public CA is embedded
 only for the factory hostname; no SSL errors are ignored. No system CA install
 is necessary for the APK. Use email/password; passkeys in native WebViews have

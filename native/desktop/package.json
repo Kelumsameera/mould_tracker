@@ -1,7 +1,7 @@
 {
   "name": "tool-tracker-desktop",
-  "version": "2.1.0",
-  "description": "Tool Tracker factory LAN desktop app",
+  "version": "2.2.0",
+  "description": "Mould Tracker factory LAN desktop app",
   "author": "Tool Tracker",
   "private": true,
   "main": "main.cjs",
@@ -17,10 +17,10 @@
   },
   "build": {
     "appId": "lk.factory.tooltracker",
-    "productName": "Tool Tracker",
+    "productName": "Mould Tracker",
     "directories": { "output": "../../outputs/native/desktop" },
     "files": ["main.cjs", "offline.html", "icon.png"],
-    "artifactName": "Tool-Tracker-${version}-${os}-${arch}.${ext}",
+    "artifactName": "Mould-Tracker-${version}-${os}-${arch}.${ext}",
     "win": { "target": "nsis", "icon": "icon.png", "signAndEditExecutable": false },
     "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true },
     "mac": { "target": "dmg", "category": "public.app-category.productivity", "icon": "icon.png", "hardenedRuntime": true }
