@@ -1,0 +1,91 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gaps and open questions · Mould Tracker Docs</title><meta name="description" content="Uncertainties, inconsistencies and questions for the product owner">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a on" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="gaps-and-open-questions"><a class="anchor" href="#gaps-and-open-questions">#</a>Gaps and open questions</h1><p class="lead">Uncertainties, inconsistencies and questions for the product owner</p><div class="chips"><span class="chip">👥 Product owner, IT, maintainers</span><span class="chip warn">Open</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><h2 id="questions-for-the-owner"><a class="anchor" href="#questions-for-the-owner">#</a>Questions for the owner</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q1</td>
+<td>Does the Coolify service mount a persistent volume on the backend&#39;s <code>/app/uploads</code>? <code>compose.yaml</code> has none.</td>
+<td>Item and work-log pictures could be lost on redeploy and are not in Mongo backups</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>What is the official version number? Packages say 2.0.0; native shells say 2.2.0.</td>
+<td>Version labels in the docs</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>Should <code>settings.manage</code>, <code>import.run</code> and <code>export.run</code> be removed, or are screens planned?</td>
+<td>They appear in User access but have no effect</td>
+</tr>
+<tr>
+<td>Q4</td>
+<td>Is an &quot;Add machine&quot; button wanted on <code>/machines</code>? (The API supports it.)</td>
+<td>New machines currently need API/scripts</td>
+</tr>
+<tr>
+<td>Q5</td>
+<td>Escalation paths per shift (who to call when a move is refused)?</td>
+<td>Roles pages</td>
+</tr>
+<tr>
+<td>Q6</td>
+<td>Backup schedule, RPO/RTO and the restore owner?</td>
+<td>Operations page</td>
+</tr>
+<tr>
+<td>Q7</td>
+<td>Is a Sinhala quick-start document wanted? (The UI already supports Sinhala.)</td>
+<td>Optional deliverable</td>
+</tr>
+<tr>
+<td>Q8</td>
+<td>May screenshots be captured from production (with redaction), or only from a demo stack?</td>
+<td>Screenshot backlog</td>
+</tr>
+<tr>
+<td>Q9</td>
+<td>Are QR labels in use with the old <code>#/…/m/&lt;id&gt;</code> links?</td>
+<td>Integrations / FAQ</td>
+</tr>
+</tbody></table>
+<h2 id="inconsistencies-found-in-existing-docs-not-changed"><a class="anchor" href="#inconsistencies-found-in-existing-docs-not-changed">#</a>Inconsistencies found in existing docs (not changed)</h2><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>README.md</code> (root)</td>
+<td>Top half describes the pre-upgrade Tool app (roles admin/operator/viewer, <code>/api/tools</code>, a seed with default credentials, &quot;auto refresh every 10s&quot;). The <code>/api/tools</code> route now returns 410.</td>
+</tr>
+<tr>
+<td><code>deploy/README.md</code> § &quot;Passkeys and role permissions&quot;</td>
+<td>Describes Admin/Operator/Viewer; the current roles are different</td>
+</tr>
+<tr>
+<td><code>backend/.env.example</code></td>
+<td><code>JWT_EXPIRES_IN</code> exists, but the cookie <code>maxAge</code> is hard-coded to 7 days</td>
+</tr>
+</tbody></table>
+<h2 id="not-verified-at-runtime"><a class="anchor" href="#not-verified-at-runtime">#</a>Not verified at runtime</h2><ul>
+<li>The UI flows were not clicked through; the app was not started against a database.</li>
+<li>The Mermaid diagrams were not rendered by a tool (syntax checked by review).</li>
+<li>Native builds were not built.</li>
+</ul>
+<h2 id="screenshot-backlog"><a class="anchor" href="#screenshot-backlog">#</a>Screenshot backlog</h2><p>Every <code>Screenshot needed:</code> line in <code>docs/</code> (at least 12). Capture them from the demo stack and save under <code>docs/assets/screenshots/</code>.</p>
+
+<footer class="foot">Source: <code>docs/analysis/GAPS-AND-QUESTIONS.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#questions-for-the-owner">Questions for the owner</a><a class="l2" href="#inconsistencies-found-in-existing-docs-not-changed">Inconsistencies found in existing docs (not changed)</a><a class="l2" href="#not-verified-at-runtime">Not verified at runtime</a><a class="l2" href="#screenshot-backlog">Screenshot backlog</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

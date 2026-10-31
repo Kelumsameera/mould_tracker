@@ -6,7 +6,7 @@ import { routerFrom } from "./table.js";
 const VIEW = ["moulds.view"];
 const MANAGE = ["moulds.manage"];
 // The move route lets anyone with a move permission in; lib/workflow.js decides the exact move.
-const MOVE = ["moves.machine", "moves.mouldRoom", "workshop.work"];
+const MOVE = ["moves.outOfService", "moves.machine", "moves.mouldRoom", "workshop.work"];
 
 export const mouldRouteTable = [
   ["get", "/", VIEW, c.listMoulds, null, s.listMouldsQuery],

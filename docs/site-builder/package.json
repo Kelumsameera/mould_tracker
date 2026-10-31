@@ -1,0 +1,13 @@
+{
+  "name": "mould-tracker-docs-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "docx": "node build-docx.mjs"
+  },
+  "dependencies": {
+    "docx": "^9.0.2",
+    "marked": "12.0.2"
+  }
+}

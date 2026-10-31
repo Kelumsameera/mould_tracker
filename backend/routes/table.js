@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { protectAccounts } from "../middleware/accountPrivacy.js";
 import { requireAuth, requirePermission } from "../middleware/authMiddleware.js";
 import { asyncHandler } from "../middleware/errorMiddleware.js";
 import { validate } from "../middleware/validate.js";
@@ -12,7 +13,7 @@ export function routerFrom(table) {
     const steps = [requirePermission(...permissions)];
     if (query) steps.push(validate(query, "query"));
     if (body) steps.push(validate(body));
-    router[method](path, ...steps, asyncHandler(handler));
+    router[method](path, ...steps, asyncHandler(protectAccounts), asyncHandler(handler));
   }
   return router;
 }

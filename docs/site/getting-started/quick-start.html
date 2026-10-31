@@ -1,0 +1,66 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>5-minute quick start · Mould Tracker Docs</title><meta name="description" content="Find a mould, read its state, and take your first action">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a on" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="5-minute-quick-start"><a class="anchor" href="#5-minute-quick-start">#</a>5-minute quick start</h1><p class="lead">Find a mould, read its state, and take your first action</p><div class="chips"><span class="chip">👥 New users (any role)</span><span class="chip ok">Verified (static code review); untested on a running instance</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><p><strong>Goal:</strong> find a mould, understand where it is and what state it is in, and do one thing your role allows.</p>
+<h2 id="before-you-begin"><a class="anchor" href="#before-you-begin">#</a>Before you begin</h2><p>You are signed in (<a href="first-login.html">First login</a>).</p>
+<h2 id="steps"><a class="anchor" href="#steps">#</a>Steps</h2><ol>
+<li><strong>Find it.</strong> On <strong>Find a mould</strong>, type part of a Tool ID, an Item ID, a product description, a machine code or a rack (for example <code>FLK A3</code>).
+<em>Checkpoint:</em> the result count updates (&quot;1 mould&quot; / &quot;N moulds&quot;).</li>
+<li><strong>Read the card.</strong> The status badge shows the condition (Good / Needs service / …). The location line shows the machine, rack, Production Floor, Workshop, Tool Room or Out of Service.</li>
+<li><strong>Open it.</strong> Tap the card. Check <strong>Items made by this mould</strong>, <strong>Shots</strong>, and <strong>History</strong>.</li>
+<li><strong>Take your first action</strong>, depending on your role:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Try this</th>
+<th>Doc</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Production Supervisor</td>
+<td><strong>Report a problem</strong> with a short description</td>
+<td><a href="../user-guide/report-a-problem.html">Report a problem</a></td>
+</tr>
+<tr>
+<td>Mould Technician</td>
+<td><strong>Mount on a machine</strong> (choose a machine listed for the mould)</td>
+<td><a href="../user-guide/move-a-mould.html">Move a mould</a></td>
+</tr>
+<tr>
+<td>Mould Maker</td>
+<td>Open <strong>Workshop queue</strong> and <strong>Change status</strong> on a mould at the Workshop</td>
+<td><a href="../user-guide/workshop-queue.html">Workshop queue</a></td>
+</tr>
+<tr>
+<td>Admin</td>
+<td><strong>Add mould</strong> with one item</td>
+<td><a href="../user-guide/manage-moulds.html">Manage moulds</a></td>
+</tr>
+</tbody></table>
+<ol start="5">
+<li><strong>Confirm.</strong> A success message appears, the card updates, and a new line appears in <strong>History</strong>.</li>
+</ol>
+<h2 id="expected-result"><a class="anchor" href="#expected-result">#</a>Expected result</h2><p>You can locate any mould in under 30 seconds and see the actions available to you.</p>
+<h2 id="troubleshooting"><a class="anchor" href="#troubleshooting">#</a>Troubleshooting</h2><ul>
+<li><em>&quot;…can only go to the Workshop&quot;</em>: the mould is not Good. Only Good moulds may be mounted or stored.</li>
+<li><em>&quot;…already has …; take it off first&quot;</em>: the machine is occupied. Move that mould off first.</li>
+<li>More in <a href="../support/troubleshooting.html">Troubleshooting</a>.</li>
+</ul>
+<h2 id="first-day-checklist"><a class="anchor" href="#first-day-checklist">#</a>First-day checklist</h2><ul>
+<li><input disabled="" type="checkbox"> Signed in and changed password</li>
+<li><input disabled="" type="checkbox"> Language set (EN / සිං)</li>
+<li><input disabled="" type="checkbox"> Found three moulds by Tool ID, Item ID and rack</li>
+<li><input disabled="" type="checkbox"> Opened a mould&#39;s history</li>
+<li><input disabled="" type="checkbox"> Performed one action allowed for your role</li>
+<li><input disabled="" type="checkbox"> <em>(Optional)</em> Installed the app (<strong>Install app</strong>) or added a passkey</li>
+</ul>
+
+<footer class="foot">Source: <code>docs/getting-started/quick-start.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#before-you-begin">Before you begin</a><a class="l2" href="#steps">Steps</a><a class="l2" href="#expected-result">Expected result</a><a class="l2" href="#troubleshooting">Troubleshooting</a><a class="l2" href="#first-day-checklist">First-day checklist</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

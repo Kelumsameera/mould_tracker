@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
 
 // One Tool ID from the tools list. The products it makes are Item documents.
@@ -34,6 +35,7 @@ const mouldSchema = new mongoose.Schema(
     totalShots: { type: Number, min: 0, default: 0 },
     lastServicedAt: { type: Date, default: null },
     notes: { type: String, default: "", maxlength: 2000 },
+    outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
     lastMovedAt: { type: Date, default: null },
     lastMovedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },

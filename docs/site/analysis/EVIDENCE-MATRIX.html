@@ -1,0 +1,513 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evidence matrix · Mould Tracker Docs</title><meta name="description" content="Traceability of documented claims to source code and tests">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a on" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="evidence-matrix"><a class="anchor" href="#evidence-matrix">#</a>Evidence matrix</h1><p class="lead">Traceability of documented claims to source code and tests</p><div class="chips"><span class="chip">👥 Auditors, maintainers</span><span class="chip ok">Verified</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><p>Verification methods: <strong>S</strong> = static code review · <strong>T</strong> = covered by an automated test that passed on 2026-10-29 · <strong>D</strong> = from repository documentation · <strong>R</strong> = runtime (not performed in this pass).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Claim</th>
+<th>Status</th>
+<th>Source</th>
+<th>Route / endpoint</th>
+<th>Method</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>6 roles exist</td>
+<td>Verified</td>
+<td><code>backend/lib/permissions.js</code> <code>ROLES</code></td>
+<td>—</td>
+<td>S,T</td>
+<td>Legacy operator/viewer aliased</td>
+</tr>
+<tr>
+<td>2</td>
+<td>19 permissions and role mapping</td>
+<td>Verified</td>
+<td><code>permissions.js</code> <code>PERMISSIONS</code></td>
+<td>all</td>
+<td>S,T</td>
+<td><code>routes.test.js</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>System Administrator has all permissions and is hidden</td>
+<td>Verified</td>
+<td><code>permissions.js</code> <code>can</code>, <code>canViewUser</code>; <code>lib/accountPrivacy.js</code></td>
+<td><code>/api/users</code></td>
+<td>S,T</td>
+<td><code>auth.test.js</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>access.manage</code> cannot be delegated</td>
+<td>Verified</td>
+<td><code>permissions.js</code> <code>can</code></td>
+<td><code>/api/users/access</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Out of Service only for Super Admin</td>
+<td>Verified</td>
+<td><code>permissions.js</code> <code>can</code>; <code>userController.updateUserAccess</code></td>
+<td>move</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Each route requires sign-in + a permission</td>
+<td>Verified</td>
+<td><code>routes/table.js</code></td>
+<td>all</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td>User reloaded on every request</td>
+<td>Verified</td>
+<td><code>middleware/authMiddleware.js</code></td>
+<td>all</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Session = JWT in an HttpOnly cookie, 7 days</td>
+<td>Verified</td>
+<td><code>utils/session.js</code></td>
+<td><code>/api/auth/login</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Login rate limit 40/10 min</td>
+<td>Verified</td>
+<td><code>routes/authRoutes.js</code></td>
+<td><code>/api/auth/login</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Passkeys (WebAuthn) with password confirmation</td>
+<td>Verified</td>
+<td><code>controllers/passkeyController.js</code>, <code>validators/schemas.js</code></td>
+<td><code>/api/auth/passkeys/*</code></td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Locations and statuses (enums)</td>
+<td>Verified</td>
+<td><code>lib/mouldState.js</code></td>
+<td>—</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>12</td>
+<td>Non-Good never in storage; In service/repair only at the Workshop/OOS</td>
+<td>Verified</td>
+<td><code>mouldState.js</code> <code>mouldStateError</code></td>
+<td>—</td>
+<td>S,T</td>
+<td><code>mouldModel.test.js</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td>Move permission groups</td>
+<td>Verified</td>
+<td><code>lib/workflow.js</code> <code>movePermissionGroups</code></td>
+<td><code>POST /moulds/:id/move</code></td>
+<td>S,T</td>
+<td><code>workflow.test.js</code> &quot;who may move what&quot;</td>
+</tr>
+<tr>
+<td>14</td>
+<td>One mould per machine (DB index)</td>
+<td>Verified</td>
+<td><code>models/Mould.js</code> partial unique index</td>
+<td>move</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>15</td>
+<td>Capable machine override for Admins with reason</td>
+<td>Verified</td>
+<td><code>workflow.js</code> <code>planMove</code></td>
+<td>move</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>16</td>
+<td>Rack capacity / inactive / owner-zone reason</td>
+<td>Verified</td>
+<td><code>planMove</code></td>
+<td>move</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>17</td>
+<td>Remarks required to Workshop / OOS / status change</td>
+<td>Verified</td>
+<td><code>planMove</code>, <code>planStatus</code></td>
+<td>move, status</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>18</td>
+<td>Shot limit auto-flags Needs service</td>
+<td>Verified</td>
+<td><code>planShots</code>, <code>serviceDueChange</code></td>
+<td><code>POST /:id/shots</code></td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>19</td>
+<td>In service → Good resets shots</td>
+<td>Verified</td>
+<td><code>planStatus</code></td>
+<td>status</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>20</td>
+<td>Extrusion dies stored in the Tool Room</td>
+<td>Verified</td>
+<td><code>mouldState.js</code> <code>storageLocation</code></td>
+<td>—</td>
+<td>S,T</td>
+<td><code>toolRoom.test.js</code></td>
+</tr>
+<tr>
+<td>21</td>
+<td>Optimistic locking <code>STALE</code></td>
+<td>Verified</td>
+<td><code>mouldController.js</code> <code>loadForUpdate</code></td>
+<td>PATCH/move/status</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>22</td>
+<td>Changes + history + audit in one transaction</td>
+<td>Verified</td>
+<td><code>config/db.js</code> <code>withTransaction</code>; controllers</td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>23</td>
+<td>Soft delete / restore moulds; can&#39;t delete when mounted</td>
+<td>Verified</td>
+<td><code>deleteMould</code>, <code>restoreMould</code></td>
+<td>DELETE/restore</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>24</td>
+<td>Search fields and spacing-insensitive Tool ID</td>
+<td>Verified</td>
+<td><code>listMoulds</code></td>
+<td><code>GET /moulds</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>25</td>
+<td>Stats counts</td>
+<td>Verified</td>
+<td><code>mouldStats</code></td>
+<td><code>GET /moulds/stats</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>26</td>
+<td>Work-log fields, 1–5 people, ≤3 photos</td>
+<td>Verified</td>
+<td><code>models/WorkLog.js</code>, <code>schemas.js</code></td>
+<td><code>POST /:id/worklogs</code></td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>27</td>
+<td>Outcome effects and warnings</td>
+<td>Verified</td>
+<td><code>lib/workLog.js</code> <code>planWorkLog</code></td>
+<td>worklogs</td>
+<td>S,T</td>
+<td><code>workLog.test.js</code></td>
+</tr>
+<tr>
+<td>28</td>
+<td>Work log append-only; corrections via <code>correctsId</code></td>
+<td>Verified</td>
+<td><code>lib/immutable.js</code>, <code>WorkLog.js</code></td>
+<td>—</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>29</td>
+<td>Problem report never changes status/location</td>
+<td>Verified</td>
+<td><code>planProblemReport</code></td>
+<td><code>POST /:id/problems</code></td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>30</td>
+<td>Problem resolved by work log or Workshop move</td>
+<td>Verified</td>
+<td><code>workLogController.resolveProblem</code>, <code>moveMould</code></td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>31</td>
+<td>Report filters, Asia/Colombo days, paging</td>
+<td>Verified</td>
+<td><code>schemas.js</code> <code>workLogQuery</code>, <code>lib/dateRange.js</code></td>
+<td><code>GET /worklogs</code></td>
+<td>S,T</td>
+<td><code>workLogReport.test.js</code></td>
+</tr>
+<tr>
+<td>32</td>
+<td>Export CSV/XLSX, cap 5,000, audited</td>
+<td>Verified</td>
+<td><code>exportWorkLogs</code>, <code>lib/workLogFilter.js</code></td>
+<td><code>GET /worklogs/export</code></td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>33</td>
+<td>Zones/racks CRUD, bulk preview, occupied guards</td>
+<td>Verified</td>
+<td><code>rackController.js</code></td>
+<td><code>/api/racks/*</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>34</td>
+<td>Machines: no disable while occupied; code fixed in UI</td>
+<td>Verified</td>
+<td><code>machineController.js</code>; <code>machines/page.tsx</code></td>
+<td><code>/api/machines</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>35</td>
+<td>No add-machine UI</td>
+<td>Verified</td>
+<td><code>machines/page.tsx</code> (only list/update calls)</td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>36</td>
+<td>User management rules</td>
+<td>Verified</td>
+<td><code>userController.js</code>, <code>canManageUser</code></td>
+<td><code>/api/users</code></td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>37</td>
+<td>Custom access replaces role defaults</td>
+<td>Verified</td>
+<td><code>can</code> (<code>permissionOverrides</code>)</td>
+<td><code>/api/users/:id/access</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>38</td>
+<td>Audit log append-only, filters, ≤200/page</td>
+<td>Verified</td>
+<td><code>AuditLog.js</code>, <code>schemas.js</code> <code>auditQuery</code></td>
+<td><code>GET /audit</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>39</td>
+<td>Uploads: JPEG/PNG/WebP → WebP 800 px + 200 px thumbnail</td>
+<td>Verified</td>
+<td><code>lib/images.js</code></td>
+<td>uploads</td>
+<td>S,T</td>
+<td><code>itemPhoto.test.js</code></td>
+</tr>
+<tr>
+<td>40</td>
+<td>Uploads served to signed-in users only</td>
+<td>Verified</td>
+<td><code>index.js</code></td>
+<td><code>/api/uploads</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>41</td>
+<td>10 s list refresh; 60 s permission refresh</td>
+<td>Verified</td>
+<td><code>MouldSearch.tsx</code>, <code>AppLayout.tsx</code></td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>42</td>
+<td>English + Sinhala UI</td>
+<td>Verified</td>
+<td><code>utils/i18n.ts</code></td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>43</td>
+<td>PWA + offline page</td>
+<td>Verified</td>
+<td><code>public/sw.js</code>, <code>manifest.ts</code></td>
+<td>—</td>
+<td>S,T</td>
+<td><code>service-worker.test.mjs</code></td>
+</tr>
+<tr>
+<td>44</td>
+<td>Legacy hash links redirect</td>
+<td>Verified</td>
+<td><code>utils/helpers.ts</code> <code>getLegacyDestination</code></td>
+<td><code>/</code></td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>45</td>
+<td>Native shells (Windows, Android), Apple source only</td>
+<td>Verified</td>
+<td><code>native/README.md</code></td>
+<td>—</td>
+<td>D,S</td>
+<td></td>
+</tr>
+<tr>
+<td>46</td>
+<td>Compose stack, Mongo replica set</td>
+<td>Verified</td>
+<td><code>compose.yaml</code></td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>47</td>
+<td>Production on Coolify</td>
+<td>Partially verified</td>
+<td><code>deploy/README.md</code></td>
+<td>—</td>
+<td>D</td>
+<td>Server not inspected</td>
+</tr>
+<tr>
+<td>48</td>
+<td>No uploads volume in Compose</td>
+<td>Verified</td>
+<td><code>compose.yaml</code>, <code>backend/Dockerfile</code></td>
+<td>—</td>
+<td>S</td>
+<td>Coolify config not inspected</td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>settings.manage</code>, <code>import.run</code>, <code>export.run</code> unused</td>
+<td>Verified</td>
+<td>grep of <code>backend/</code></td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>50</td>
+<td>No notifications / QR / scheduler / integrations</td>
+<td>Not found</td>
+<td>dependencies, code search</td>
+<td>—</td>
+<td>S</td>
+<td></td>
+</tr>
+<tr>
+<td>51</td>
+<td>Import scripts dry-run by default, nothing deleted</td>
+<td>Verified</td>
+<td>script headers</td>
+<td>CLI</td>
+<td>S,T</td>
+<td></td>
+</tr>
+<tr>
+<td>52</td>
+<td>UI walkthrough steps and button labels</td>
+<td>Partially verified</td>
+<td><code>i18n.ts</code>, components</td>
+<td>pages</td>
+<td>S</td>
+<td>Not exercised at runtime (R)</td>
+</tr>
+</tbody></table>
+<h2 id="coverage-summary"><a class="anchor" href="#coverage-summary">#</a>Coverage summary</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Verified</td>
+<td>49</td>
+</tr>
+<tr>
+<td>Partially verified</td>
+<td>2 (#47, #52)</td>
+</tr>
+<tr>
+<td>Not found (confirmed absent)</td>
+<td>1 (#50)</td>
+</tr>
+</tbody></table>
+
+<footer class="foot">Source: <code>docs/analysis/EVIDENCE-MATRIX.md</code></footer></article></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

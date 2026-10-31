@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createConfirmStore } from '../src/lib/confirmStore.ts';
+import { createConfirmStore } from '../src/utils/confirmStore.ts';
 
 const opts = (patch = {}) => ({ title: 'Move mould', message: 'Move FLK19013 from Machine INJ-03 to Mould Room · FLK · A3?', confirmText: 'Move', ...patch });
 

@@ -10,8 +10,10 @@ const oid = (v) => new mongoose.Types.ObjectId(String(v)); // aggregate() does n
 
 // Report query -> MongoDB filter. itemMouldIds: moulds whose Item ID matches the search (looked up by the caller).
 // The same filter feeds the list, the summary and the export, so they always agree.
-export function buildWorkLogFilter(q, { itemMouldIds = [], now = new Date(), tz = APP_TIMEZONE } = {}) {
+export function buildWorkLogFilter(q, { itemMouldIds = [], hiddenUserIds = [], now = new Date(), tz = APP_TIMEZONE } = {}) {
   const and = [];
+  if (q.userId && hiddenUserIds.map(String).includes(String(q.userId))) return { _id: { $exists: false } };
+  const hidden = hiddenUserIds.map(oid);
   if (q.toolId) and.push({ toolId: spacedId(q.toolId) });
   if (q.userId) and.push({ "doneBy.userId": oid(q.userId) });
   if (q.type) and.push({ type: q.type });
@@ -27,7 +29,10 @@ export function buildWorkLogFilter(q, { itemMouldIds = [], now = new Date(), tz 
     and.push({
       $or: [
         { description: rx }, { partsUsed: rx }, { toolId: spacedId(q.q) }, { machineCode: rx }, ...(machine !== q.q.trim().toUpperCase() ? [{ machineCode: machine }] : []),
-        { "doneBy.name": rx }, { "recordedBy.name": rx }, ...(itemMouldIds.length ? [{ mouldId: { $in: itemMouldIds.map(oid) } }] : [])
+        ...(hidden.length ? [
+          { doneBy: { $elemMatch: { name: rx, userId: { $nin: hidden } } } },
+          { "recordedBy.name": rx, "recordedBy.userId": { $nin: hidden } }
+        ] : [{ "doneBy.name": rx }, { "recordedBy.name": rx }]), ...(itemMouldIds.length ? [{ mouldId: { $in: itemMouldIds.map(oid) } }] : [])
       ]
     });
   }

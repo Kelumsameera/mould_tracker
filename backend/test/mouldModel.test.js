@@ -39,7 +39,7 @@ const TABLE = {
 
 test("permission map matches the role table for one user per role", () => {
   for (const [permission, row] of Object.entries(TABLE)) {
-    ROLES.forEach((role, i) => assert.equal(can(user(role), permission), Boolean(row[i]), `${role} / ${permission}`));
+    ROLES.forEach((role, i) => assert.equal(can(user(role), permission), role === "system_admin" || Boolean(row[i]), `${role} / ${permission}`));
   }
   assert.ok(Object.keys(TABLE).every((p) => p in PERMISSIONS));
   assert.throws(() => can(user("admin"), "nope"), /Unknown permission/);

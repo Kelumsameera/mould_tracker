@@ -4,7 +4,15 @@ import { auditDTO } from "../utils/serializers.js";
 // GET /api/audit - newest first, filterable, paged.
 export async function listAudit(req, res) {
   const { entityType, entityId, action, actorId, from, to, page, limit } = req.validQuery;
-  const filter = {};
+  const hidden = req.accountPrivacy.ids;
+  const filter = { $and: [
+    { actorId: { $nin: hidden } },
+    { $or: [{ entityType: { $ne: "User" } }, { entityId: { $nin: hidden } }] },
+    { $or: [
+      { "before.role": { $ne: "system_admin" }, "after.role": { $ne: "system_admin" } },
+      { entityType: "User", entityId: req.user._id }
+    ] }
+  ] };
   if (entityType) filter.entityType = entityType;
   if (entityId) filter.entityId = entityId;
   if (action) filter.action = action;

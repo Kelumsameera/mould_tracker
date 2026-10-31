@@ -7,6 +7,7 @@
 //   6. One mould per machine.
 //   7. Every change is recorded; remarks are mandatory for service/repair.
 //   8. totalShots >= shotsToService -> NEEDS_SERVICE.
+import { dispatchDetailsSchema } from "./outOfService.js";
 import { fail } from "../utils/ApiError.js";
 import { can } from "./permissions.js";
 import { LOCATIONS, MOULD_STATUSES, isStorage, storageLocation } from "./mouldState.js";
@@ -19,6 +20,7 @@ export const isServiceDue = (m) => Number(m.shotsToService) > 0 && Number(m.tota
 
 // Permissions a move needs; the user must hold one permission from every group.
 export function movePermissionGroups(from, to) {
+  if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return [["moves.outOfService"]];
   const groups = [];
   if (isStorage(from) || isStorage(to)) groups.push(["moves.mouldRoom"]);
   if (to === "MACHINE") groups.push(["moves.machine"]);
@@ -27,7 +29,10 @@ export function movePermissionGroups(from, to) {
   return groups;
 }
 
-export const canMove = (user, from, to) => movePermissionGroups(from, to).every((g) => g.some((p) => can(user, p)));
+export const canMove = (user, from, to) => {
+  if (from === "OUT_OF_SERVICE" && to === "OUT_OF_SERVICE") return false;
+  return movePermissionGroups(from, to).every(g => g.some(p => can(user, p)));
+};
 
 function requireRemarks(remarks, what) {
   if (!text(remarks)) fail(400, "REMARKS_REQUIRED", `Remarks are required ${what}`);
@@ -37,7 +42,7 @@ function requireRemarks(remarks, what) {
 //   machine:  target machine (to MACHINE)            occupant: mould currently on that machine, if any
 //   rack:     target rack (to MOULD_ROOM), with zoneActive from its zone    rackOccupancy: moulds on it now, this one excluded
 //   status:   optional new status, only when sending to the Workshop
-export function planMove({ mould, user, to, machine = null, occupant = null, rack = null, rackOccupancy = 0, remarks = "", overrideReason = "", status, now = new Date() }) {
+export function planMove({ mould, user, to, machine = null, occupant = null, rack = null, rackOccupancy = 0, remarks = "", overrideReason = "", status, outOfServiceDetails, now = new Date() }) {
   if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
   if (!LOCATIONS.includes(to)) fail(400, "INVALID_LOCATION", "Unknown location");
   if (isStorage(to) && to !== storageLocation(mould.toolType)) fail(400, "INVALID_LOCATION", "Use the Tool Room for extrusion dies and the Mould Room for injection moulds");
@@ -46,6 +51,8 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
   if (status !== undefined && to !== "WORKSHOP") fail(400, "STATUS_ONLY_AT_WORKSHOP", "A status can only be set when sending a mould to the Workshop");
   if (status !== undefined && !MOULD_STATUSES.includes(status)) fail(400, "INVALID_STATUS", "Unknown status");
 
+  if (from === "OUT_OF_SERVICE" && status !== undefined && status !== mould.status) fail(400, "OUT_OF_SERVICE_STATUS", "Return to the Workshop before changing the status");
+  if (to === "OUT_OF_SERVICE" || from === "OUT_OF_SERVICE") requireRemarks(remarks, "when sending out or returning from Out of Service");
   const nextStatus = status ?? mould.status;
   const warnings = [];
   const set = { location: to, status: nextStatus, machineId: null, rackId: null, awaitingRack: false };
@@ -57,8 +64,21 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
     remarks: text(remarks), overrideReason: "", performedBy: user._id
   };
 
+  if (to === "OUT_OF_SERVICE") {
+    const parsed = dispatchDetailsSchema.safeParse(outOfServiceDetails);
+    if (!parsed.success) fail(400, "DISPATCH_DETAILS_REQUIRED", "Enter recipient name, address and repair details");
+    set.outOfServiceDetails = { ...parsed.data, sentAt: now, returnedAt: null };
+    movement.outOfServiceDetails = { ...set.outOfServiceDetails };
+  } else {
+    if (outOfServiceDetails !== undefined) fail(400, "INVALID_DISPATCH_DETAILS", "Dispatch details can only be set when sending Out of Service");
+    if (from === "OUT_OF_SERVICE" && mould.outOfServiceDetails) {
+      set.outOfServiceDetails = { ...mould.outOfServiceDetails, returnedAt: now };
+      movement.outOfServiceDetails = { ...set.outOfServiceDetails };
+    }
+  }
+
   // Rules 1 and 2: only GOOD moulds leave the Workshop.
-  if (to !== "WORKSHOP" && nextStatus !== "GOOD") {
+  if (!["WORKSHOP", "OUT_OF_SERVICE"].includes(to) && nextStatus !== "GOOD") {
     fail(409, "NOT_GOOD", `${mould.toolId} is ${nextStatus.replace(/_/g, " ").toLowerCase()}; it can only go to the Workshop`, { status: nextStatus });
   }
 

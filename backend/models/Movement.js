@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { immutable } from "../lib/immutable.js";
 import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
 
@@ -25,6 +26,7 @@ const movementSchema = new mongoose.Schema(
     toRackId: ref("Rack"),
     fromRackLocationId: snapshot,
     toRackLocationId: snapshot,
+    outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
     overrideReason: { type: String, default: "", maxlength: 500 }, // capable-machine or owner/zone override
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

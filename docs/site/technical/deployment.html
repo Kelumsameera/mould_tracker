@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deployment · Mould Tracker Docs</title><meta name="description" content="Production stack, environment, release and rollback">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a on" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="deployment"><a class="anchor" href="#deployment">#</a>Deployment</h1><p class="lead">Production stack, environment, release and rollback</p><div class="chips"><span class="chip">👥 IT, developers</span><span class="chip ok">Verified from compose.yaml and deploy/README.md; not executed in this pass</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0; native 2.2.0</span></div><p>The authoritative step-by-step guide is <code><code>deploy/README.md</code></code>, with HTTPS in <code><code>deploy/LOCAL-HTTPS.md</code></code>. This page summarises them.</p>
+<h2 id="stack-composeyaml"><a class="anchor" href="#stack-composeyaml">#</a>Stack (<code>compose.yaml</code>)</h2><table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mongo</td>
+<td>mongo:7.0</td>
+<td>Replica set <code>rs0</code>, keyfile auth, internal network only</td>
+</tr>
+<tr>
+<td>mongo-init</td>
+<td>mongo:7.0</td>
+<td>Creates the app user (one-shot)</td>
+</tr>
+<tr>
+<td>backend</td>
+<td>./backend</td>
+<td>API on 4000, health check <code>/api/health</code> must report <code>connected</code></td>
+</tr>
+<tr>
+<td>frontend</td>
+<td>./frontend</td>
+<td>Next.js</td>
+</tr>
+<tr>
+<td>proxy</td>
+<td>nginx:stable-alpine</td>
+<td>Port <code>${HTTP_PORT:-8081}</code> → 80</td>
+</tr>
+</tbody></table>
+<p>Volumes <code>mongo-data</code>, <code>mongo-config</code>. <strong>Never delete these volumes.</strong></p>
+<blockquote class="warn"><p>⚠️ <strong>Risk:</strong> <code>compose.yaml</code> declares no volume for the backend&#39;s <code>/app/uploads</code> (item and work-log pictures, created in <code>backend/Dockerfile</code>). Unless the Coolify service adds one, pictures are lost when the backend container is recreated. Confirm this; see <a href="../analysis/GAPS-AND-QUESTIONS.html">GAPS</a> Q1.</p>
+</blockquote><h2 id="current-production"><a class="anchor" href="#current-production">#</a>Current production</h2><p>Managed by <strong>Coolify</strong> on the factory server. Build the backend/frontend images from the source folder, then redeploy in Coolify. Secrets live in the Coolify environment settings. Do not start a second standalone copy. (The host, paths and URL are in <code>deploy/README.md</code>; they are not repeated here.)</p>
+<h2 id="release-procedure"><a class="anchor" href="#release-procedure">#</a>Release procedure</h2><ol>
+<li>Run <code>npm test</code> in <code>backend</code> and <code>frontend</code>; run <code>npm run build</code> in <code>frontend</code>.</li>
+<li><strong>Back up the database</strong> (see <a href="../administration/operations-and-recovery.html">Operations</a>).</li>
+<li>Run any required migration as a dry run, then with <code>--apply</code>.</li>
+<li>Build the images and redeploy.</li>
+<li>Check <code>/api/health</code> and sign in.</li>
+</ol>
+<h2 id="rollback"><a class="anchor" href="#rollback">#</a>Rollback</h2><p>Redeploy the previous images. The data model is append-only, so code rollback does not need data rollback unless a migration ran; then restore the backup taken in step 2.</p>
+<h2 id="native-shells"><a class="anchor" href="#native-shells">#</a>Native shells</h2><ul>
+<li>Windows: <code>native/desktop</code> → <code>npm ci &amp;&amp; npm run dist:win</code> (unsigned NSIS installer).</li>
+<li>Android: <code>python native/android/build.py</code> (Java 21, Android SDK). The signing key is kept outside the repo; <strong>back it up</strong>.</li>
+<li>Bump the version for shell updates. Web UI updates need no reinstall.</li>
+</ul>
+
+<footer class="foot">Source: <code>docs/technical/deployment.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#stack-composeyaml">Stack (compose.yaml)</a><a class="l2" href="#current-production">Current production</a><a class="l2" href="#release-procedure">Release procedure</a><a class="l2" href="#rollback">Rollback</a><a class="l2" href="#native-shells">Native shells</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

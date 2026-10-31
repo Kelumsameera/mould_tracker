@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Architecture · Mould Tracker Docs</title><meta name="description" content="Components, boundaries and request flow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a on" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="architecture"><a class="anchor" href="#architecture">#</a>Architecture</h1><p class="lead">Components, boundaries and request flow</p><div class="chips"><span class="chip">👥 Developers, architects</span><span class="chip ok">Verified</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><pre class="mermaid">flowchart LR
+    subgraph Client
+      B[Next.js pages - client components]
+      SW[Service worker]
+    end
+    subgraph Server [Docker Compose]
+      NG[Nginx proxy :80]
+      FE[frontend: next start]
+      API[backend: Express]
+      DB[(mongo:7 replica set rs0)]
+      UP[(/app/uploads folder)]
+    end
+    B --&gt; NG
+    NG --&gt; FE
+    NG --&gt;|/api| API
+    API --&gt; DB
+    API --&gt; UP</pre><h2 id="backend-layering"><a class="anchor" href="#backend-layering">#</a>Backend layering</h2><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Folder</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Routes</td>
+<td><code>routes/</code></td>
+<td>Route tables <code>[method, path, permissions, handler, bodySchema, querySchema]</code>, built by <code>routerFrom</code> (auth → permission → validation → privacy → handler)</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td><code>validators/schemas.js</code></td>
+<td>Zod schemas</td>
+</tr>
+<tr>
+<td>Controllers</td>
+<td><code>controllers/</code></td>
+<td>Load documents, call pure rules, save in a transaction with Movement + AuditLog</td>
+</tr>
+<tr>
+<td>Rules (pure)</td>
+<td><code>lib/workflow.js</code>, <code>lib/workLog.js</code>, <code>lib/mouldState.js</code>, <code>lib/permissions.js</code></td>
+<td>All business decisions; unit-tested without a DB</td>
+</tr>
+<tr>
+<td>Models</td>
+<td><code>models/</code></td>
+<td>Mongoose schemas, invariants, indexes, immutability plugin</td>
+</tr>
+<tr>
+<td>Privacy</td>
+<td><code>middleware/accountPrivacy.js</code>, <code>lib/accountPrivacy.js</code></td>
+<td>Replaces protected users with &quot;Private user&quot; in every JSON response</td>
+</tr>
+</tbody></table>
+<h2 id="frontend"><a class="anchor" href="#frontend">#</a>Frontend</h2><p>Next.js App Router. Route group <code>(tracker)</code> shares <code>AppLayout</code> (session check, sidebar, 60 s permission refresh). Data via <code>utils/api.ts</code> (fetch with credentials). Permissions mirrored in <code>utils/permissions.ts</code> for display only. i18n in <code>utils/i18n.ts</code> (en, si). The PWA service worker is <code>public/sw.js</code>.</p>
+<h2 id="authentication-flow"><a class="anchor" href="#authentication-flow">#</a>Authentication flow</h2><pre class="mermaid">sequenceDiagram
+    Browser-&gt;&gt;API: POST /api/auth/login {email,password}
+    API-&gt;&gt;DB: find user, bcrypt compare
+    API--&gt;&gt;Browser: Set-Cookie access_token (JWT sub=userId, HttpOnly, SameSite=lax)
+    Browser-&gt;&gt;API: any /api call (cookie)
+    API-&gt;&gt;DB: load user (active, not deleted) each request
+    API-&gt;&gt;API: can(user, permission)</pre><h2 id="key-design-decisions-from-code-comments"><a class="anchor" href="#key-design-decisions-from-code-comments">#</a>Key design decisions (from code comments)</h2><ul>
+<li>Rules are pure functions so they can be tested exhaustively (<code>backend/test/workflow.test.js</code>).</li>
+<li>History stores text snapshots (machine code, rack ID, person name) so renames never rewrite the past.</li>
+<li>Pictures are content-hashed WebP files, cached immutably.</li>
+</ul>
+
+<footer class="foot">Source: <code>docs/technical/architecture.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#backend-layering">Backend layering</a><a class="l2" href="#frontend">Frontend</a><a class="l2" href="#authentication-flow">Authentication flow</a><a class="l2" href="#key-design-decisions-from-code-comments">Key design decisions (from code comments)</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

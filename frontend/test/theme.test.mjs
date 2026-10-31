@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTheme } from '../src/lib/theme.ts';
+import { resolveTheme } from '../src/utils/helpers.ts';
 
 test('saved light and dark themes override the device preference', () => {
   assert.equal(resolveTheme('light', true), 'light');

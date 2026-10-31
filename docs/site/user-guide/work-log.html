@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Work log · Mould Tracker Docs</title><meta name="description" content="Record repair, service and other work on a mould, with photos and corrections">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a on" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="work-log"><a class="anchor" href="#work-log">#</a>Work log</h1><p class="lead">Record repair, service and other work on a mould, with photos and corrections</p><div class="chips"><span class="chip">👥 Mould Technician, Mould Maker, Admins</span><span class="chip ok">Verified (static code review + tests)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><h2 id="availability-and-role-permissions"><a class="anchor" href="#availability-and-role-permissions">#</a>Availability and role permissions</h2><ul>
+<li><strong>View</strong> a mould&#39;s work log: <code>worklog.view</code> (everyone).</li>
+<li><strong>Log work:</strong> <code>worklog.create</code>, held by Super Admin, Admin, Mould Technician and Mould Maker. Work can be logged <strong>wherever the mould is</strong>, including on a machine.</li>
+</ul>
+<h2 id="fields"><a class="anchor" href="#fields">#</a>Fields</h2><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Type</td>
+<td>Yes</td>
+<td>Repair, Service, Minor fix, Inspection, Cleaning, Other</td>
+</tr>
+<tr>
+<td>What was done (description)</td>
+<td>Yes</td>
+<td>Max 2000</td>
+</tr>
+<tr>
+<td>Parts used</td>
+<td>No</td>
+<td>Max 1000</td>
+</tr>
+<tr>
+<td>Time spent (minutes)</td>
+<td>No</td>
+<td>0–100,000</td>
+</tr>
+<tr>
+<td>Done by</td>
+<td>No (defaults to you)</td>
+<td>1–5 people, each allowed to do mould work</td>
+</tr>
+<tr>
+<td>Done at</td>
+<td>No (defaults to now)</td>
+<td>Cannot be more than 2 minutes in the future</td>
+</tr>
+<tr>
+<td>Shots (counter reading)</td>
+<td>No</td>
+<td>Whole number ≥ 0</td>
+</tr>
+<tr>
+<td>Outcome</td>
+<td>No</td>
+<td>OK, Needs repair, Needs service</td>
+</tr>
+<tr>
+<td>Send to Workshop</td>
+<td>No</td>
+<td>Only with a Needs… outcome</td>
+</tr>
+<tr>
+<td>Photos</td>
+<td>No</td>
+<td>Up to 3; JPEG/PNG/WebP, shrunk in the browser, max 6 MB each</td>
+</tr>
+</tbody></table>
+<h2 id="what-the-outcome-does"><a class="anchor" href="#what-the-outcome-does">#</a>What the outcome does</h2><table>
+<thead>
+<tr>
+<th>Outcome</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OK on a non-Good mould</td>
+<td>Becomes <strong>Good</strong>, unless the shot limit is still reached and the type is not Service (warning <code>SERVICE_STILL_DUE</code>)</td>
+</tr>
+<tr>
+<td>OK with type <strong>Service</strong></td>
+<td>Also resets shots to 0 and sets Last serviced</td>
+</tr>
+<tr>
+<td>Needs repair / Needs service + Send to Workshop</td>
+<td>Moves it to the Workshop with that status, if you may make the move (otherwise warning <code>WORKSHOP_MOVE_NOT_ALLOWED</code>)</td>
+</tr>
+<tr>
+<td>Needs… without sending, on a machine or floor</td>
+<td>Status flagged in place</td>
+</tr>
+<tr>
+<td>Needs… while in storage</td>
+<td>Entry saved, status unchanged, warning <code>WORKSHOP_MOVE_REQUIRED</code></td>
+</tr>
+</tbody></table>
+<p>The work itself never moves the mould; only <strong>Send to Workshop</strong> does.</p>
+<h2 id="corrections"><a class="anchor" href="#corrections">#</a>Corrections</h2><p>Entries cannot be edited or deleted (append-only). To fix one, log a new entry that <strong>corrects</strong> it; the report marks the old one as corrected.</p>
+<h2 id="side-effects"><a class="anchor" href="#side-effects">#</a>Side effects</h2><ul>
+<li>The mould card shows <strong>Last work</strong> (type, names, date).</li>
+<li>Logging work on a mould with an open problem <strong>resolves the problem</strong> (audit <code>problem.resolved</code>).</li>
+<li>Audit <code>worklog.created</code> / <code>worklog.corrected</code>.</li>
+</ul>
+<blockquote class="shot"><p>Screenshot needed: Work log form with type Repair, two people and one photo.</p>
+</blockquote><h2 id="evidence"><a class="anchor" href="#evidence">#</a>Evidence</h2><p><code>backend/lib/workLog.js</code> <code>planWorkLog</code>; <code>backend/controllers/workLogController.js</code> <code>createWorkLog</code>; <code>backend/models/WorkLog.js</code>; <code>backend/lib/images.js</code> <code>photosFromDataUrls</code>; <code>backend/test/workLog.test.js</code>; <code>frontend/src/components/WorkLogForm.tsx</code>.</p>
+
+<footer class="foot">Source: <code>docs/user-guide/work-log.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#availability-and-role-permissions">Availability and role permissions</a><a class="l2" href="#fields">Fields</a><a class="l2" href="#what-the-outcome-does">What the outcome does</a><a class="l2" href="#corrections">Corrections</a><a class="l2" href="#side-effects">Side effects</a><a class="l2" href="#evidence">Evidence</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

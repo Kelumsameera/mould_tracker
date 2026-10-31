@@ -1,0 +1,214 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mould Tracker — complete guide · Mould Tracker Docs</title><meta name="description" content="Standalone manual covering every verified feature, role, workflow and operation">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="index.html">Mould Tracker documentation</a><a class="nav-a on" href="MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="introduction.html">Introduction</a><a class="nav-a" href="product-overview.html">Product overview</a><a class="nav-a" href="glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="getting-started/first-login.html">First login</a><a class="nav-a" href="getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="user-guide/index.html">User guide</a><a class="nav-a" href="user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="user-guide/audit-log.html">Audit log</a><a class="nav-a" href="user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="user-guide/machines.html">Machines</a><a class="nav-a" href="user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="user-guide/rack-management.html">Rack management</a><a class="nav-a" href="user-guide/rack-view.html">Rack view</a><a class="nav-a" href="user-guide/record-shots.html">Record shots</a><a class="nav-a" href="user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="user-guide/users.html">Users</a><a class="nav-a" href="user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="user-guide/work-log.html">Work log</a><a class="nav-a" href="user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="roles/overview.html">Roles overview</a><a class="nav-a" href="roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="roles/super-admin.html">Super Admin</a><a class="nav-a" href="roles/admin.html">Admin</a><a class="nav-a" href="roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="workflows/overview.html">Workflows overview</a><a class="nav-a" href="workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="administration/configuration.html">Configuration</a><a class="nav-a" href="administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="technical/architecture.html">Architecture</a><a class="nav-a" href="technical/repository-structure.html">Repository structure</a><a class="nav-a" href="technical/local-development.html">Local development</a><a class="nav-a" href="technical/database-reference.html">Database reference</a><a class="nav-a" href="technical/api-reference.html">API reference</a><a class="nav-a" href="technical/integrations.html">Integrations</a><a class="nav-a" href="technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="support/faq.html">FAQ</a><a class="nav-a" href="support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="mould-tracker-complete-guide"><a class="anchor" href="#mould-tracker-complete-guide">#</a>Mould Tracker — complete guide</h1><p class="lead">Standalone manual covering every verified feature, role, workflow and operation</p><div class="chips"><span class="chip">👥 Operators, supervisors, maintenance, administrators, management, IT, developers, auditors</span><span class="chip ok">Verified (static code review + 186 passing automated tests); UI flows not exercised at runtime</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0; native shells 2.2.0</span></div><h2 id="contents"><a class="anchor" href="#contents">#</a>Contents</h2><ol>
+<li><a href="#1-what-mould-tracker-is">What Mould Tracker is</a></li>
+<li><a href="#2-reading-paths-by-role">Reading paths by role</a></li>
+<li><a href="#3-key-concepts">Key concepts</a></li>
+<li><a href="#4-getting-started">Getting started</a></li>
+<li><a href="#5-everyday-tasks">Everyday tasks</a></li>
+<li><a href="#6-the-rules-the-app-enforces">The rules the app enforces</a></li>
+<li><a href="#7-roles-and-permissions">Roles and permissions</a></li>
+<li><a href="#8-workflows">Workflows</a></li>
+<li><a href="#9-administration">Administration</a></li>
+<li><a href="#10-technical-reference">Technical reference</a></li>
+<li><a href="#11-support">Support</a></li>
+<li><a href="#12-evidence-and-open-questions">Evidence and open questions</a></li>
+</ol>
+<hr>
+<h2 id="1-what-mould-tracker-is"><a class="anchor" href="#1-what-mould-tracker-is">#</a>1. What Mould Tracker is</h2><p>A web app (also a PWA and Windows/Android shells) that tracks every <strong>injection mould</strong> and <strong>extrusion die</strong>: where it is, whether it can be used, what it makes, how many shots it has done, and who did what to it. Details: <a href="introduction.html">introduction</a>, <a href="product-overview.html">product overview</a>.</p>
+<pre class="mermaid">flowchart LR
+    U[Browser / PWA / shells] --&gt; N[Nginx] --&gt; F[Next.js]
+    N --&gt;|/api| B[Express API] --&gt; M[(MongoDB)]</pre><h2 id="2-reading-paths-by-role"><a class="anchor" href="#2-reading-paths-by-role">#</a>2. Reading paths by role</h2><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Read</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Production Supervisor</td>
+<td>§4, §5.1, §5.4, §5.5, <a href="roles/production-supervisor.html">role page</a></td>
+</tr>
+<tr>
+<td>Mould Technician</td>
+<td>§4, §5.1–5.6, §6, <a href="roles/mould-technician.html">role page</a></td>
+</tr>
+<tr>
+<td>Mould Maker</td>
+<td>§4, §5.2, §5.3, §5.6, <a href="roles/mould-maker.html">role page</a></td>
+</tr>
+<tr>
+<td>Admin</td>
+<td>§5.7, §7, §9, <a href="roles/admin.html">role page</a></td>
+</tr>
+<tr>
+<td>Super Admin</td>
+<td>Admin path + racks, audit, Out of Service (<a href="roles/super-admin.html">role page</a>)</td>
+</tr>
+<tr>
+<td>IT / System Administrator</td>
+<td>§9, §10, <a href="roles/system-administrator.html">role page</a></td>
+</tr>
+</tbody></table>
+<h2 id="3-key-concepts"><a class="anchor" href="#3-key-concepts">#</a>3. Key concepts</h2><ul>
+<li><strong>Locations:</strong> Machine · Production Floor · Workshop · Mould Room (racks, moulds) · Tool Room (dies) · Out of Service.</li>
+<li><strong>Statuses:</strong> Good · Needs service · Needs repair · In service · In repair.</li>
+<li><strong>Rack location IDs:</strong> zone + row + number, for example <code>FLK-A3</code>.</li>
+<li><strong>Shots:</strong> counted while mounted; reaching the limit makes the mould service-due.</li>
+<li><strong>History, Work log, Audit log:</strong> append-only records.</li>
+</ul>
+<p>Full list: <a href="glossary.html">glossary</a>.</p>
+<h2 id="4-getting-started"><a class="anchor" href="#4-getting-started">#</a>4. Getting started</h2><ol>
+<li>Get an account from an Admin (<a href="getting-started/prerequisites.html">prerequisites</a>).</li>
+<li>Sign in with email and password; set EN / සිං (<a href="getting-started/first-login.html">first login</a>).</li>
+<li>Change your password in <strong>Account details</strong>; optionally add a passkey (HTTPS only).</li>
+<li>Learn the sidebar and the mould sheet (<a href="getting-started/navigation-tour.html">navigation tour</a>).</li>
+<li>Do the <a href="getting-started/quick-start.html">5-minute quick start</a>.</li>
+</ol>
+<h2 id="5-everyday-tasks"><a class="anchor" href="#5-everyday-tasks">#</a>5. Everyday tasks</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Task</th>
+<th>Who</th>
+<th>Guide</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5.1</td>
+<td>Find a mould (Tool ID, Item ID, description, machine, rack)</td>
+<td>All</td>
+<td><a href="user-guide/find-a-mould.html">find-a-mould</a></td>
+</tr>
+<tr>
+<td>5.2</td>
+<td>Move a mould</td>
+<td>By permission</td>
+<td><a href="user-guide/move-a-mould.html">move-a-mould</a></td>
+</tr>
+<tr>
+<td>5.3</td>
+<td>Workshop queue, change status</td>
+<td>Workshop roles</td>
+<td><a href="user-guide/workshop-queue.html">workshop-queue</a></td>
+</tr>
+<tr>
+<td>5.4</td>
+<td>Record shots</td>
+<td>Supervisor, Technician, Maker*, Admins</td>
+<td><a href="user-guide/record-shots.html">record-shots</a></td>
+</tr>
+<tr>
+<td>5.5</td>
+<td>Report a problem</td>
+<td>All</td>
+<td><a href="user-guide/report-a-problem.html">report-a-problem</a></td>
+</tr>
+<tr>
+<td>5.6</td>
+<td>Log work, corrections, photos</td>
+<td>Technician, Maker, Admins</td>
+<td><a href="user-guide/work-log.html">work-log</a></td>
+</tr>
+<tr>
+<td>5.7</td>
+<td>Manage moulds and items</td>
+<td>Admins</td>
+<td><a href="user-guide/manage-moulds.html">manage-moulds</a></td>
+</tr>
+<tr>
+<td>5.8</td>
+<td>Rack view / rack management</td>
+<td>All / Super Admin</td>
+<td><a href="user-guide/rack-view.html">rack-view</a>, <a href="user-guide/rack-management.html">rack-management</a></td>
+</tr>
+<tr>
+<td>5.9</td>
+<td>Machines, users, custom access</td>
+<td>Admins / System Administrator</td>
+<td><a href="user-guide/machines.html">machines</a>, <a href="user-guide/users.html">users</a>, <a href="user-guide/user-access.html">user-access</a></td>
+</tr>
+<tr>
+<td>5.10</td>
+<td>Work log report and export</td>
+<td>Admins</td>
+<td><a href="user-guide/work-log-report.html">work-log-report</a></td>
+</tr>
+<tr>
+<td>5.11</td>
+<td>Audit log</td>
+<td>Super Admin</td>
+<td><a href="user-guide/audit-log.html">audit-log</a></td>
+</tr>
+<tr>
+<td>5.12</td>
+<td>Extrusion dies, install, theme, offline</td>
+<td>All</td>
+<td><a href="user-guide/extrusion-dies.html">extrusion-dies</a>, <a href="user-guide/app-settings-and-install.html">app-settings-and-install</a></td>
+</tr>
+</tbody></table>
+<p>*Mould Makers record shots through <code>workshop.work</code>, but shots can only be recorded on a machine.</p>
+<h2 id="6-the-rules-the-app-enforces"><a class="anchor" href="#6-the-rules-the-app-enforces">#</a>6. The rules the app enforces</h2><ol>
+<li>Only <strong>Good</strong> moulds may be mounted, put on the floor or stored; anything else may only go to the Workshop.</li>
+<li><strong>In service / In repair</strong> only at the Workshop (or Out of Service).</li>
+<li>Injection moulds are stored in the Mould Room on a rack; dies are stored in the Tool Room.</li>
+<li>One mould per machine; the machine must be active.</li>
+<li>Mount only on listed machines, unless an Admin overrides with a reason.</li>
+<li>Racks must be active and not full; another zone&#39;s rack needs a reason.</li>
+<li>Remarks are required for Workshop and Out of Service moves and for status changes.</li>
+<li>Reaching the shot limit flags <strong>Needs service</strong> and blocks mounting; In service → Good resets the count.</li>
+<li>Status changes only at the Workshop.</li>
+<li>Every change writes History and the Audit log; work-log entries are never edited.</li>
+</ol>
+<h2 id="7-roles-and-permissions"><a class="anchor" href="#7-roles-and-permissions">#</a>7. Roles and permissions</h2><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Highlights</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Super Admin</td>
+<td>All operations, racks, audit, Out of Service</td>
+</tr>
+<tr>
+<td>Admin</td>
+<td>Moulds, machines, users, reports, overrides; racks read-only</td>
+</tr>
+<tr>
+<td>Production Supervisor</td>
+<td>Machine/floor moves, shots, problem reports</td>
+</tr>
+<tr>
+<td>Mould Technician</td>
+<td>Machine and workshop work, work log</td>
+</tr>
+<tr>
+<td>Mould Maker</td>
+<td>Storage moves, workshop work, work log</td>
+</tr>
+<tr>
+<td>System Administrator</td>
+<td>Everything + User access; protected account</td>
+</tr>
+</tbody></table>
+<p>Full matrix including who may make each move: <a href="roles/permissions-matrix.html">permissions-matrix</a>.</p>
+<h2 id="8-workflows"><a class="anchor" href="#8-workflows">#</a>8. Workflows</h2><p><a href="workflows/overview.html">Overview and state machine</a> · <a href="workflows/mould-lifecycle.html">Lifecycle</a> · <a href="workflows/mount-and-unmount.html">Mount/unmount</a> · <a href="workflows/shot-count-and-service.html">Shots and service</a> · <a href="workflows/problem-to-repair.html">Problem to repair</a> · <a href="workflows/workshop-repair-cycle.html">Workshop cycle</a> · <a href="workflows/out-of-service.html">Out of Service</a> · <a href="workflows/data-import.html">Data import</a></p>
+<h2 id="9-administration"><a class="anchor" href="#9-administration">#</a>9. Administration</h2><p><a href="administration/configuration.html">Configuration</a> · <a href="administration/security-and-access.html">Security and access</a> · <a href="administration/operations-and-recovery.html">Operations and recovery</a> · <a href="technical/deployment.html">Deployment</a></p>
+<p><strong>Most important operational facts:</strong></p>
+<ul>
+<li>Production runs on Coolify. Back up MongoDB <strong>and</strong> the uploads folder before any migration.</li>
+<li>The database is shared: never delete existing data.</li>
+</ul>
+<h2 id="10-technical-reference"><a class="anchor" href="#10-technical-reference">#</a>10. Technical reference</h2><p><a href="technical/architecture.html">Architecture</a> · <a href="technical/repository-structure.html">Repository</a> · <a href="technical/local-development.html">Local development</a> · <a href="technical/database-reference.html">Database</a> · <a href="technical/api-reference.html">API (55 endpoints)</a> · <a href="technical/integrations.html">Integrations</a></p>
+<h2 id="11-support"><a class="anchor" href="#11-support">#</a>11. Support</h2><p><a href="support/troubleshooting.html">Troubleshooting</a> · <a href="support/faq.html">FAQ</a> · <a href="support/known-limitations.html">Known limitations</a> · Demos: <a href="demonstrations/five-minute-tour.html">5 min</a>, <a href="demonstrations/fifteen-minute-demo.html">15 min</a>, <a href="demonstrations/admin-technical-demo.html">30 min</a>, <a href="demonstrations/demo-data-and-reset.html">demo data</a></p>
+<h2 id="12-evidence-and-open-questions"><a class="anchor" href="#12-evidence-and-open-questions">#</a>12. Evidence and open questions</h2><p><a href="analysis/EVIDENCE-MATRIX.html">EVIDENCE-MATRIX</a> (52 claims) · <a href="analysis/GAPS-AND-QUESTIONS.html">GAPS-AND-QUESTIONS</a> (9 questions) · <a href="DOCUMENTATION-CHANGELOG.html">Changelog</a></p>
+
+<footer class="foot">Source: <code>docs/MOULD-TRACKER-COMPLETE-GUIDE.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#contents">Contents</a><a class="l2" href="#1-what-mould-tracker-is">1. What Mould Tracker is</a><a class="l2" href="#2-reading-paths-by-role">2. Reading paths by role</a><a class="l2" href="#3-key-concepts">3. Key concepts</a><a class="l2" href="#4-getting-started">4. Getting started</a><a class="l2" href="#5-everyday-tasks">5. Everyday tasks</a><a class="l2" href="#6-the-rules-the-app-enforces">6. The rules the app enforces</a><a class="l2" href="#7-roles-and-permissions">7. Roles and permissions</a><a class="l2" href="#8-workflows">8. Workflows</a><a class="l2" href="#9-administration">9. Administration</a><a class="l2" href="#10-technical-reference">10. Technical reference</a><a class="l2" href="#11-support">11. Support</a><a class="l2" href="#12-evidence-and-open-questions">12. Evidence and open questions</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="assets/docs.js"></script></body></html>

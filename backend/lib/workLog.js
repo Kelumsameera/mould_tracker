@@ -4,7 +4,7 @@
 //  - Rule 2 still holds: a NEEDS_* outcome cannot be stored on a mould in the Mould Room. The entry is
 //    saved anyway and a warning asks for the move, so data entry is never blocked by it.
 import { fail } from "../utils/ApiError.js";
-import { can } from "./permissions.js";
+import { can, canViewUser } from "./permissions.js";
 import { canMove, isServiceDue, planMove } from "./workflow.js";
 
 const FUTURE_TOLERANCE_MS = 2 * 60 * 1000; // device clocks drift a little
@@ -71,7 +71,7 @@ export function planWorkLog({ mould, user, input, workers = [], corrected = null
   if (ids.length > 5) fail(400, "TOO_MANY_WORKERS", "Up to five people per entry");
   const doneBy = ids.map((wid) => {
     const w = workers.find((x) => id(x) === wid) ?? (wid === id(user) ? user : null);
-    if (!canDoWork(w)) fail(400, "INVALID_WORKER", "Choose people who are allowed to do mould work", { userId: wid });
+    if (!canDoWork(w) || !canViewUser(user, w)) fail(400, "INVALID_WORKER", "Choose people who are allowed to do mould work", { userId: wid });
     return personSnapshot(w);
   });
 

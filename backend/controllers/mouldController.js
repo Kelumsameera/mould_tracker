@@ -216,7 +216,7 @@ export async function updateMould(req, res) {
 
 // POST /api/moulds/:id/move
 export async function moveMould(req, res) {
-  const { to, machineId, machineCode, rackId, status, remarks, overrideReason, version } = req.body;
+  const { to, machineId, machineCode, rackId, status, remarks, overrideReason, version, outOfServiceDetails } = req.body;
   let warnings = [];
   const id = await withTransaction(async (session) => {
     const doc = await loadForUpdate(req.params.id, session, version);
@@ -231,7 +231,7 @@ export async function moveMould(req, res) {
     }
     const { rack, rackOccupancy } = to === "MOULD_ROOM" ? await rackForMove(rackId, doc._id, session) : { rack: null, rackOccupancy: 0 };
 
-    const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status });
+    const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status, outOfServiceDetails });
     warnings = plan.warnings;
     Object.assign(doc, plan.set);
     if (to === "WORKSHOP") {
@@ -244,7 +244,7 @@ export async function moveMould(req, res) {
     await audit(req, {
       action: "mould.moved", entityType: "Mould", entityId: doc._id, entityLabel: doc.toolId,
       before: { location: mould.location, status: mould.status, machine: mould.machine?.code ?? null, rack: mould.rack?.locationId ?? null },
-      after: { location: doc.location, status: doc.status, machine: machine?.code ?? null, rack: rack?.locationId ?? null },
+      after: { location: doc.location, status: doc.status, machine: machine?.code ?? null, rack: rack?.locationId ?? null, outOfServiceDetails: doc.outOfServiceDetails ?? null },
       reason: [remarks, overrideReason && `Override: ${overrideReason}`].filter(Boolean).join(" | ")
     }, session);
     return doc._id;

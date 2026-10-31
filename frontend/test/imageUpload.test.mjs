@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shrink } from '../src/lib/imageUpload.ts';
+import { shrink } from '../src/utils/imageUpload.ts';
 
 function mockCanvas(alpha, fail = false) {
   let closed = false;

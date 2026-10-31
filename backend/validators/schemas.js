@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ROLES } from "../lib/permissions.js";
+import { dispatchDetailsSchema } from "../lib/outOfService.js";
+import { CUSTOM_PERMISSIONS, ROLES } from "../lib/permissions.js";
 import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES } from "../lib/mouldState.js";
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid id");
@@ -41,6 +42,10 @@ export const createUserSchema = z.object({
   password,
   role: role.default("mould_technician")
 });
+
+export const updateUserAccessSchema = z.object({
+  permissions: z.array(z.enum(CUSTOM_PERMISSIONS)).max(CUSTOM_PERMISSIONS.length).refine(values => new Set(values).size === values.length, "Duplicate permissions").nullable()
+}).strict();
 
 export const updateUserSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
@@ -95,6 +100,7 @@ export const createMouldSchema = z.object({
 });
 export const updateMouldSchema = z.object({ toolId: upperId("Tool ID").optional(), ...mouldFields, remarks, version });
 export const moveMouldSchema = z.object({
+  outOfServiceDetails: dispatchDetailsSchema.optional(),
   to: z.enum(LOCATIONS),
   machineId: objectId.optional(),
   machineCode: z.string().trim().min(1).max(50).optional(),
@@ -103,6 +109,9 @@ export const moveMouldSchema = z.object({
   remarks,
   overrideReason,
   version
+}).superRefine((value, context) => {
+  if (value.to === "OUT_OF_SERVICE" && !value.outOfServiceDetails) context.addIssue({ code: "custom", path: ["outOfServiceDetails"], message: "Enter recipient name, address and repair details" });
+  if (value.to !== "OUT_OF_SERVICE" && value.outOfServiceDetails) context.addIssue({ code: "custom", path: ["outOfServiceDetails"], message: "Dispatch details can only be set when sending Out of Service" });
 });
 export const statusSchema = z.object({ status: z.enum(MOULD_STATUSES), remarks, version });
 export const shotsSchema = z.object({ shots: z.number().int().min(1).max(10_000_000), version });

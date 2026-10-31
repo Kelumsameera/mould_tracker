@@ -7,6 +7,7 @@ import Movement from "../models/Movement.js";
 import User from "../models/User.js";
 import WorkLog from "../models/WorkLog.js";
 import { withTransaction } from "../config/db.js";
+import { visibleUsersFilter } from "../lib/permissions.js";
 import { fail } from "../utils/ApiError.js";
 import { workLogDTO } from "../utils/serializers.js";
 import { audit } from "../lib/audit.js";
@@ -30,7 +31,7 @@ const toDTOs = async (logs) => {
 
 // GET /api/worklogs/workers - who can be named as having done the work.
 export async function listWorkers(req, res) {
-  const users = await User.find({ active: true, deletedAt: null }).sort({ name: 1 }).lean();
+  const users = await User.find({ active: true, deletedAt: null, ...visibleUsersFilter(req.user) }).sort({ name: 1 }).lean();
   res.json({ success: true, workers: users.filter(canDoWork).map((u) => ({ id: String(u._id), name: u.name, role: u.role })) });
 }
 
@@ -60,7 +61,7 @@ export async function createWorkLog(req, res) {
       doc.rackId ? Rack.findById(doc.rackId).session(session).lean() : null
     ]);
     const mould = { ...doc.toObject(), machine, rack };
-    const workers = input.doneBy?.length ? await User.find({ _id: { $in: input.doneBy } }).session(session).lean() : [];
+    const workers = input.doneBy?.length ? await User.find({ _id: { $in: input.doneBy }, ...visibleUsersFilter(req.user) }).session(session).lean() : [];
     const corrected = input.correctsId ? await WorkLog.findById(input.correctsId).session(session).lean() : null;
 
     const plan = planWorkLog({ mould, user: req.user, input, workers, corrected });
@@ -93,9 +94,9 @@ export async function createWorkLog(req, res) {
 }
 
 // Shared filters for the report, the summary and the export (search also looks at the mould's Item IDs).
-export async function reportFilter(q) {
+export async function reportFilter(q, privacy) {
   const itemMouldIds = q.q ? await Item.distinct("mouldId", { deletedAt: null, itemId: new RegExp(escapeRegex(q.q.trim()), "i") }) : [];
-  return buildWorkLogFilter(q, { itemMouldIds });
+  return buildWorkLogFilter(q, { itemMouldIds, hiddenUserIds: privacy?.ids ?? [] });
 }
 
 // Clears the mould's open problem; the report entry stays in the history.
@@ -141,7 +142,7 @@ export async function reportProblem(req, res) {
 // GET /api/worklogs - report list.
 export async function listWorkLogs(req, res) {
   const q = req.validQuery;
-  const filter = await reportFilter(q);
+  const filter = await reportFilter(q, req.accountPrivacy);
   const [total, logs] = await Promise.all([
     WorkLog.countDocuments(filter),
     WorkLog.find(filter).sort({ doneAt: -1, _id: -1 }).skip((q.page - 1) * q.limit).limit(q.limit).lean()
@@ -152,7 +153,7 @@ export async function listWorkLogs(req, res) {
 // GET /api/worklogs/summary - per person (each named person counts once per entry) and per mould.
 export async function workLogSummary(req, res) {
   // A corrected entry is replaced by its correction, so only the correction counts.
-  const filter = { $and: [await reportFilter(req.validQuery), { _id: { $nin: await WorkLog.distinct("correctsId", { correctsId: { $ne: null } }) } }] };
+  const filter = { $and: [await reportFilter(req.validQuery, req.accountPrivacy), { _id: { $nin: await WorkLog.distinct("correctsId", { correctsId: { $ne: null } }) } }] };
   const [people, moulds] = await Promise.all([
     WorkLog.aggregate([
       { $match: filter },
@@ -171,7 +172,7 @@ export async function workLogSummary(req, res) {
   ]);
   res.json({
     success: true,
-    people: people.map((p) => ({ userId: String(p._id), name: p.name, role: p.role, total: p.total, minutes: p.minutes, byType: Object.fromEntries(p.byType.map((x) => [x.k, x.v])) })),
+    people: people.filter(p => !req.accountPrivacy.isHidden({ userId: p._id, role: p.role })).map((p) => ({ userId: String(p._id), name: p.name, role: p.role, total: p.total, minutes: p.minutes, byType: Object.fromEntries(p.byType.map((x) => [x.k, x.v])) })),
     moulds: moulds.map((m) => ({ mouldId: String(m._id), toolId: m.toolId, count: m.count, repairs: m.repairs, last: m.last }))
   });
 }
@@ -180,7 +181,7 @@ const EXPORT_COLUMNS = [
   ["Done at", (l) => l.doneAt.toISOString()],
   ["Tool ID", (l) => l.toolId],
   ["Type", (l) => l.type],
-  ["Done by", (l) => l.doneBy.map((p) => `${p.name} (${p.role})`).join("; ")],
+  ["Done by", (l) => l.doneBy.map((p) => p.role ? `${p.name} (${p.role})` : p.name).join("; ")],
   ["What was done", (l) => l.description],
   ["Parts used", (l) => l.partsUsed],
   ["Minutes", (l) => l.timeSpentMinutes ?? ""],
@@ -190,7 +191,7 @@ const EXPORT_COLUMNS = [
   ["Outcome", (l) => l.outcome ?? ""],
   ["Sent to Workshop", (l) => (l.sentToWorkshop ? "yes" : "")],
   ["Shots", (l) => l.shots ?? ""],
-  ["Recorded by", (l) => `${l.recordedBy.name} (${l.recordedBy.role})`],
+  ["Recorded by", (l) => l.recordedBy.role ? `${l.recordedBy.name} (${l.recordedBy.role})` : l.recordedBy.name],
   ["Recorded at", (l) => l.createdAt.toISOString()],
   ["Corrects entry", (l) => (l.correctsId ? String(l.correctsId) : "")],
   ["Corrected later", (l) => (l.corrected ? "yes" : "")],
@@ -205,12 +206,12 @@ const csvCell = (v) => {
 // GET /api/worklogs/export?format=csv|xlsx
 export async function exportWorkLogs(req, res) {
   const q = req.validQuery;
-  const filter = await reportFilter(q);
+  const filter = await reportFilter(q, req.accountPrivacy);
   const total = await WorkLog.countDocuments(filter);
   if (total > EXPORT_CAP) fail(400, "EXPORT_TOO_LARGE", `${total} entries match; narrow the filters to ${EXPORT_CAP} or fewer`, { total, cap: EXPORT_CAP });
   const found = await WorkLog.find(filter).sort({ doneAt: -1 }).limit(EXPORT_CAP).lean();
   const corrected = await correctedIds(found);
-  const logs = found.map((l) => ({ ...l, corrected: corrected.has(String(l._id)) }));
+  const logs = found.map((l) => req.accountPrivacy.project({ ...l, corrected: corrected.has(String(l._id)) }));
   const stamp = new Date().toISOString().slice(0, 10);
   const about = describeFilters(q, logs.length);
   await audit(req, { action: "worklog.exported", entityType: "WorkLog", after: { format: q.format, rows: logs.length, filter: Object.fromEntries(about) } });

@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>First login · Mould Tracker Docs</title><meta name="description" content="Sign in, set your language and theme, change your password and optionally add a passkey">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a on" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="first-login"><a class="anchor" href="#first-login">#</a>First login</h1><p class="lead">Sign in, set your language and theme, change your password and optionally add a passkey</p><div class="chips"><span class="chip">👥 All users</span><span class="chip ok">Verified (static code review); not walked through on a running instance</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><p><strong>Goal:</strong> sign in, secure your account and land on <strong>Find a mould</strong>.</p>
+<h2 id="before-you-begin"><a class="anchor" href="#before-you-begin">#</a>Before you begin</h2><p>See <a href="prerequisites.html">Prerequisites</a>.</p>
+<h2 id="steps"><a class="anchor" href="#steps">#</a>Steps</h2><ol>
+<li>Open the app address. Signed-out users see the sign-in card (&quot;Sign in to see where every mould is.&quot;).</li>
+<li><em>(Optional)</em> Choose <strong>EN</strong> or <strong>සිං</strong> at the top of the card, and the light/dark theme toggle.</li>
+<li>Enter <strong>Email</strong> and <strong>Password</strong>, then select <strong>Sign in</strong>.</li>
+<li>You arrive on <strong>Find a mould</strong> (<code>/find</code>), the default page.</li>
+<li>Open <strong>Account details</strong> from the sidebar. Enter your <strong>Current password</strong>, a <strong>New password (min 8 characters)</strong>, repeat it, and select <strong>Save changes</strong>.</li>
+<li><em>(Optional, HTTPS only)</em> Open <strong>Passkeys / Biometric login</strong> in the sidebar. Enter a device name and your current password, then select <strong>Add a passkey</strong>. Next time you can use <strong>Sign in with fingerprint / Face ID</strong>.</li>
+</ol>
+<blockquote class="shot"><p>Screenshot needed: sign-in card in light theme, English, with the passkey button visible (<code>/login</code>).
+Screenshot needed: Account details page (<code>/account</code>) with the password fields.</p>
+</blockquote><h2 id="expected-result"><a class="anchor" href="#expected-result">#</a>Expected result</h2><ul>
+<li>You are signed in. The session is an HttpOnly cookie valid for 7 days (<code>backend/utils/session.js</code>).</li>
+<li>Your language choice is saved to your account and follows you to other devices (<code>PATCH /api/auth/me/language</code>).</li>
+</ul>
+<h2 id="troubleshooting"><a class="anchor" href="#troubleshooting">#</a>Troubleshooting</h2><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;Invalid email or password&quot;</td>
+<td>Wrong credentials, or the account is disabled</td>
+<td>Retry; ask an Admin to check the account is active</td>
+</tr>
+<tr>
+<td>&quot;Too many authentication attempts…&quot;</td>
+<td>Rate limit (40 per 10 min)</td>
+<td>Wait 10 minutes</td>
+</tr>
+<tr>
+<td>Passkey button disabled; note says passkeys need trusted HTTPS</td>
+<td>Server not configured for passkeys, or plain HTTP</td>
+<td>Use password; IT sets <code>WEBAUTHN_ORIGIN</code> / <code>WEBAUTHN_RP_ID</code></td>
+</tr>
+<tr>
+<td>&quot;Passkey request was cancelled or timed out.&quot;</td>
+<td>Prompt dismissed</td>
+<td>Try again</td>
+</tr>
+<tr>
+<td>Signed out unexpectedly</td>
+<td>Account disabled/deleted, or session expired</td>
+<td>Sign in again; contact an Admin</td>
+</tr>
+</tbody></table>
+<p>Related: <a href="navigation-tour.html">Navigation tour</a> · <a href="quick-start.html">Quick start</a> · <a href="../user-guide/account-and-passkeys.html">Account and passkeys</a></p>
+
+<footer class="foot">Source: <code>docs/getting-started/first-login.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#before-you-begin">Before you begin</a><a class="l2" href="#steps">Steps</a><a class="l2" href="#expected-result">Expected result</a><a class="l2" href="#troubleshooting">Troubleshooting</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

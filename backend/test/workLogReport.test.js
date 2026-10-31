@@ -1,3 +1,4 @@
+import { accountPrivacy } from "../lib/accountPrivacy.js";
 import { test, describe, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
@@ -116,7 +117,7 @@ describe("pagination and export", () => {
     mock.method(WorkLog, "find", fakeFind([row(), row({ description: "Polished, cavity 3" })], seen));
     mock.method(AuditLog, "create", async () => ({}));
     const res = response();
-    await exportWorkLogs({ validQuery: { q: "pin", range: "7d", format: "csv" }, user: { _id: oid(), name: "Admin" } }, res);
+    await exportWorkLogs({ accountPrivacy: accountPrivacy(null), validQuery: { q: "pin", range: "7d", format: "csv" }, user: { _id: oid(), name: "Admin" } }, res);
     assert.deepEqual(seen.filter, counted);
     assert.equal(String(seen.filter.$and[1].$or.find((c) => c.mouldId).mouldId.$in[0]), String(m1));
     const lines = res.body.replace(/^﻿/, "").split("\r\n");
