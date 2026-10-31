@@ -1,7 +1,9 @@
 """Build/sign a LAN APK with installed Android SDK tools, without Gradle downloads."""
 from pathlib import Path
+import hashlib
 import json
 import os
+import re
 import secrets
 import subprocess
 import zipfile
@@ -14,6 +16,9 @@ ANDROID = SDK / "platforms/android-37.0/android.jar"
 BUILD = ROOT / "build"
 OUT = REPO / "outputs/native"
 SIGNING = Path.home() / ".tool-tracker-signing"
+MANIFEST = (ROOT / "AndroidManifest.xml").read_text(encoding="utf-8")
+VERSION_CODE = int(re.search(r'android:versionCode="(\d+)"', MANIFEST).group(1))
+VERSION_NAME = re.search(r'android:versionName="([^"]+)"', MANIFEST).group(1)
 
 def run(*args, env=None):
     subprocess.run([str(a) for a in args], check=True, env=env, cwd=ROOT)
@@ -42,7 +47,9 @@ with zipfile.ZipFile(BUILD / "unsigned.apk", "a", zipfile.ZIP_DEFLATED) as apk:
     for dex in (BUILD / "dex").glob("*.dex"):
         apk.write(dex, dex.name)
 run(TOOLS / "zipalign.exe", "-f", "-p", "4", BUILD / "unsigned.apk", BUILD / "aligned.apk")
-target = OUT / "Mould-Tracker-2.2.0-android.apk"
+target = OUT / f"Mould-Tracker-{VERSION_NAME}-android.apk"
 run("java", "-jar", TOOLS / "lib/apksigner.jar", "sign", "--ks", keystore, "--ks-key-alias", "tool-tracker", "--ks-pass", "env:TOOL_TRACKER_STORE_PASSWORD", "--key-pass", "env:TOOL_TRACKER_STORE_PASSWORD", "--out", target, BUILD / "aligned.apk", env=env)
 run("java", "-jar", TOOLS / "lib/apksigner.jar", "verify", "--verbose", target)
+feed = {"versionCode": VERSION_CODE, "versionName": VERSION_NAME, "file": target.name, "sha256": hashlib.sha256(target.read_bytes()).hexdigest()}
+(OUT / "android-latest.json").write_text(json.dumps(feed, indent=2) + "\n")
 print(f"APK ready: {target}")

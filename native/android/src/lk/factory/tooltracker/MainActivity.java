@@ -1,6 +1,7 @@
 package lk.factory.tooltracker;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.net.Uri;
@@ -23,6 +24,7 @@ public class MainActivity extends Activity {
   private LinearLayout message;
   private TextView status;
   private boolean failed;
+  private Updater updater;
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     FrameLayout root = new FrameLayout(this);
@@ -35,7 +37,7 @@ public class MainActivity extends Activity {
     WebSettings settings = web.getSettings();
     settings.setJavaScriptEnabled(true);
     settings.setDomStorageEnabled(true);
-    settings.setUserAgentString(settings.getUserAgentString() + " ToolTrackerNative/2.2.0");
+    settings.setUserAgentString(settings.getUserAgentString() + " ToolTrackerNative/" + versionName());
     settings.setAllowFileAccess(false);
     settings.setAllowContentAccess(false);
     settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -67,6 +69,15 @@ public class MainActivity extends Activity {
       }
     });
     setContentView(root); load();
+    updater = new Updater(this);
+  }
+  @Override public void onResume() { super.onResume(); updater.check(); }
+  @Override protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    if (Updater.ACTION_STATUS.equals(intent.getAction())) updater.onStatus(intent);
+  }
+  private String versionName() {
+    try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "unknown"; }
   }
   private void load() { failed = false; status.setText("Connecting to Mould Tracker…"); message.setVisibility(View.VISIBLE); web.loadUrl(URL); }
   private void offline() { failed = true; status.setText("Cannot connect to Mould Tracker.\n\nConnect to the factory Wi-Fi or LAN and check that the server is running. If the factory certificate has changed, ask the administrator for an updated app."); message.setVisibility(View.VISIBLE); }
