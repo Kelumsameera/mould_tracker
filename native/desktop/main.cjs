@@ -26,7 +26,7 @@ else {
       webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true }
     });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    window.webContents.setUserAgent(window.webContents.getUserAgent() + ' ToolTrackerNative/2.2.0');
+    window.webContents.setUserAgent(window.webContents.getUserAgent() + ' ToolTrackerNative/' + app.getVersion());
     window.webContents.on('will-navigate', (event, url) => {
       if (url === 'https://tool-tracker-retry.invalid/' && failed) { event.preventDefault(); load(); return; }
       if (!allowed(url) && url !== OFFLINE) event.preventDefault();
@@ -42,6 +42,7 @@ else {
       if (allowed(url)) dialog.showErrorBox('Factory certificate required', 'Install the Tool Tracker LAN Root CA using http://192.168.0.116:8081/install.html, then restart Mould Tracker.');
     });
     load();
+    if (app.isPackaged) require(path.join(__dirname, 'updater.cjs')).start(window);
   });
   app.on('window-all-closed', () => app.quit());
 }

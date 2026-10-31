@@ -261,7 +261,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
           onChange={(event) => set({ ...itemDraft, itemId: event.target.value })}
         />
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           placeholder={translations.form.cavities}
           aria-label={translations.form.cavities}
           type="number"
@@ -272,22 +272,22 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         />
       </div>
       <input
-        className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink mt-3 focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+        className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink mt-3 focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
         placeholder={translations.form.description}
         aria-label={translations.form.description}
         value={itemDraft.description}
         onChange={(event) => set({ ...itemDraft, description: event.target.value })}
       />
-      <div className="grid grid-cols-2 [gap:0_var(--s3)] mt mt-3">
+      <div className="grid grid-cols-2 gap-[0_var(--s3)] mt mt-3">
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           placeholder={translations.form.qas}
           aria-label={translations.form.qas}
           value={itemDraft.qas}
           onChange={(event) => set({ ...itemDraft, qas: event.target.value })}
         />
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           placeholder={translations.form.materialId}
           aria-label={translations.form.materialId}
           value={itemDraft.materialId}
@@ -295,22 +295,22 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         />
       </div>
       <input
-        className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink mt-3 focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+        className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink mt-3 focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
         placeholder={translations.form.materialDescription}
         aria-label={translations.form.materialDescription}
         value={itemDraft.materialDescription}
         onChange={(event) => set({ ...itemDraft, materialDescription: event.target.value })}
       />
-      <div className="grid grid-cols-2 [gap:0_var(--s3)] mt mt-3">
+      <div className="grid grid-cols-2 gap-[0_var(--s3)] mt mt-3">
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           placeholder={translations.form.masterbatchId}
           aria-label={translations.form.masterbatchId}
           value={itemDraft.masterbatchId}
           onChange={(event) => set({ ...itemDraft, masterbatchId: event.target.value })}
         />
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           placeholder={translations.form.masterbatchDescription}
           aria-label={translations.form.masterbatchDescription}
           value={itemDraft.masterbatchDescription}
@@ -323,14 +323,14 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
   // UI and inline Tailwind styles
   return (
     <Sheet open={open} onClose={onClose} label={title} closeLabel={translations.close}>
-      <h2 className="text-xl font-extrabold [margin:var(--s2)_0_var(--s4)] leading-[1.3]">{title}</h2>
+      <h2 className="text-xl font-extrabold m-[var(--s2)_0_var(--s4)] leading-[1.3]">{title}</h2>
       <fieldset disabled={busy} className="border-0 p-0 m-0 min-w-0">
         <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="mf-tool-type">
           {translations.toolType}
         </label>
         <select
           id="mf-tool-type"
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           disabled={editing}
           value={toolType}
           onChange={(event) => {
@@ -353,12 +353,12 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
           "aria-invalid": tried && !form.toolId.trim(),
         })}
         {tried && !form.toolId.trim() && (
-          <p className="text-danger-ink text-sm font-bold [margin:6px_2px_0] flex items-center gap-1.5" role="alert">
+          <p className="text-danger-ink text-sm font-bold m-[6px_2px_0] flex items-center gap-1.5" role="alert">
             <Icon name="error" size={14} />
             {translations.form.required}
           </p>
         )}
-        <div className="grid grid-cols-2 [gap:0_var(--s3)]">
+        <div className="grid grid-cols-2 gap-[0_var(--s3)]">
           <div>{renderTextInput("toolSetCount", translations.form.toolSet, { maxLength: 50 })}</div>
           <div>{renderTextInput("size", translations.form.size, { maxLength: 50 })}</div>
         </div>
@@ -367,7 +367,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         </label>
         <select
           id="mf-owner"
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           value={form.owner}
           onChange={(event) => setForm({ ...form, owner: event.target.value })}
         >
@@ -389,7 +389,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         </label>
         <textarea
           id="mf-notes"
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           rows={2}
           maxLength={2000}
           value={form.notes}
@@ -416,7 +416,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
             </div>
             {start === "MOULD_ROOM" && zones.length > 0 && <RackPicker zones={zones} value={rackId} preferZone={form.owner || null} translations={translations} onChange={(id) => setRackId(id)} />}
             {tried && start === "MOULD_ROOM" && !rackId && (
-              <p className="text-danger-ink text-sm font-bold [margin:6px_2px_0] flex items-center gap-1.5" role="alert">
+              <p className="text-danger-ink text-sm font-bold m-[6px_2px_0] flex items-center gap-1.5" role="alert">
                 <Icon name="error" size={14} />
                 {translations.errors.RACK_REQUIRED()}
               </p>
@@ -424,7 +424,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
           </>
         )}
 
-        <h3 className="text-md [margin:var(--s5)_0_var(--s3)]">{translations.form.items}</h3>
+        <h3 className="text-md m-[var(--s5)_0_var(--s3)]">{translations.form.items}</h3>
         {items.map((itemDraft, index) => (
           <div className="[border-top:1px_dashed_var(--line)] pt-3 mt-3" key={itemDraft.id ?? index}>
             {renderItemFields(itemDraft, (nd) => setItems(items.map((x, j) => (j === index ? nd : x))))}
@@ -435,11 +435,11 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
                 </label>
                 <div className="flex gap-2 flex-wrap mt-1">
                   {(itemDraft.photo || itemDraft.imageUrl) && (
-                    <div className="relative w-[76px] [aspect-ratio:1] rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-pointer [&_img]:size-full [&_img]:object-cover [&_span]:absolute [&_span]:top-0.5 [&_span]:right-1.5 [&_span]:font-black [&_span]:text-white [&_span]:[text-shadow:0_0_3px_#000]">
+                    <div className="relative w-19 aspect-[1] rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-pointer [&_img]:size-full [&_img]:object-cover [&_span]:absolute [&_span]:top-0.5 [&_span]:right-1.5 [&_span]:font-black [&_span]:text-white [&_span]:[text-shadow:0_0_3px_#000]">
                       <img src={itemDraft.photo || itemDraft.imageUrl} alt={itemDraft.itemId} />
                     </div>
                   )}
-                  <label className="w-[76px] [aspect-ratio:1] rounded-md [border:1.5px_dashed_var(--ink-faint)] flex flex-col gap-1 items-center justify-center text-center text-xs font-extrabold text-ink-soft cursor-pointer p-1">
+                  <label className="w-19 aspect-[1] rounded-md [border:1.5px_dashed_var(--ink-faint)] flex flex-col gap-1 items-center justify-center text-center text-xs font-extrabold text-ink-soft cursor-pointer p-1">
                     <Icon name="camera" size={22} />
                     {translations.work.addPhoto}
                     <input
@@ -512,7 +512,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
             {error}
           </div>
         )}
-        <div className="flex gap-2 items-center mt-3 [&>button:first-child]:shrink-0 [&>button:last-child]:flex-1 [&>button:last-child]:mt-0 max-md:in-data-[sheet]:sticky max-md:in-data-[sheet]:bottom-[calc(-1*var(--s4))] max-md:in-data-[sheet]:bg-surface max-md:in-data-[sheet]:pt-3 max-md:in-data-[sheet]:pb-[calc(var(--s3)+var(--safe-b))] max-md:in-data-[sheet]:-mb-4 max-md:in-data-[sheet]:[border-top:1px_solid_var(--line)] max-md:in-data-[sheet]:z-2">
+        <div className="flex gap-2 items-center mt-3 [&>button:first-child]:shrink-0 [&>button:last-child]:flex-1 [&>button:last-child]:mt-0 max-md:in-data-sheet:sticky max-md:in-data-sheet:-bottom-(--s4) max-md:in-data-sheet:bg-surface max-md:in-data-sheet:pt-3 max-md:in-data-sheet:pb-[calc(var(--s3)+var(--safe-b))] max-md:in-data-sheet:-mb-4 max-md:in-data-sheet:[border-top:1px_solid_var(--line)] max-md:in-data-sheet:z-2">
           <button
             className="bg-transparent border-0 text-action font-extrabold text-sm min-h-tap px-2 py-0 cursor-pointer inline-flex items-center gap-1.5 disabled:text-ink-faint disabled:cursor-default"
             type="button"

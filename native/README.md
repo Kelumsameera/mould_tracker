@@ -2,8 +2,25 @@
 
 All shells open `https://tools.192.168.0.116.sslip.io:8444/`. They need the
 factory LAN and the existing server. They do not bundle or expose the database,
-server secrets or admin credentials. Web UI updates arrive from the server;
-shell updates require rebuilding the installer/APK with a higher version.
+server secrets or admin credentials. Web UI updates arrive from the server
+automatically whenever `main` is deployed.
+
+## In-app shell updates (2.3.0+)
+
+The Windows and Android apps check
+`https://tools.192.168.0.116.sslip.io:8444/downloads/windows-latest.json` /
+`android-latest.json`. When the feed has a higher version they offer
+**Update**, download the file, verify its SHA-256 and install it. Windows
+installs silently and reopens; Android shows the system install screen once
+(the first time, the user must allow Mould Tracker to install apps). Apps
+installed before 2.3.0 have no updater: install 2.3.0 manually once.
+
+To release a shell update: raise `version` in `desktop/package.json` and
+`versionName` + `versionCode` in `android/AndroidManifest.xml`, then run
+`powershell -File native/publish-native.ps1` (flags `-SkipWindows` /
+`-SkipAndroid`). It builds, uploads the installer/APK first and the feed
+last, and refreshes `SHA256SUMS.txt`. Builds stay on this PC because the
+Android signing key must never leave it.
 
 ## Windows
 
@@ -20,7 +37,7 @@ signing certificate to distribute a publisher-signed release.
 
 Requires Java 21, Android SDK platform `android-37.0`, build-tools `36.0.0` and
 Python. Set `ANDROID_HOME` if needed and run `python native/android/build.py`
-on Windows. Output: `outputs/native/Mould-Tracker-2.2.0-android.apk`.
+on Windows. Output: `outputs/native/Mould-Tracker-<version>-android.apk` and `android-latest.json`.
 Minimum Android version: Android 8 / API 26. The factory public CA is embedded
 only for the factory hostname; no SSL errors are ignored. No system CA install
 is necessary for the APK. Use email/password; passkeys in native WebViews have

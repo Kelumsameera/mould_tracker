@@ -6,7 +6,7 @@ const path = require('node:path');
 async function launch() {
   const appEvents = {}, pageEvents = {};
   let window, permission;
-  const app = { requestSingleInstanceLock: () => true, whenReady: async () => {}, on: (name, handler) => { appEvents[name] = handler; }, quit() {} };
+  const app = { requestSingleInstanceLock: () => true, whenReady: async () => {}, on: (name, handler) => { appEvents[name] = handler; }, quit() {}, getVersion: () => '0.0.0' };
   class BrowserWindow {
     constructor(options) {
       window = this; this.options = options;
@@ -55,4 +55,12 @@ test('remote pages cannot silently grant native permissions', async () => {
   const { permission } = await launch(); let granted;
   permission({}, 'media', (value) => { granted = value; });
   assert.equal(granted, false);
+});
+
+test('update check only accepts higher versions', () => {
+  const { newer } = require('../updater.cjs');
+  assert.equal(newer('2.3.0', '2.2.0'), true);
+  assert.equal(newer('2.10.0', '2.9.1'), true);
+  assert.equal(newer('2.2.0', '2.2.0'), false);
+  assert.equal(newer('2.1.9', '2.2.0'), false);
 });
