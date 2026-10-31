@@ -4,34 +4,49 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#1B2B35">
-  <title>Install Tool Tracker</title>
+  <title>Download &amp; install Mould Tracker</title>
   <style>
     :root{color-scheme:light;font-family:"Avenir Next","Trebuchet MS","Noto Sans Sinhala",sans-serif;color:#18232D;background:#F2F5F7}
     *{box-sizing:border-box}body{margin:0}header{background:#1B2B35;color:white;padding:36px max(24px,calc((100% - 600px)/2))}header p{color:#CFDDE1;line-height:1.6;margin-bottom:0}h1{font-size:30px;margin:12px 0}main{max-width:648px;margin:auto;padding:24px 24px calc(36px + env(safe-area-inset-bottom,0px))}p,li{font-size:15px;line-height:1.7}li+li{margin-top:10px}ol{padding-left:24px}details{border-bottom:1px solid #DEE5E9;padding:18px 0}summary{font-size:18px;font-weight:bold;cursor:pointer;padding:4px 0}a{color:#18515A;text-underline-offset:3px}header a{color:#fff}.open-app{display:block;background:#246B75;color:white;text-align:center;padding:15px 20px;border-radius:12px;font-weight:bold;text-decoration:none;margin:24px 0 12px}.note{color:#64727D;font-size:13px}.step{font-size:20px;margin:28px 0 8px}button{font:inherit;border:1px solid #87949D;border-radius:8px;background:transparent;color:white;padding:7px 12px;cursor:pointer}button[aria-pressed=true]{background:white;color:#1B2B35}:focus-visible{outline:3px solid #B7791F;outline-offset:4px}[hidden]{display:none!important}code{overflow-wrap:anywhere;font-size:12px}footer{margin-top:28px;border-top:1px solid #DEE5E9;padding-top:14px}
+
+    :root{--steel:#1B2B35;--accent:#F5B800;--line:#D8E2E7;background:#F3F6F8;font-family:"Segoe UI","Noto Sans Sinhala",system-ui,sans-serif}
+    html{scroll-behavior:smooth;scroll-padding-top:24px}header{border-top:5px solid var(--accent);padding:32px max(24px,calc((100% - 1000px)/2)) 40px}header h1{font-size:clamp(30px,5vw,48px);letter-spacing:-1px;line-height:1.2;max-width:850px}header p{max-width:650px;font-size:17px}main{max-width:1048px;padding-top:28px}.page-nav{display:flex;gap:28px;overflow-x:auto;padding:18px max(24px,calc((100% - 1000px)/2));background:white;border-bottom:1px solid var(--line)}.page-nav a{font-weight:650;white-space:nowrap;text-decoration:none}.step{font-size:27px;margin-top:38px;letter-spacing:-.4px}main>p{max-width:780px}.open-app{max-width:530px;text-align:left;border-radius:6px;background:#20616B}main>p:first-child{max-width:none;background:#FFF7DA;border-left:4px solid var(--accent);padding:15px 20px;margin-top:0}.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 32px}.guide-link{display:block;padding:22px 0;text-decoration:none;border-bottom:1px solid var(--line)}.guide-link strong{font-size:18px;display:block;color:var(--steel)}.guide-link span{font-size:14px;color:#526572;line-height:1.7;display:block;margin-top:8px}.guide-link:hover strong{text-decoration:underline}.manual-box{padding:24px;background:white;border:1px solid var(--line);border-radius:8px;margin-top:24px}.manual-box .open-app{margin-top:16px}.manual-box p:last-child{margin-bottom:0}.native-steps{max-width:780px;background:white;border:1px solid var(--line);padding:20px 24px;border-radius:8px;margin:24px 0}.native-steps h3{margin:0;font-size:19px}.native-steps ol{margin-bottom:0}.help-section{margin-top:36px}.help-section details p{max-width:780px}.skip{position:absolute;top:-80px;left:12px;background:white;padding:12px;z-index:5}.skip:focus{top:12px}.back-app{display:inline-block;margin-top:18px;color:white}footer{margin-top:42px}details code{display:block;max-width:100%;white-space:normal}@media(max-width:650px){.guide-grid{grid-template-columns:1fr}.page-nav{gap:22px}header h1{letter-spacing:-.5px}.open-app{max-width:none}.manual-box{padding:20px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{header{background:white;color:black}header p{color:black}header button,.page-nav,.skip{display:none}main{max-width:none}.guide-grid{display:block}.guide-link{break-inside:avoid}}
   </style>
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
   <header>
     <button type="button" aria-pressed="true" data-language="en">English</button>
     <button type="button" aria-pressed="false" data-language="si">සිංහල</button>
-    <h1 data-en="Install Tool Tracker" data-si="Tool Tracker install කරන්න">Install Tool Tracker</h1>
+    <h1 data-en="Download &amp; install Mould Tracker" data-si="Tool Tracker install කරන්න">Download &amp; install Mould Tracker</h1>
     <p data-en="Open from your home screen or desktop in its own app window, without the browser address bar." data-si="Home screen එකෙන් හෝ desktop එකෙන් browser address bar නැති app window එකක විවෘත කරන්න.">Open from your home screen or desktop in its own app window, without the browser address bar.</p>
+    <a class="back-app" href="https://tools.192.168.0.116.sslip.io:8444/login" data-en="Open Mould Tracker" data-si="Mould Tracker විවෘත කරන්න">Open Mould Tracker</a>
   </header>
-  <main>
+  <nav class="page-nav" aria-label="On this page"><a href="#downloads">Downloads</a><a href="#setup">Installation</a><a href="#documentation">Documentation</a><a href="#help">Help</a></nav>
+  <main id="main">
     <p data-en="First, connect to the factory Wi-Fi or LAN. The factory server must be running whenever you use the app." data-si="මුලින් factory Wi-Fi හෝ LAN එකට සම්බන්ධ වෙන්න. App එක භාවිත කරන විට factory server එක ක්‍රියාත්මකව තිබිය යුතුයි.">First, connect to the factory Wi-Fi or LAN. The factory server must be running whenever you use the app.</p>
-    <h2 class="step" data-en="Download the app" data-si="App එක download කරන්න">Download the app</h2>
-    <p data-en="These apps open Tool Tracker without browser menus or extension controls. Version 2.1.0." data-si="මේ apps වල browser menu හෝ extension controls පෙන්වන්නේ නැහැ. Version 2.1.0.">These apps open Tool Tracker without browser menus or extension controls. Version 2.1.0.</p>
-    <a class="open-app" href="/downloads/Tool-Tracker-2.1.0-windows-x64.exe" download data-en="Download Windows installer (.exe)" data-si="Windows installer (.exe) download කරන්න">Download Windows installer (.exe)</a>
+    <h2 id="downloads" class="step" data-en="Download the app" data-si="App එක download කරන්න">Download the app</h2>
+    <p data-en="These apps open Tool Tracker without browser menus or extension controls. Version 2.2.0." data-si="මේ apps වල browser menu හෝ extension controls පෙන්වන්නේ නැහැ. Version 2.2.0.">These apps open Tool Tracker without browser menus or extension controls. Version 2.2.0.</p>
+    <a class="open-app" href="/downloads/Mould-Tracker-2.2.0-windows-x64.exe" download data-en="Download Windows installer (.exe)" data-si="Windows installer (.exe) download කරන්න">Download Windows installer (.exe)</a>
     <p class="note" data-en="Windows 10/11, 64-bit. Install the factory certificate using the Windows steps below, then run the installer. This release has no publisher code signature, so Windows may show an unknown-publisher warning." data-si="Windows 10/11, 64-bit සඳහා. පහත Windows උපදෙස් අනුව factory certificate එක install කර installer එක run කරන්න. Publisher code signature නොමැති නිසා Windows unknown-publisher පණිවිඩයක් පෙන්විය හැකියි.">Windows 10/11, 64-bit. Install the factory certificate using the Windows steps below, then run the installer. This release has no publisher code signature, so Windows may show an unknown-publisher warning.</p>
-    <a class="open-app" href="/downloads/Tool-Tracker-2.1.0-android.apk" download data-en="Download Android app (.apk)" data-si="Android app (.apk) download කරන්න">Download Android app (.apk)</a>
+    <a class="open-app" href="/downloads/Mould-Tracker-2.2.0-android.apk" download data-en="Download Android app (.apk)" data-si="Android app (.apk) download කරන්න">Download Android app (.apk)</a>
     <p class="note" data-en="Android 8 or later. Open the downloaded APK and allow installation from your browser when Android asks. The factory certificate is already included in this app; no separate certificate setup is needed. Use email/password to sign in." data-si="Android 8 හෝ ඊට අලුත් version සඳහා. APK එක open කර Android ඉල්ලන විට browser එකෙන් install කිරීමට අවසර දෙන්න. මේ app එකට factory certificate ඇතුළත් නිසා වෙනම certificate setup අවශ්‍ය නැහැ. Email/password එකෙන් login වෙන්න.">Android 8 or later. Open the downloaded APK and allow installation from your browser when Android asks. The factory certificate is already included in this app; no separate certificate setup is needed. Use email/password to sign in.</p>
     <p class="note"><a href="/downloads/SHA256SUMS.txt" download>Download SHA-256 checksums</a></p>
+
+    <div class="native-steps">
+      <h3 data-en="Install your downloaded app" data-si="Download කළ app එක install කරන්න">Install your downloaded app</h3>
+      <ol>
+        <li data-en="Android: open the downloaded APK, allow installation from this browser if Android asks, and tap Install. The factory certificate is included in the APK." data-si="Android: download කළ APK එක විවෘත කරන්න. Android ඉල්ලුවොත් browser එකෙන් install කිරීමට අවසර දී Install තෝරන්න. Factory certificate එක APK එකට ඇතුළත්.">Android: open the downloaded APK, allow installation from this browser if Android asks, and tap Install. The factory certificate is included in the APK.</li>
+        <li data-en="Windows: complete the Windows certificate setup below, then run the downloaded EXE and follow the installer. Open Mould Tracker from Start or your desktop." data-si="Windows: පහත Windows certificate setup එක සම්පූර්ණ කර download කළ EXE එක විවෘත කරන්න. Installer පියවර අනුගමනය කර Start menu හෝ desktop එකෙන් Mould Tracker විවෘත කරන්න.">Windows: complete the Windows certificate setup below, then run the downloaded EXE and follow the installer. Open Mould Tracker from Start or your desktop.</li>
+        <li data-en="Connect to the factory network and sign in using the email and password assigned by your administrator. Native app passkey sign-in is not integrated; use your password." data-si="Factory network එකට සම්බන්ධ වී administrator ලබාදුන් email සහ password එකෙන් login වෙන්න. Native apps සඳහා passkey login සකස් කර නැති නිසා password භාවිත කරන්න.">Connect to the factory network and sign in using the email and password assigned by your administrator. Native app passkey sign-in is not integrated; use your password.</li>
+      </ol>
+    </div>
     <details>
       <summary>Apple: iPhone / iPad / Mac</summary>
       <p data-en="Native Apple downloads are not available yet. A Mac/Xcode build and Apple signing/distribution setup are required. Until those are ready, install the web app using the iPhone/iPad or Mac instructions below." data-si="Apple native download files තවම සූදානම් නැහැ. Mac/Xcode build සහ Apple signing/distribution setup අවශ්‍යයි. එතෙක් පහත iPhone/iPad හෝ Mac උපදෙස් අනුව web app එක install කරන්න.">Native Apple downloads are not available yet. A Mac/Xcode build and Apple signing/distribution setup are required. Until those are ready, install the web app using the iPhone/iPad or Mac instructions below.</p>
     </details>
     <h2 class="step" data-en="Or install the web app" data-si="නැත්නම් web app එක install කරන්න">Or install the web app</h2>
-    <h2 class="step" data-en="1. Set up this device" data-si="1. මේ device එක සකස් කරන්න">1. Set up this device</h2>
+    <h2 id="setup" class="step" data-en="1. Set up this device" data-si="1. මේ device එක සකස් කරන්න">1. Set up this device</h2>
     <p data-en="Do this once on each device. Choose your device below, trust the factory certificate, then install the app." data-si="හැම device එකකම මෙය එක්වරක් කරන්න. පහතින් device එක තෝරා factory certificate එක trust කර app එක install කරන්න.">Do this once on each device. Choose your device below, trust the factory certificate, then install the app.</p>
     <details name="device">
       <summary>Android</summary>
@@ -75,6 +90,33 @@
     <h2 class="step" data-en="2. Open and install" data-si="2. App එක විවෘත කර install කරන්න">2. Open and install</h2>
     <a class="open-app" href="https://tools.192.168.0.116.sslip.io:8444/" data-en="Open Tool Tracker" data-si="Tool Tracker විවෘත කරන්න">Open Tool Tracker</a>
     <p class="note" data-en="Already installed? Open the Tool Tracker icon on your device. This link opens the website; installing adds the separate app window." data-si="දැනටමත් install කරලාද? Device එකේ Tool Tracker icon එකෙන් විවෘත කරන්න. මේ link එක website එක විවෘත කරනවා; install කළ පසු වෙනම app window එක ලැබෙනවා.">Already installed? Open the Tool Tracker icon on your device. This link opens the website; installing adds the separate app window.</p>
+
+    <section id="documentation" aria-labelledby="docs-heading">
+      <h2 id="docs-heading" class="step" data-en="Documentation &amp; user guides" data-si="Documentation සහ භාවිත උපදෙස්">Documentation &amp; user guides</h2>
+      <p data-en="Start with the quick guide or choose a daily workflow below. The complete documentation is available in English." data-si="Quick guide එකෙන් පටන්ගන්න හෝ පහතින් දෛනික වැඩකට අදාළ guide එක තෝරන්න. සම්පූර්ණ documentation එක English භාෂාවෙන් ලබාගත හැකියි.">Start with the quick guide or choose a daily workflow below. The complete documentation is available in English.</p>
+      <div class="guide-grid">
+<a class="guide-link" href="/docs/getting-started/quick-start.html"><strong data-en="5-minute quick start" data-si="විනාඩි 5ක quick start">5-minute quick start</strong><span>First login, navigation and your first mould search.</span></a>
+<a class="guide-link" href="/docs/user-guide/find-a-mould.html"><strong data-en="Find a mould or extrusion die" data-si="Mould හෝ extrusion die එකක් සොයන්න">Find a mould or extrusion die</strong><span>Read location, status and movement history.</span></a>
+<a class="guide-link" href="/docs/user-guide/move-a-mould.html"><strong data-en="Move, mount and return" data-si="Move, mount සහ return කරන්න">Move, mount and return</strong><span>Record movements between racks, machines and the workshop.</span></a>
+<a class="guide-link" href="/docs/user-guide/work-log.html"><strong data-en="Record workshop work" data-si="Workshop වැඩ සටහන් කරන්න">Record workshop work</strong><span>Keep maintenance work and service history up to date.</span></a>
+<a class="guide-link" href="/docs/roles/overview.html"><strong data-en="Roles and permissions" data-si="Roles සහ permissions">Roles and permissions</strong><span>Understand the actions available to your account.</span></a>
+<a class="guide-link" href="/docs/support/troubleshooting.html"><strong data-en="Troubleshooting" data-si="ගැටලු විසඳුම්">Troubleshooting</strong><span>Resolve sign-in, network, access and installation issues.</span></a>
+</div>
+      <div class="manual-box">
+        <h3 data-en="The complete Mould Tracker manual" data-si="සම්පූර්ණ Mould Tracker අත්පොත">The complete Mould Tracker manual</h3>
+        <p data-en="Browse all topics, or open the complete manual and use your browser’s Print / Save as PDF to keep a copy." data-si="සියලු මාතෘකා බලන්න. නැත්නම් සම්පූර්ණ අත්පොත විවෘත කර browser එකේ Print / Save as PDF භාවිත කර පිටපතක් තබාගන්න.">Browse all topics, or open the complete manual and use your browser’s Print / Save as PDF to keep a copy.</p>
+        <a class="open-app" href="/docs/index.html" data-en="Browse all documentation" data-si="සියලු documentation බලන්න">Browse all documentation</a>
+        <p><a href="/docs/MOULD-TRACKER-COMPLETE-GUIDE.html" data-en="Open complete manual" data-si="සම්පූර්ණ අත්පොත විවෘත කරන්න">Open complete manual</a></p>
+      </div>
+    </section>
+    <section id="help" class="help-section" aria-labelledby="help-heading">
+      <h2 id="help-heading" class="step" data-en="Need a hand?" data-si="උදව් අවශ්‍යද?">Need a hand?</h2>
+      <details><summary data-en="The app cannot connect" data-si="App එක connect වෙන්නේ නැද්ද?">The app cannot connect</summary><p data-en="Check that your device is connected to the factory Wi-Fi/LAN and the server is running. Close and reopen the app. If it still fails, contact factory IT." data-si="Device එක factory Wi-Fi/LAN එකට සම්බන්ධද සහ server එක ක්‍රියාත්මකද බලන්න. App එක වසා නැවත විවෘත කරන්න. ගැටලුව පවතී නම් factory IT අංශයට දන්වන්න.">Check that your device is connected to the factory Wi-Fi/LAN and the server is running. Close and reopen the app. If it still fails, contact factory IT.</p></details>
+      <details><summary data-en="I see a certificate warning" data-si="Certificate warning එකක් පෙන්වනවාද?">I see a certificate warning</summary><p data-en="Use the device setup instructions above. Ask factory IT to confirm the certificate if you are unsure; do not continue through an unexpected certificate warning." data-si="ඉහත device setup උපදෙස් අනුගමනය කරන්න. සැකයක් ඇත්නම් certificate එක factory IT අංශයෙන් තහවුරු කරගන්න; නොහඳුනන certificate warning එකක් මඟහැර ඉදිරියට යන්න එපා.">Use the device setup instructions above. Ask factory IT to confirm the certificate if you are unsure; do not continue through an unexpected certificate warning.</p></details>
+      <details><summary data-en="I cannot sign in or see an action" data-si="Login වෙන්න හෝ action එකක් බලන්න බැරිද?">I cannot sign in or see an action</summary><p data-en="Use your assigned account. Ask your administrator to check that it is active and has the required permissions, or to reset your password." data-si="ඔබට ලබාදුන් account එක භාවිත කරන්න. එය active ද සහ අවශ්‍ය permissions තිබේද administrator ලවා බලවාගන්න. Password reset අවශ්‍ය නම් administrator අමතන්න.">Use your assigned account. Ask your administrator to check that it is active and has the required permissions, or to reset your password.</p></details>
+      <details><summary data-en="How do updates work?" data-si="Updates ලැබෙන්නේ කොහොමද?">How do updates work?</summary><p data-en="The web UI updates from the factory server when you reopen the app. Native shell changes need a new APK or Windows installer. Android updates must use the same app signing identity." data-si="App එක නැවත විවෘත කරන විට factory server එකෙන් අලුත් web UI එක ලැබෙනවා. Native shell වෙනස්කම් සඳහා අලුත් APK හෝ Windows installer අවශ්‍යයි. Android updates සඳහා එකම app signing identity භාවිත කළ යුතුයි.">The web UI updates from the factory server when you reopen the app. Native shell changes need a new APK or Windows installer. Android updates must use the same app signing identity.</p></details>
+      <p><a href="/docs/support/faq.html">Frequently asked questions</a></p>
+    </section>
     <footer>
       <p data-en="Share this setup page with other factory users:" data-si="අනිත් factory users සමඟ මේ setup link එක බෙදාගන්න:">Share this setup page with other factory users:</p>
       <a href="http://192.168.0.116:8081/install.html">http://192.168.0.116:8081/install.html</a>
@@ -88,7 +130,7 @@
       button.addEventListener('click', function() {
         var lang = button.dataset.language;
         document.documentElement.lang = lang;
-        document.querySelectorAll('[data-en]').forEach(function(node) { node.textContent = node.dataset[lang]; });
+        document.querySelectorAll('[data-en]').forEach(function(node) { node.textContent = node.dataset[lang] || node.dataset.en; });
         document.querySelectorAll('[data-language]').forEach(function(item) { item.setAttribute('aria-pressed', String(item === button)); });
       });
     });
