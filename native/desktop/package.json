@@ -1,0 +1,28 @@
+{
+  "name": "tool-tracker-desktop",
+  "version": "2.2.0",
+  "description": "Mould Tracker factory LAN desktop app",
+  "author": "Tool Tracker",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:mac": "electron-builder --mac dmg --universal"
+  },
+  "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "lk.factory.tooltracker",
+    "productName": "Mould Tracker",
+    "directories": { "output": "../../outputs/native/desktop" },
+    "files": ["main.cjs", "offline.html", "icon.png"],
+    "artifactName": "Mould-Tracker-${version}-${os}-${arch}.${ext}",
+    "win": { "target": "nsis", "icon": "icon.png", "signAndEditExecutable": false },
+    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true },
+    "mac": { "target": "dmg", "category": "public.app-category.productivity", "icon": "icon.png", "hardenedRuntime": true }
+  }
+}

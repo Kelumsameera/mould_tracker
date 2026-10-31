@@ -1,3 +1,12 @@
 .env.local
 node_modules/
 .next/
+.cache/
+native
+output/
+output/image-review/
+output/image-review/.next/
+outputs
+test
+package-lock.json
+index-delete.tsx

@@ -1,0 +1,119 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Database reference · Mould Tracker Docs</title><meta name="description" content="MongoDB collections, fields, enums, indexes and invariants">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a on" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="database-reference"><a class="anchor" href="#database-reference">#</a>Database reference</h1><p class="lead">MongoDB collections, fields, enums, indexes and invariants</p><div class="chips"><span class="chip">👥 Developers, DBAs</span><span class="chip ok">Verified against backend/models/*.js</span><span class="chip">Verified 2026-10-29</span><span class="chip">API 2.0.0</span></div><p>MongoDB via Mongoose 8. Transactions are required (replica set). Schema files: <code>backend/models/</code>.</p>
+<pre class="mermaid">erDiagram
+    MOULD ||--o{ ITEM : makes
+    MOULD }o--o| MACHINE : &quot;mounted on&quot;
+    MOULD }o--o| RACK : &quot;stored on&quot;
+    ZONE ||--o{ RACK : contains
+    MOULD ||--o{ MOVEMENT : history
+    MOULD ||--o{ WORKLOG : work
+    USER ||--o{ MOVEMENT : performedBy
+    USER ||--o{ PASSKEY : owns
+    USER ||--o{ AUDITLOG : actor</pre><h2 id="mould"><a class="anchor" href="#mould">#</a>Mould</h2><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>toolId</td>
+<td>String</td>
+<td>required, unique, uppercase, ≤100</td>
+</tr>
+<tr>
+<td>toolType</td>
+<td>enum</td>
+<td><code>INJECTION_MOULD</code> (default), <code>EXTRUSION_DIE</code></td>
+</tr>
+<tr>
+<td>toolSetCount, size</td>
+<td>String</td>
+<td>≤50</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>String</td>
+<td>zone code, uppercase, ≤10</td>
+</tr>
+<tr>
+<td>capableMachines</td>
+<td>[String]</td>
+<td>machine codes</td>
+</tr>
+<tr>
+<td>status</td>
+<td>enum</td>
+<td><code>GOOD, NEEDS_SERVICE, NEEDS_REPAIR, IN_SERVICE, IN_REPAIR</code></td>
+</tr>
+<tr>
+<td>location</td>
+<td>enum</td>
+<td><code>MACHINE, PRODUCTION_FLOOR, WORKSHOP, MOULD_ROOM, TOOL_ROOM, OUT_OF_SERVICE</code>; validated by <code>mouldStateError</code></td>
+</tr>
+<tr>
+<td>machineId / rackId</td>
+<td>ObjectId</td>
+<td>only with MACHINE / MOULD_ROOM</td>
+</tr>
+<tr>
+<td>awaitingRack</td>
+<td>Boolean</td>
+<td>imported, no rack yet</td>
+</tr>
+<tr>
+<td>shotsToService, totalShots, lastServicedAt</td>
+<td>Number/Date</td>
+<td>rule 8</td>
+</tr>
+<tr>
+<td>notes, remarks</td>
+<td>String ≤2000</td>
+<td>remarks = latest service/repair note</td>
+</tr>
+<tr>
+<td>outOfServiceDetails</td>
+<td>DispatchDetails</td>
+<td>recipientName, address, repairDetails, sentAt, returnedAt</td>
+</tr>
+<tr>
+<td>lastMovedAt/By, lastWork, openProblem</td>
+<td></td>
+<td>denormalised for cards</td>
+</tr>
+<tr>
+<td>deletedAt/By</td>
+<td></td>
+<td>soft delete</td>
+</tr>
+<tr>
+<td>version</td>
+<td>Number</td>
+<td>optimistic lock</td>
+</tr>
+</tbody></table>
+<p>Indexes: unique <code>machineId</code> where <code>location = MACHINE</code> (one mould per machine); <code>capableMachines</code>; <code>openProblem.at</code>; status, location, rackId, deletedAt.</p>
+<h2 id="item"><a class="anchor" href="#item">#</a>Item</h2><p><code>mouldId, itemId</code> (unique per mould), description, cavities, qas, materialId/Description, masterbatchId/Description, <code>images[{path, thumbPath, width, height, source}]</code>, notes, sortOrder, deletedAt.</p>
+<h2 id="machine"><a class="anchor" href="#machine">#</a>Machine</h2><p><code>code</code> (unique, uppercase), <code>name</code>, <code>active</code>.</p>
+<h2 id="zone-rack"><a class="anchor" href="#zone-rack">#</a>Zone / Rack</h2><ul>
+<li>Zone: <code>code</code> (unique, <code>[A-Z0-9]{1,10}</code>), name, active, sortOrder, deletedAt.</li>
+<li>Rack: zone, row (<code>[A-Z]{1,3}</code>), number (1–999), code, <code>locationId</code> (unique, <code>ZONE-CODE</code>), capacity (null = unlimited), active, note, deletedAt.</li>
+</ul>
+<h2 id="movement-append-only"><a class="anchor" href="#movement-append-only">#</a>Movement (append-only)</h2><p>mouldId, toolId, type (<code>CREATED, EDITED, MOVED, STATUS_CHANGED, DELETED, RESTORED, IMPORTED</code>), from/to location, status, machineId+code snapshot, rackId+locationId snapshot, outOfServiceDetails, remarks, overrideReason, performedBy, createdAt.</p>
+<h2 id="worklog-append-only"><a class="anchor" href="#worklog-append-only">#</a>WorkLog (append-only)</h2><p>mouldId, toolId, type (<code>REPAIR, SERVICE, MINOR_FIX, INSPECTION, CLEANING, OTHER</code>), description, partsUsed, timeSpentMinutes, doneBy[1–5]{userId,name,role}, recordedBy, doneAt, place snapshot, statusBefore/After, shots, outcome (<code>OK, NEEDS_REPAIR, NEEDS_SERVICE</code>), sentToWorkshop, photos[≤3], correctsId, problemReported, resolvesProblemId. Indexes on doneAt plus mould, person, type, machine and problem.</p>
+<h2 id="auditlog-append-only"><a class="anchor" href="#auditlog-append-only">#</a>AuditLog (append-only)</h2><p>actorId (null = system), actorName, action, entityType, entityId, entityLabel, before, after, reason, ip, createdAt.</p>
+<h2 id="user"><a class="anchor" href="#user">#</a>User</h2><p>name, email (unique, lowercase), passwordHash (bcrypt, cost 12), role, permissionOverrides (null = role defaults), language (<code>en</code>/<code>si</code>), active, deletedAt.</p>
+<h2 id="passkey-authchallenge"><a class="anchor" href="#passkey-authchallenge">#</a>Passkey / AuthChallenge</h2><p>Passkey: userId, credentialId (unique), publicKey, counter, transports, name, deviceType, backedUp, lastUsedAt. AuthChallenge: short-lived WebAuthn challenges.</p>
+<h2 id="legacy-support"><a class="anchor" href="#legacy-support">#</a>Legacy / support</h2><p><code>Tool</code>, <code>ToolMovement</code> (pre-upgrade model, kept for migration), <code>MigrationRun</code> (one-time migration record).</p>
+<h2 id="retention"><a class="anchor" href="#retention">#</a>Retention</h2><p>Nothing is hard-deleted by the app: moulds, items, racks, zones and users are soft-deleted; history, work log and audit are append-only (<code>backend/lib/immutable.js</code>). No retention or purge job exists.</p>
+
+<footer class="foot">Source: <code>docs/technical/database-reference.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#mould">Mould</a><a class="l2" href="#item">Item</a><a class="l2" href="#machine">Machine</a><a class="l2" href="#zone-rack">Zone / Rack</a><a class="l2" href="#movement-append-only">Movement (append-only)</a><a class="l2" href="#worklog-append-only">WorkLog (append-only)</a><a class="l2" href="#auditlog-append-only">AuditLog (append-only)</a><a class="l2" href="#user">User</a><a class="l2" href="#passkey-authchallenge">Passkey / AuthChallenge</a><a class="l2" href="#legacy-support">Legacy / support</a><a class="l2" href="#retention">Retention</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

@@ -1,0 +1,117 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Navigation tour · Mould Tracker Docs</title><meta name="description" content="The sidebar, pages, search, mould cards and the mould detail sheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a on" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="navigation-tour"><a class="anchor" href="#navigation-tour">#</a>Navigation tour</h1><p class="lead">The sidebar, pages, search, mould cards and the mould detail sheet</p><div class="chips"><span class="chip">👥 All users</span><span class="chip ok">Verified (static code review)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><h2 id="sidebar"><a class="anchor" href="#sidebar">#</a>Sidebar</h2><p>The sidebar collapses on desktop (<strong>Expand menu / Collapse menu</strong>) and becomes a menu on phones. Links only appear when you hold the permission (<code>frontend/src/components/Sidebar.tsx</code>, <code>frontend/src/utils/permissions.ts</code> <code>canVisitPage</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Link</th>
+<th>Route</th>
+<th>Shown when you have</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Find a mould</td>
+<td><code>/find</code></td>
+<td><code>moulds.view</code></td>
+<td>Search and browse injection moulds</td>
+</tr>
+<tr>
+<td>Extrusion die</td>
+<td><code>/extrusion</code></td>
+<td><code>moulds.view</code></td>
+<td>The same screen for extrusion dies</td>
+</tr>
+<tr>
+<td>Rack view</td>
+<td><code>/racks</code></td>
+<td><code>racks.view</code></td>
+<td>Mould Room map by zone and row</td>
+</tr>
+<tr>
+<td>Workshop queue</td>
+<td><code>/workshop</code></td>
+<td><code>moulds.view</code></td>
+<td>Moulds at the Workshop or flagged elsewhere</td>
+</tr>
+<tr>
+<td>User access</td>
+<td><code>/access</code></td>
+<td><code>access.manage</code> (System Administrator)</td>
+<td>Custom permissions per user</td>
+</tr>
+<tr>
+<td>Machines</td>
+<td><code>/machines</code></td>
+<td><code>moulds.manage</code></td>
+<td>Machine list, add, rename, enable/disable</td>
+</tr>
+<tr>
+<td>Users</td>
+<td><code>/users</code></td>
+<td><code>users.manage</code></td>
+<td>Create, edit, disable, delete users</td>
+</tr>
+<tr>
+<td>Work log report</td>
+<td><code>/work-report</code></td>
+<td><code>worklog.report</code></td>
+<td>Search, summarise and export work</td>
+</tr>
+<tr>
+<td>Rack management</td>
+<td><code>/rack-admin</code></td>
+<td><code>racks.manage</code>, or <code>moulds.manage</code> (view only)</td>
+<td>Zones and racks</td>
+</tr>
+<tr>
+<td>Audit log</td>
+<td><code>/audit</code></td>
+<td><code>audit.view</code></td>
+<td>Every change with before/after</td>
+</tr>
+<tr>
+<td>Account details</td>
+<td><code>/account</code></td>
+<td>everyone</td>
+<td>Name, email, password</td>
+</tr>
+<tr>
+<td>Passkeys / Biometric login</td>
+<td><code>/passkeys</code></td>
+<td>everyone</td>
+<td>Manage passkeys</td>
+</tr>
+<tr>
+<td>Sign out</td>
+<td>—</td>
+<td>everyone</td>
+<td>End the session</td>
+</tr>
+</tbody></table>
+<p>Opening a page without permission shows nothing useful, and the API refuses the data with HTTP 403.</p>
+<h2 id="find-a-mould"><a class="anchor" href="#find-a-mould">#</a>Find a mould</h2><ul>
+<li><strong>Search box:</strong> &quot;Tool ID, Item ID, description, machine or rack&quot;. Spacing is ignored (<code>FLK 19066</code> finds <code>FLK19066</code>); a rack like <code>FLK A3</code> finds rack <code>FLK-A3</code>.</li>
+<li><strong>Filter chips</strong> show counts (All, Service / repair, No rack yet, by location and status) from <code>GET /api/moulds/stats</code>.</li>
+<li><strong>Cards</strong> show Tool ID, status badge, location line, item count, picture thumbnail, last work and &quot;Service due&quot;.</li>
+<li>The list refreshes <strong>every 10 seconds</strong>. The sync indicator shows &quot;Live — synced with server&quot; or &quot;Offline — cannot reach server&quot;.</li>
+</ul>
+<h2 id="mould-detail-sheet"><a class="anchor" href="#mould-detail-sheet">#</a>Mould detail sheet</h2><p>Tap a card to open the sheet (<code>?mould=&lt;id&gt;</code> in the URL, so it can be bookmarked). It shows:</p>
+<ul>
+<li>Items made by this mould (pictures open in a lightbox), capable machines, shots, last serviced, owner (zone), tool set, size, notes, latest remarks.</li>
+<li><strong>Move or update</strong> actions you are allowed to take (others are hidden; if none: &quot;You can view this mould but not move it.&quot;).</li>
+<li>Work log, <strong>Report a problem</strong>, and <strong>History</strong>.</li>
+<li>For Admins: <strong>Edit mould</strong>, <strong>Delete mould</strong>, <strong>Restore mould</strong>.</li>
+</ul>
+<blockquote class="shot"><p>Screenshot needed: Find page on a phone with filter chips and two cards.
+Screenshot needed: Mould detail sheet showing actions and history.</p>
+</blockquote><p>Related: <a href="../user-guide/index.html">User guide</a></p>
+
+<footer class="foot">Source: <code>docs/getting-started/navigation-tour.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#sidebar">Sidebar</a><a class="l2" href="#find-a-mould">Find a mould</a><a class="l2" href="#mould-detail-sheet">Mould detail sheet</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

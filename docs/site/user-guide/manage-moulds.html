@@ -1,0 +1,113 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manage moulds and items · Mould Tracker Docs</title><meta name="description" content="Add, edit, delete and restore moulds; manage items and item pictures">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a on" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="manage-moulds-and-items"><a class="anchor" href="#manage-moulds-and-items">#</a>Manage moulds and items</h1><p class="lead">Add, edit, delete and restore moulds; manage items and item pictures</p><div class="chips"><span class="chip">👥 Admin, Super Admin</span><span class="chip ok">Verified (static code review + tests)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><h2 id="availability-and-role-permissions"><a class="anchor" href="#availability-and-role-permissions">#</a>Availability and role permissions</h2><p>Requires <code>moulds.manage</code>, held by Super Admin, Admin and System Administrator. Other roles do not see these buttons, and the API returns 403.</p>
+<h2 id="navigation"><a class="anchor" href="#navigation">#</a>Navigation</h2><ul>
+<li><strong>Add mould:</strong> on Find a mould / Extrusion die.</li>
+<li><strong>Edit mould / Delete mould / Restore mould:</strong> in the mould detail sheet.</li>
+</ul>
+<h2 id="fields-mould"><a class="anchor" href="#fields-mould">#</a>Fields — mould</h2><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tool ID</td>
+<td>Yes</td>
+<td>Max 100, stored uppercase, unique. A duplicate that differs only in spacing is refused (<code>DUPLICATE_TOOL_ID</code>).</td>
+</tr>
+<tr>
+<td>Tool type</td>
+<td>No</td>
+<td>Injection mould (default) or extrusion die</td>
+</tr>
+<tr>
+<td>Tool set count, Size</td>
+<td>No</td>
+<td>Max 50 characters each</td>
+</tr>
+<tr>
+<td>Owner (zone)</td>
+<td>No</td>
+<td>Zone code, letters and digits, max 10</td>
+</tr>
+<tr>
+<td>Capable machines</td>
+<td>No</td>
+<td>Comma separated, max 50; codes are normalised</td>
+</tr>
+<tr>
+<td>Shots to service</td>
+<td>No</td>
+<td>Whole number ≥ 0; empty means no limit</td>
+</tr>
+<tr>
+<td>Notes</td>
+<td>No</td>
+<td>Max 2000</td>
+</tr>
+<tr>
+<td>Starts at</td>
+<td>Create only</td>
+<td>Mould Room (default), Tool Room, Production Floor or Workshop. Never a machine. Mould Room needs a rack.</td>
+</tr>
+<tr>
+<td>Items</td>
+<td>No</td>
+<td>Up to 100 at creation</td>
+</tr>
+</tbody></table>
+<h2 id="fields-item"><a class="anchor" href="#fields-item">#</a>Fields — item</h2><p>Item ID (required, uppercase, unique within the mould), Description (500), Cavities (whole number), QAS, Material ID and description, Masterbatch ID and description, Notes (1000), Sort order, and a <strong>picture</strong> (edit only; JPEG/PNG/WebP, saved as an 800 px WebP plus a 200 px thumbnail).</p>
+<h2 id="actions"><a class="anchor" href="#actions">#</a>Actions</h2><ol>
+<li><strong>Add:</strong> fill the form, choose <strong>Starts at</strong> (and a rack for the Mould Room), add items, then save. The status is always <strong>Good</strong>.</li>
+<li><strong>Edit:</strong> change fields and save. The form sends the mould&#39;s <code>version</code>; if someone else changed it first you see &quot;…was changed by someone else. Refresh and try again.&quot;</li>
+<li><strong>Delete:</strong> enter an optional reason and confirm. This is a soft delete: history and items are kept.</li>
+<li><strong>Restore:</strong> open a deleted mould and select <strong>Restore mould</strong>.</li>
+</ol>
+<h2 id="rules-and-state-changes"><a class="anchor" href="#rules-and-state-changes">#</a>Rules and state changes</h2><ul>
+<li>A mould <strong>on a machine cannot be deleted</strong>: &quot;Take … off the machine before deleting it&quot;.</li>
+<li>Restore fails if another mould has since taken the Tool ID.</li>
+<li>Changing Shots to service can immediately flag the mould <strong>Needs service</strong> (rule 8) when it is outside storage.</li>
+<li>Every change writes a History line (<code>CREATED</code>, <code>EDITED</code>, <code>DELETED</code>, <code>RESTORED</code>) and an Audit log entry.</li>
+</ul>
+<h2 id="errors"><a class="anchor" href="#errors">#</a>Errors</h2><table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DUPLICATE_TOOL_ID</code></td>
+<td>Tool ID exists (or exists deleted: restore it instead)</td>
+</tr>
+<tr>
+<td><code>STALE</code></td>
+<td>Someone else saved first</td>
+</tr>
+<tr>
+<td><code>NO_CHANGE</code></td>
+<td>Nothing changed</td>
+</tr>
+<tr>
+<td><code>UNMOUNT_FIRST</code></td>
+<td>Mould is on a machine</td>
+</tr>
+<tr>
+<td><code>INVALID_PHOTO</code> / <code>TOO_LARGE</code></td>
+<td>Picture unreadable or too big</td>
+</tr>
+</tbody></table>
+<blockquote class="shot"><p>Screenshot needed: Add mould form with one item filled in.</p>
+</blockquote><h2 id="evidence"><a class="anchor" href="#evidence">#</a>Evidence</h2><p><code>backend/controllers/mouldController.js</code> (<code>createMould</code>, <code>updateMould</code>, <code>deleteMould</code>, <code>restoreMould</code>, <code>addItem</code>, <code>updateItem</code>, <code>deleteItem</code>); <code>backend/validators/schemas.js</code>; <code>backend/lib/images.js</code>; <code>frontend/src/components/MouldFormSheet.tsx</code>; <code>backend/test/itemPhoto.test.js</code>, <code>mouldModel.test.js</code>.</p>
+
+<footer class="foot">Source: <code>docs/user-guide/manage-moulds.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#availability-and-role-permissions">Availability and role permissions</a><a class="l2" href="#navigation">Navigation</a><a class="l2" href="#fields-mould">Fields — mould</a><a class="l2" href="#fields-item">Fields — item</a><a class="l2" href="#actions">Actions</a><a class="l2" href="#rules-and-state-changes">Rules and state changes</a><a class="l2" href="#errors">Errors</a><a class="l2" href="#evidence">Evidence</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

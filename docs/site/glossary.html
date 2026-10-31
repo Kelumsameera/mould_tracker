@@ -1,0 +1,140 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glossary · Mould Tracker Docs</title><meta name="description" content="Terms used in Mould Tracker and in these docs">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="index.html">Mould Tracker documentation</a><a class="nav-a" href="MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="introduction.html">Introduction</a><a class="nav-a" href="product-overview.html">Product overview</a><a class="nav-a on" href="glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="getting-started/first-login.html">First login</a><a class="nav-a" href="getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="user-guide/index.html">User guide</a><a class="nav-a" href="user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="user-guide/audit-log.html">Audit log</a><a class="nav-a" href="user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="user-guide/machines.html">Machines</a><a class="nav-a" href="user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="user-guide/rack-management.html">Rack management</a><a class="nav-a" href="user-guide/rack-view.html">Rack view</a><a class="nav-a" href="user-guide/record-shots.html">Record shots</a><a class="nav-a" href="user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="user-guide/users.html">Users</a><a class="nav-a" href="user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="user-guide/work-log.html">Work log</a><a class="nav-a" href="user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="roles/overview.html">Roles overview</a><a class="nav-a" href="roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="roles/super-admin.html">Super Admin</a><a class="nav-a" href="roles/admin.html">Admin</a><a class="nav-a" href="roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="workflows/overview.html">Workflows overview</a><a class="nav-a" href="workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="administration/configuration.html">Configuration</a><a class="nav-a" href="administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="technical/architecture.html">Architecture</a><a class="nav-a" href="technical/repository-structure.html">Repository structure</a><a class="nav-a" href="technical/local-development.html">Local development</a><a class="nav-a" href="technical/database-reference.html">Database reference</a><a class="nav-a" href="technical/api-reference.html">API reference</a><a class="nav-a" href="technical/integrations.html">Integrations</a><a class="nav-a" href="technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="support/faq.html">FAQ</a><a class="nav-a" href="support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="glossary"><a class="anchor" href="#glossary">#</a>Glossary</h1><p class="lead">Terms used in Mould Tracker and in these docs</p><div class="chips"><span class="chip">👥 Everyone</span><span class="chip ok">Verified (static code review)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+<th>Code value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mould / tool</td>
+<td>One Tool ID: an injection mould or an extrusion die.</td>
+<td><code>Mould</code> model</td>
+</tr>
+<tr>
+<td>Tool ID</td>
+<td>Unique identifier, stored uppercase (for example <code>FLK19066</code>). Searches ignore spacing.</td>
+<td><code>toolId</code></td>
+</tr>
+<tr>
+<td>Tool type</td>
+<td>Injection mould (default) or extrusion die.</td>
+<td><code>INJECTION_MOULD</code>, <code>EXTRUSION_DIE</code></td>
+</tr>
+<tr>
+<td>Item</td>
+<td>A product a mould makes: Item ID, description, cavities, material, masterbatch, QAS, pictures.</td>
+<td><code>Item</code> model</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>Machine, Production Floor, Workshop, Mould Room, Tool Room or Out of Service.</td>
+<td><code>MACHINE</code>, <code>PRODUCTION_FLOOR</code>, <code>WORKSHOP</code>, <code>MOULD_ROOM</code>, <code>TOOL_ROOM</code>, <code>OUT_OF_SERVICE</code></td>
+</tr>
+<tr>
+<td>Mould Room</td>
+<td>Storage for injection moulds, organised into zones and racks.</td>
+<td><code>MOULD_ROOM</code></td>
+</tr>
+<tr>
+<td>Tool Room</td>
+<td>Storage for extrusion dies. It has no racks.</td>
+<td><code>TOOL_ROOM</code></td>
+</tr>
+<tr>
+<td>Zone</td>
+<td>A side of the Mould Room (for example FLK). Also used as a mould&#39;s <strong>owner</strong>.</td>
+<td><code>Zone.code</code></td>
+</tr>
+<tr>
+<td>Rack / rack location</td>
+<td>Zone + row + number gives a location ID such as <code>FLK-A3</code>. Capacity is optional.</td>
+<td><code>Rack.locationId</code></td>
+</tr>
+<tr>
+<td>Awaiting rack</td>
+<td>An imported mould in the Mould Room with no rack yet (&quot;No rack yet&quot;).</td>
+<td><code>awaitingRack</code></td>
+</tr>
+<tr>
+<td>Status</td>
+<td>Good, Needs service, Needs repair, In service, In repair.</td>
+<td><code>GOOD</code>, <code>NEEDS_SERVICE</code>, <code>NEEDS_REPAIR</code>, <code>IN_SERVICE</code>, <code>IN_REPAIR</code></td>
+</tr>
+<tr>
+<td>Capable machines</td>
+<td>Machines a mould is listed for. Other machines need an Admin override with a reason.</td>
+<td><code>capableMachines</code></td>
+</tr>
+<tr>
+<td>Shots / shot limit</td>
+<td>Cycles counted while mounted. Reaching <code>shotsToService</code> makes the mould service-due.</td>
+<td><code>totalShots</code>, <code>shotsToService</code></td>
+</tr>
+<tr>
+<td>Workshop queue</td>
+<td>Moulds at the Workshop plus moulds flagged elsewhere.</td>
+<td><code>/workshop</code></td>
+</tr>
+<tr>
+<td>Work log</td>
+<td>Append-only record of work: repair, service, minor fix, inspection, cleaning, other.</td>
+<td><code>WorkLog</code></td>
+</tr>
+<tr>
+<td>Problem report</td>
+<td>A work-log entry anyone may make. It flags the mould but never changes status or location.</td>
+<td><code>problemReported</code>, <code>openProblem</code></td>
+</tr>
+<tr>
+<td>Correction</td>
+<td>A new work-log entry pointing at a wrong one. Entries are never edited.</td>
+<td><code>correctsId</code></td>
+</tr>
+<tr>
+<td>Out of Service</td>
+<td>Sent outside the factory for repair with recipient, address and repair details. Super Admin only.</td>
+<td><code>OUT_OF_SERVICE</code></td>
+</tr>
+<tr>
+<td>Movement</td>
+<td>One history line: created, edited, moved, status changed, deleted, restored, imported.</td>
+<td><code>Movement</code></td>
+</tr>
+<tr>
+<td>Audit log</td>
+<td>Append-only who / what / before / after record of every change.</td>
+<td><code>AuditLog</code></td>
+</tr>
+<tr>
+<td>Override</td>
+<td>An Admin decision to mount on a non-listed machine, or to store on another zone&#39;s rack. A reason is required.</td>
+<td><code>overrideReason</code></td>
+</tr>
+<tr>
+<td>Passkey</td>
+<td>Fingerprint, face or PIN sign-in using WebAuthn.</td>
+<td><code>Passkey</code></td>
+</tr>
+<tr>
+<td>Private user</td>
+<td>How a protected System Administrator appears to everyone else.</td>
+<td><code>backend/lib/accountPrivacy.js</code></td>
+</tr>
+<tr>
+<td>Version (optimistic lock)</td>
+<td>A number sent with edits so the server can detect that someone else changed the mould first.</td>
+<td><code>version</code></td>
+</tr>
+</tbody></table>
+
+<footer class="foot">Source: <code>docs/glossary.md</code></footer></article></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="assets/docs.js"></script></body></html>

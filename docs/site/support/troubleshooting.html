@@ -1,0 +1,141 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Troubleshooting · Mould Tracker Docs</title><meta name="description" content="Symptom, cause, check, fix and escalation for common problems">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a on" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="troubleshooting"><a class="anchor" href="#troubleshooting">#</a>Troubleshooting</h1><p class="lead">Symptom, cause, check, fix and escalation for common problems</p><div class="chips"><span class="chip">👥 All users; support</span><span class="chip ok">Verified (messages taken from source)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><table>
+<thead>
+<tr>
+<th>Message / symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+<th>Escalate to</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;Invalid email or password&quot;</td>
+<td>Wrong credentials or disabled account</td>
+<td>Retry; check caps lock</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td>&quot;Too many authentication attempts…&quot;</td>
+<td>40 attempts in 10 min</td>
+<td>Wait 10 minutes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;Invalid or expired session&quot; / sent to sign-in</td>
+<td>Session expired, user disabled</td>
+<td>Sign in again</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td>&quot;You do not have permission to do this&quot;</td>
+<td>Role or custom access</td>
+<td>Ask someone with the right role</td>
+<td>Admin / System Administrator</td>
+</tr>
+<tr>
+<td>&quot;…is needs repair; it can only go to the Workshop&quot; (<code>NOT_GOOD</code>)</td>
+<td>Only Good moulds leave the Workshop</td>
+<td>Send to Workshop, fix, mark Good</td>
+<td>Technician / Maker</td>
+</tr>
+<tr>
+<td>&quot;…already has X; take it off first&quot; (<code>MACHINE_OCCUPIED</code>)</td>
+<td>One mould per machine</td>
+<td>Move X off first</td>
+<td>Supervisor</td>
+</tr>
+<tr>
+<td>&quot;…is not listed for INJ-03&quot; (<code>NOT_CAPABLE</code>)</td>
+<td>Machine not in capable machines</td>
+<td>Choose a listed machine, or an Admin overrides with a reason</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td>&quot;…has reached its shot limit…&quot; (<code>SERVICE_DUE</code>)</td>
+<td>Shots ≥ limit</td>
+<td>Service at the Workshop</td>
+<td>Technician</td>
+</tr>
+<tr>
+<td>&quot;Rack FLK-A3 is full&quot; (<code>RACK_FULL</code>)</td>
+<td>Capacity reached</td>
+<td>Choose another rack</td>
+<td>Super Admin (capacity)</td>
+</tr>
+<tr>
+<td>&quot;…belongs to FLK, not CCI; give a reason…&quot; (<code>OWNER_MISMATCH</code>)</td>
+<td>Owner zone ≠ rack zone</td>
+<td>Use own zone, or give a reason</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;Remarks are required…&quot;</td>
+<td>Workshop / Out of Service moves and status changes</td>
+<td>Enter remarks</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;Send … to the Workshop before changing its status&quot;</td>
+<td>Status changes only at the Workshop</td>
+<td>Move first</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;…was changed by someone else. Refresh and try again.&quot; (<code>STALE</code>)</td>
+<td>Concurrent edit</td>
+<td>Reload and redo</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;Take … off the machine before deleting it&quot;</td>
+<td>Delete on a machine</td>
+<td>Unmount first</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;…entries match; narrow the filters to 5000 or fewer&quot;</td>
+<td>Export cap</td>
+<td>Narrow the date range</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;Upload is too large&quot; / &quot;Photos must be JPEG, PNG or WebP&quot;</td>
+<td>Photo size/type</td>
+<td>Use a smaller JPEG/PNG/WebP</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;The work time cannot be in the future&quot;</td>
+<td>Device clock / date field</td>
+<td>Fix the date</td>
+<td>—</td>
+</tr>
+<tr>
+<td>&quot;Offline — cannot reach server&quot;</td>
+<td>Network / server down</td>
+<td>Check Wi-Fi/LAN; retry</td>
+<td>IT</td>
+</tr>
+<tr>
+<td>Passkey button disabled</td>
+<td>No trusted HTTPS configuration</td>
+<td>Use password</td>
+<td>IT</td>
+</tr>
+<tr>
+<td>Certificate warning on a device</td>
+<td>Factory CA not trusted</td>
+<td>Install the CA (<code>deploy/LOCAL-HTTPS.md</code>)</td>
+<td>IT</td>
+</tr>
+</tbody></table>
+
+<footer class="foot">Source: <code>docs/support/troubleshooting.md</code></footer></article></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

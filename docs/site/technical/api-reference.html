@@ -1,0 +1,506 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API reference · Mould Tracker Docs</title><meta name="description" content="Every REST endpoint with permissions, inputs, side effects and errors">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a on" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="api-reference"><a class="anchor" href="#api-reference">#</a>API reference</h1><p class="lead">Every REST endpoint with permissions, inputs, side effects and errors</p><div class="chips"><span class="chip">👥 Developers, integrators, testers</span><span class="chip ok">Verified against backend/routes/*.js and backend/validators/schemas.js</span><span class="chip">Verified 2026-10-29</span><span class="chip">API 2.0.0</span></div><p>Base path <code>/api</code>. JSON only. Authentication uses the HttpOnly cookie <code>access_token</code> set by login. All routes built with <code>routerFrom</code> require sign-in, then <strong>any one</strong> of the listed permissions (<code>backend/routes/table.js</code>).</p>
+<h2 id="response-envelope"><a class="anchor" href="#response-envelope">#</a>Response envelope</h2><pre><code class="lang-json">{ &quot;success&quot;: true, &quot;...&quot;: &quot;...&quot; }
+{ &quot;success&quot;: false, &quot;message&quot;: &quot;Human readable&quot;, &quot;code&quot;: &quot;MACHINE_OCCUPIED&quot;, &quot;details&quot;: { &quot;occupant&quot;: &quot;FLK19066&quot; } }</code></pre><table>
+<thead>
+<tr>
+<th>HTTP</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>400</td>
+<td>Validation (Zod), <code>NO_CHANGE</code>, <code>REMARKS_REQUIRED</code>, bad id, invalid JSON</td>
+</tr>
+<tr>
+<td>401</td>
+<td>No / invalid / expired session; user inactive or deleted</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Missing permission, <code>FORBIDDEN_MOVE</code></td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not found / route not found</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Business-rule conflict (<code>STALE</code>, <code>NOT_GOOD</code>, <code>MACHINE_OCCUPIED</code>, <code>DUPLICATE</code>, …)</td>
+</tr>
+<tr>
+<td>410</td>
+<td><code>/api/tools</code> (old API, replaced)</td>
+</tr>
+<tr>
+<td>413</td>
+<td><code>TOO_LARGE</code> body (1 MB; 8 MB on work log / problem routes)</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Rate limit on auth / passkey routes</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Unexpected; message hidden in production</td>
+</tr>
+</tbody></table>
+<h2 id="health"><a class="anchor" href="#health">#</a>Health</h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>none</td>
+<td><code>{ service, database: &quot;connected&quot;|&quot;disconnected&quot;, timestamp }</code></td>
+</tr>
+</tbody></table>
+<h2 id="auth-apiauth-backendroutesauthroutesjs"><a class="anchor" href="#auth-apiauth-backendroutesauthroutesjs">#</a>Auth — <code>/api/auth</code> (<code>backend/routes/authRoutes.js</code>)</h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Body</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/login</code></td>
+<td>rate-limited 40/10 min</td>
+<td><code>{ email, password }</code></td>
+<td>Sets cookie (7 days)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/logout</code></td>
+<td>—</td>
+<td>—</td>
+<td>Clears cookie</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me</code></td>
+<td>signed in</td>
+<td>—</td>
+<td>User + <code>permissions[]</code></td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/me</code></td>
+<td>signed in, rate-limited</td>
+<td><code>{ name, email, currentPassword, newPassword? }</code></td>
+<td>Profile</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/me/language</code></td>
+<td>signed in</td>
+<td><code>{ language: &quot;en&quot;|&quot;si&quot; }</code></td>
+<td></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/password</code></td>
+<td>signed in</td>
+<td><code>{ currentPassword, newPassword }</code></td>
+<td></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/passkeys/capabilities</code></td>
+<td>—</td>
+<td>—</td>
+<td>Whether passkeys are configured</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/passkeys</code></td>
+<td>signed in</td>
+<td>—</td>
+<td>Your passkeys</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/passkeys/register/options</code></td>
+<td>signed in, 20/10 min, origin check</td>
+<td><code>{ currentPassword, name }</code></td>
+<td>WebAuthn options</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/passkeys/register/verify</code></td>
+<td>signed in, origin check</td>
+<td><code>{ response }</code></td>
+<td></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/passkeys/login/options</code></td>
+<td>40/10 min, origin check</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/passkeys/login/verify</code></td>
+<td>40/10 min, origin check</td>
+<td><code>{ response }</code></td>
+<td>Sets cookie</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/passkeys/:id</code></td>
+<td>signed in, origin check</td>
+<td><code>{ currentPassword }</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="moulds-apimoulds-backendroutesmouldroutesjs"><a class="anchor" href="#moulds-apimoulds-backendroutesmouldroutesjs">#</a>Moulds — <code>/api/moulds</code> (<code>backend/routes/mouldRoutes.js</code>)</h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Permission (any)</th>
+<th>Body / query</th>
+<th>Side effects</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>moulds.view</td>
+<td><code>toolType, q, location, status, owner, zone, rackId, machineId, awaitingRack, needsService, problem, deleted</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/stats</code></td>
+<td>moulds.view</td>
+<td><code>toolType</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/:id</code></td>
+<td>moulds.view</td>
+<td>—</td>
+<td>Deleted only for moulds.manage</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/:id/history</code></td>
+<td>moulds.view</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/</code></td>
+<td>moulds.manage</td>
+<td><code>toolId, toolType?, toolSetCount?, size?, owner?, capableMachines?, shotsToService?, notes?, location, rackId?, overrideReason, items[]</code></td>
+<td>CREATED + audit</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/:id</code></td>
+<td>moulds.manage</td>
+<td>mould fields + <code>remarks, version</code></td>
+<td>EDITED + audit</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/:id</code></td>
+<td>moulds.manage</td>
+<td><code>{ reason }</code></td>
+<td>Soft delete</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/restore</code></td>
+<td>moulds.manage</td>
+<td>—</td>
+<td>RESTORED</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/move</code></td>
+<td>moves.outOfService, moves.machine, moves.mouldRoom, workshop.work (exact check in <code>planMove</code>)</td>
+<td><code>to, machineId?/machineCode?, rackId?, status?, remarks, overrideReason, outOfServiceDetails?, version</code></td>
+<td>MOVED + audit; may resolve problem</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/status</code></td>
+<td>workshop.work</td>
+<td><code>status, remarks, version</code></td>
+<td>STATUS_CHANGED</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/shots</code></td>
+<td>moves.machine, workshop.work</td>
+<td><code>shots (1–10,000,000), version</code></td>
+<td>May auto-flag NEEDS_SERVICE</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/items</code></td>
+<td>moulds.manage</td>
+<td>item fields</td>
+<td>item.created</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/:id/items/:itemId</code></td>
+<td>moulds.manage</td>
+<td>item fields + <code>photo</code> (data URL)</td>
+<td>item.updated</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/:id/items/:itemId</code></td>
+<td>moulds.manage</td>
+<td><code>{ reason }</code></td>
+<td>item.deleted</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/:id/worklogs</code></td>
+<td>worklog.view</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/worklogs</code></td>
+<td>worklog.create</td>
+<td>see <a href="../user-guide/work-log.html">work log</a></td>
+<td>WorkLog + audit; may move / change status</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/:id/problems</code></td>
+<td>problem.report</td>
+<td><code>description, doneAt?, photos[≤3], version</code></td>
+<td>openProblem</td>
+</tr>
+</tbody></table>
+<p>Example move:</p>
+<pre><code class="lang-http">POST /api/moulds/6650c0ffee0000000000abcd/move
+Content-Type: application/json
+
+{ &quot;to&quot;: &quot;MACHINE&quot;, &quot;machineCode&quot;: &quot;INJ-03&quot;, &quot;remarks&quot;: &quot;&quot;, &quot;version&quot;: 7 }</code></pre><h2 id="racks-apiracks"><a class="anchor" href="#racks-apiracks">#</a>Racks — <code>/api/racks</code></h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Permission</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>racks.view</td>
+<td>— (zones, racks, occupancy)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/:id</code></td>
+<td>racks.view</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/zones</code></td>
+<td>racks.manage</td>
+<td><code>{ code, name, sortOrder }</code></td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/zones/:id</code></td>
+<td>racks.manage</td>
+<td><code>{ code?, name?, active?, sortOrder? }</code></td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/zones/:id</code></td>
+<td>racks.manage</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/</code></td>
+<td>racks.manage</td>
+<td><code>{ zone, row, number, capacity, note }</code></td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/:id</code></td>
+<td>racks.manage</td>
+<td><code>{ row?, number?, capacity?, active?, note? }</code></td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/:id</code></td>
+<td>racks.manage</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/bulk</code></td>
+<td>racks.manage</td>
+<td><code>{ zone, rowFrom, rowTo, from, to, capacity, preview=true }</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/remove-row</code></td>
+<td>racks.manage</td>
+<td><code>{ zone, row }</code></td>
+</tr>
+</tbody></table>
+<h2 id="machines-apimachines"><a class="anchor" href="#machines-apimachines">#</a>Machines — <code>/api/machines</code></h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Permission</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>moulds.view</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/</code></td>
+<td>moulds.manage</td>
+<td><code>{ code, name }</code></td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/:id</code></td>
+<td>moulds.manage</td>
+<td><code>{ name?, active? }</code></td>
+</tr>
+</tbody></table>
+<h2 id="users-apiusers"><a class="anchor" href="#users-apiusers">#</a>Users — <code>/api/users</code></h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Permission</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>users.manage</td>
+<td>—</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/</code></td>
+<td>users.manage</td>
+<td><code>{ name, email, password, role }</code></td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/:id</code></td>
+<td>users.manage</td>
+<td><code>{ email?, name?, role?, active?, password? }</code></td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/:id</code></td>
+<td>users.manage</td>
+<td><code>{ reason }</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/access</code></td>
+<td>access.manage</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/:id/access</code></td>
+<td>access.manage</td>
+<td><code>{ permissions: string[] | null }</code></td>
+</tr>
+</tbody></table>
+<h2 id="work-logs-apiworklogs"><a class="anchor" href="#work-logs-apiworklogs">#</a>Work logs — <code>/api/worklogs</code></h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Permission</th>
+<th>Query</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/workers</code></td>
+<td>worklog.create</td>
+<td>— (people who may be named)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>worklog.report</td>
+<td><code>q, toolId, userId, type, machine, outcome, status, problem, range, from, to, page, limit≤100</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/summary</code></td>
+<td>worklog.report</td>
+<td>same filters</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/export</code></td>
+<td>worklog.report</td>
+<td>same + <code>format=csv|xlsx</code> (cap 5,000)</td>
+</tr>
+</tbody></table>
+<h2 id="audit-apiaudit"><a class="anchor" href="#audit-apiaudit">#</a>Audit — <code>/api/audit</code></h2><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Permission</th>
+<th>Query</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>audit.view</td>
+<td><code>entityType, entityId, action, actorId, from, to, page, limit≤200</code></td>
+</tr>
+</tbody></table>
+<h2 id="uploads"><a class="anchor" href="#uploads">#</a>Uploads</h2><p><code>GET /api/uploads/&lt;path&gt;</code>: signed-in users only; immutable cache for 365 days (file names are content hashes).</p>
+<h2 id="error-codes-business"><a class="anchor" href="#error-codes-business">#</a>Error codes (business)</h2><p><code>NOT_FOUND, STALE, NO_CHANGE, MOULD_DELETED, INVALID_LOCATION, FORBIDDEN_MOVE, FORBIDDEN, STATUS_ONLY_AT_WORKSHOP, INVALID_STATUS, OUT_OF_SERVICE_STATUS, REMARKS_REQUIRED, DISPATCH_DETAILS_REQUIRED, INVALID_DISPATCH_DETAILS, NOT_GOOD, MACHINE_REQUIRED, MACHINE_INACTIVE, SERVICE_DUE, MACHINE_OCCUPIED, NOT_CAPABLE, OVERRIDE_REASON_REQUIRED, RACK_REQUIRED, RACK_INACTIVE, RACK_FULL, OWNER_MISMATCH, NOT_AT_WORKSHOP, NOT_ON_MACHINE, INVALID_SHOTS, DUPLICATE, DUPLICATE_TOOL_ID, UNMOUNT_FIRST, RACK_OCCUPIED, INVALID_RANGE, INVALID_PHOTO, TOO_LARGE, DESCRIPTION_REQUIRED, DONE_AT_FUTURE, INVALID_DATE, TOO_MANY_WORKERS, INVALID_WORKER, INVALID_CORRECTION, EXPORT_TOO_LARGE, GONE</code>. Warnings (successful response): <code>CAPABILITY_OVERRIDDEN, OWNER_ZONE_OVERRIDDEN, SERVICE_STILL_DUE, WORKSHOP_MOVE_NOT_ALLOWED, WORKSHOP_MOVE_REQUIRED</code>.</p>
+<p>Total: <strong>55 routed endpoints</strong> (1 health + 13 auth + 17 moulds + 10 racks + 3 machines + 6 users + 4 work logs + 1 audit), plus the <code>/api/uploads</code> static files and the <code>/api/tools</code> 410 stub.</p>
+
+<footer class="foot">Source: <code>docs/technical/api-reference.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#response-envelope">Response envelope</a><a class="l2" href="#health">Health</a><a class="l2" href="#auth-apiauth-backendroutesauthroutesjs">Auth — /api/auth (backend/routes/authRoutes.js)</a><a class="l2" href="#moulds-apimoulds-backendroutesmouldroutesjs">Moulds — /api/moulds (backend/routes/mouldRoutes.js)</a><a class="l2" href="#racks-apiracks">Racks — /api/racks</a><a class="l2" href="#machines-apimachines">Machines — /api/machines</a><a class="l2" href="#users-apiusers">Users — /api/users</a><a class="l2" href="#work-logs-apiworklogs">Work logs — /api/worklogs</a><a class="l2" href="#audit-apiaudit">Audit — /api/audit</a><a class="l2" href="#uploads">Uploads</a><a class="l2" href="#error-codes-business">Error codes (business)</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

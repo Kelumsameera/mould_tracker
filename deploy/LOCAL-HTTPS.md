@@ -67,6 +67,22 @@ biometric prompt must be completed by the person using each device.
 
 ## Install as an app (PWA)
 
+The setup page also provides the Windows x64 installer and Android APK under
+`/downloads/` (version 2.1.0). Nginx serves these finished artifacts from
+`deploy/lan-certificates/downloads/` on HTTP and HTTPS. Check `SHA256SUMS.txt`
+after uploading a release. See [native build instructions](../native/README.md).
+Windows currently has no publisher signature; the Android APK uses the local
+release signing key. Apple native files are not released until Mac/Xcode and
+the owner's Apple signing/distribution setup are available.
+
+Share **http://192.168.0.116:8081/install.html** with factory users. This public
+setup page opens before certificate trust is configured and includes certificate
+downloads and app installation steps for Android, iPhone/iPad, Windows and Mac.
+It is also available at `/install.html` on the HTTPS app. To update the HTTP copy,
+copy `frontend/public/install.html` to `deploy/lan-certificates/install.html` on
+the NUC; the existing Nginx certificate-directory mount serves it. Validate and
+reload the Nginx configuration after adding the `/install.html` location.
+
 After trusting the certificate, open the HTTPS app and choose **Install app**
 in the sidebar or on the login page. Chrome/Edge on Windows and Android can show
 a native install prompt. On iPhone/iPad, open Safari and choose **Share → Add to

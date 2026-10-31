@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Introduction · Mould Tracker Docs</title><meta name="description" content="What Mould Tracker is, the problem it solves and its scope">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="index.html">Mould Tracker documentation</a><a class="nav-a" href="MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a on" href="introduction.html">Introduction</a><a class="nav-a" href="product-overview.html">Product overview</a><a class="nav-a" href="glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="getting-started/first-login.html">First login</a><a class="nav-a" href="getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="user-guide/index.html">User guide</a><a class="nav-a" href="user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="user-guide/audit-log.html">Audit log</a><a class="nav-a" href="user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="user-guide/machines.html">Machines</a><a class="nav-a" href="user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="user-guide/rack-management.html">Rack management</a><a class="nav-a" href="user-guide/rack-view.html">Rack view</a><a class="nav-a" href="user-guide/record-shots.html">Record shots</a><a class="nav-a" href="user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="user-guide/users.html">Users</a><a class="nav-a" href="user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="user-guide/work-log.html">Work log</a><a class="nav-a" href="user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="roles/overview.html">Roles overview</a><a class="nav-a" href="roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="roles/super-admin.html">Super Admin</a><a class="nav-a" href="roles/admin.html">Admin</a><a class="nav-a" href="roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="workflows/overview.html">Workflows overview</a><a class="nav-a" href="workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="administration/configuration.html">Configuration</a><a class="nav-a" href="administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="technical/architecture.html">Architecture</a><a class="nav-a" href="technical/repository-structure.html">Repository structure</a><a class="nav-a" href="technical/local-development.html">Local development</a><a class="nav-a" href="technical/database-reference.html">Database reference</a><a class="nav-a" href="technical/api-reference.html">API reference</a><a class="nav-a" href="technical/integrations.html">Integrations</a><a class="nav-a" href="technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="support/faq.html">FAQ</a><a class="nav-a" href="support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="introduction"><a class="anchor" href="#introduction">#</a>Introduction</h1><p class="lead">What Mould Tracker is, the problem it solves and its scope</p><div class="chips"><span class="chip">👥 Everyone</span><span class="chip ok">Verified (static code review + automated tests)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0; native shells 2.2.0</span></div><h2 id="what-is-mould-tracker"><a class="anchor" href="#what-is-mould-tracker">#</a>What is Mould Tracker?</h2><p>Mould Tracker tracks the injection moulds and extrusion dies (&quot;tools&quot;) of a plastics factory. Each tool has a <strong>Tool ID</strong>, a <strong>location</strong>, a <strong>condition (status)</strong>, the <strong>items (products)</strong> it makes, a <strong>shot counter</strong> and a full <strong>history</strong>.</p>
+<h2 id="problem-it-solves"><a class="anchor" href="#problem-it-solves">#</a>Problem it solves</h2><p>Without a system, moulds get lost between machines, racks and the workshop. Nobody knows which mould is due for service, and repair work goes unrecorded. Mould Tracker answers these questions at any moment:</p>
+<ul>
+<li><em>Where is mould X?</em> On a machine, on the production floor, at the workshop, on a numbered rack, in the tool room, or out of service.</li>
+<li><em>Can it be used?</em> It is Good, or it needs service/repair, or it is in service/repair.</li>
+<li><em>Who moved it, who worked on it, and when?</em></li>
+</ul>
+<h2 id="objectives-as-implemented"><a class="anchor" href="#objectives-as-implemented">#</a>Objectives (as implemented)</h2><table>
+<thead>
+<tr>
+<th>Objective</th>
+<th>How the app does it</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>One trusted location per tool</td>
+<td>Location, machine and rack rules enforced by the database model</td>
+<td><code>backend/lib/mouldState.js</code> <code>mouldStateError</code></td>
+</tr>
+<tr>
+<td>Prevent unsafe use</td>
+<td>Only <strong>Good</strong> moulds leave the Workshop; one mould per machine; a reached shot limit blocks mounting</td>
+<td><code>backend/lib/workflow.js</code> <code>planMove</code></td>
+</tr>
+<tr>
+<td>Accountability</td>
+<td>Append-only movement history, work log and audit log</td>
+<td><code>backend/lib/immutable.js</code>, <code>models/Movement.js</code>, <code>models/AuditLog.js</code></td>
+</tr>
+<tr>
+<td>Role-based control</td>
+<td>6 roles and 19 permissions, enforced on every API call</td>
+<td><code>backend/lib/permissions.js</code></td>
+</tr>
+<tr>
+<td>Shop-floor usability</td>
+<td>Mobile-first PWA, English/Sinhala UI, 10-second auto refresh</td>
+<td><code>frontend/src/utils/i18n.ts</code>, <code>components/MouldSearch.tsx</code></td>
+</tr>
+</tbody></table>
+<h2 id="scope"><a class="anchor" href="#scope">#</a>Scope</h2><p><strong>In scope (verified):</strong> tool register and items; locations and moves; Mould Room zones and racks; machines; workshop status; shot counting; work log and problem reports; work-log report with CSV/XLSX export; users, roles and custom access; audit log; passkey sign-in; PWA and native shells.</p>
+<p><strong>Not found in the code:</strong> QR/barcode scanning, notifications (email/SMS/push), scheduled jobs, production planning, spare-parts inventory, approval chains and a general dashboard page. See <a href="support/known-limitations.html">known limitations</a>.</p>
+<h2 id="lifecycle-overview"><a class="anchor" href="#lifecycle-overview">#</a>Lifecycle overview</h2><pre class="mermaid">stateDiagram-v2
+    [*] --&gt; Stored: Add mould (Good)
+    Stored --&gt; InUse: Mount / to floor
+    InUse --&gt; Stored: Put back on rack
+    InUse --&gt; Workshop: Send to Workshop
+    Stored --&gt; Workshop: Send to Workshop
+    Workshop --&gt; Workshop: In service / In repair
+    Workshop --&gt; Stored: Marked Good, put on rack
+    Workshop --&gt; InUse: Marked Good, mounted
+    Workshop --&gt; OutOfService: Sent out (Super Admin)
+    OutOfService --&gt; Workshop: Returned (Super Admin)
+    Stored --&gt; Deleted: Delete (soft)
+    Deleted --&gt; Stored: Restore</pre><p>&quot;Stored&quot; means Mould Room (injection moulds) or Tool Room (extrusion dies). &quot;In use&quot; means on a machine or on the Production Floor.</p>
+<p>Next: <a href="product-overview.html">Product overview</a> · <a href="glossary.html">Glossary</a></p>
+
+<footer class="foot">Source: <code>docs/introduction.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#what-is-mould-tracker">What is Mould Tracker?</a><a class="l2" href="#problem-it-solves">Problem it solves</a><a class="l2" href="#objectives-as-implemented">Objectives (as implemented)</a><a class="l2" href="#scope">Scope</a><a class="l2" href="#lifecycle-overview">Lifecycle overview</a></nav></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="assets/docs.js"></script></body></html>

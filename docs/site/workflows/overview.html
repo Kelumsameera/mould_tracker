@@ -1,0 +1,97 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workflows overview · Mould Tracker Docs</title><meta name="description" content="Inventory of verified end-to-end workflows and the location/status state machine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
+<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a on" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
+<main class="main"><article class="doc"><h1 id="workflows-overview"><a class="anchor" href="#workflows-overview">#</a>Workflows overview</h1><p class="lead">Inventory of verified end-to-end workflows and the location/status state machine</p><div class="chips"><span class="chip">👥 All users; managers; testers</span><span class="chip ok">Verified (backend/lib/workflow.js, backend/lib/workLog.js + tests)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>Trigger</th>
+<th>Actors</th>
+<th>Page</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mould registration and retirement</td>
+<td>New mould / mould no longer used</td>
+<td>Admin</td>
+<td><a href="mould-lifecycle.html">mould-lifecycle.md</a></td>
+</tr>
+<tr>
+<td>Mount and unmount</td>
+<td>Production needs a mould</td>
+<td>Maker, Technician, Supervisor, Admin</td>
+<td><a href="mount-and-unmount.html">mount-and-unmount.md</a></td>
+</tr>
+<tr>
+<td>Shot count and service</td>
+<td>Shift production</td>
+<td>Supervisor, Technician</td>
+<td><a href="shot-count-and-service.html">shot-count-and-service.md</a></td>
+</tr>
+<tr>
+<td>Problem → repair</td>
+<td>Someone sees a defect</td>
+<td>Anyone → Technician/Maker</td>
+<td><a href="problem-to-repair.html">problem-to-repair.md</a></td>
+</tr>
+<tr>
+<td>Workshop repair cycle</td>
+<td>Mould needs service/repair</td>
+<td>Technician, Maker</td>
+<td><a href="workshop-repair-cycle.html">workshop-repair-cycle.md</a></td>
+</tr>
+<tr>
+<td>Out of Service (external repair)</td>
+<td>Repair outside the factory</td>
+<td>Super Admin</td>
+<td><a href="out-of-service.html">out-of-service.md</a></td>
+</tr>
+<tr>
+<td>Data import and migration</td>
+<td>Initial load / workbook update</td>
+<td>IT (CLI)</td>
+<td><a href="data-import.html">data-import.md</a></td>
+</tr>
+</tbody></table>
+<p>Not found in the code: approvals, scheduled maintenance plans, notifications, archival beyond soft delete.</p>
+<h2 id="the-two-state-rules-always-enforced"><a class="anchor" href="#the-two-state-rules-always-enforced">#</a>The two state rules (always enforced)</h2><ol>
+<li>A mould that is <strong>not Good</strong> may only be at the Workshop, on a machine, on the Production Floor or Out of Service. It is <strong>never in storage</strong>.</li>
+<li><strong>In service / In repair</strong> may only be at the Workshop or Out of Service.</li>
+</ol>
+<p>These rules are checked by the database model on every save (<code>mouldStateError</code>), not just by the UI.</p>
+<pre class="mermaid">stateDiagram-v2
+    direction LR
+    state &quot;Mould Room / Tool Room&lt;br/&gt;(Good only)&quot; as S
+    state &quot;Machine&lt;br/&gt;(one per machine)&quot; as M
+    state &quot;Production Floor&quot; as F
+    state &quot;Workshop&quot; as W
+    state &quot;Out of Service&quot; as O
+    S --&gt; M: Admin only (two permissions)
+    S --&gt; F
+    S --&gt; W
+    M --&gt; F
+    M --&gt; M: change machine
+    F --&gt; M
+    M --&gt; S: Good only
+    F --&gt; S: Good only
+    M --&gt; W
+    F --&gt; W
+    W --&gt; M: Good only
+    W --&gt; F: Good only
+    W --&gt; S: Good only
+    W --&gt; O: Super Admin
+    O --&gt; W: Super Admin</pre><h2 id="concurrency-and-failure-handling"><a class="anchor" href="#concurrency-and-failure-handling">#</a>Concurrency and failure handling</h2><ul>
+<li><strong>Optimistic locking:</strong> writes carry the mould&#39;s <code>version</code>. If it changed, the result is <code>409 STALE</code> (&quot;…was changed by someone else. Refresh and try again.&quot;).</li>
+<li><strong>Transactions:</strong> each change and its History + Audit lines are saved together or not at all (<code>withTransaction</code>, <code>backend/config/db.js</code>).</li>
+<li><strong>Database guards:</strong> a unique index allows one mould per machine; Tool IDs are unique.</li>
+<li><strong>Double submits:</strong> the UI disables buttons while saving (<code>rack-admin</code>, <code>users</code> pages).</li>
+<li><strong>Offline:</strong> no offline queue; actions need the server.</li>
+</ul>
+
+<footer class="foot">Source: <code>docs/workflows/overview.md</code></footer></article></main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="../assets/docs.js"></script></body></html>

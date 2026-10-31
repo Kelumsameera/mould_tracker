@@ -4,3 +4,17 @@ Mould tracker.zip
 deploy/lan-certificates/
 deploy/tls/
 outputs/lan-https/
+outputs/native/
+outputs/migration/
+outputs/import/
+backend/uploads/
+.cache/
+native
+output/
+output/image-review/
+output/image-review/.next/
+outputs
+test
+Flexicare Lanka Tools list PR 013 & 14 - Last Updated - 04 JAN 2024.xlsx
+# Docs site builder
+docs/site-builder/node_modules/
