@@ -20,7 +20,10 @@ import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
 import { MOULD_FIELDS, planMouldEdit } from "../lib/mouldEdit.js";
-import { ISOLATION_MAX_WAIT_HOURS, isolationLevel, limitedRunLevel } from "../lib/flowConfig.js";
+import { ISOLATION_MAX_WAIT_HOURS } from "../lib/flowConfig.js";
+import { buildDowntime, planCavities, totalCavities } from "../lib/cavities.js";
+import WorkLog from "../models/WorkLog.js";
+import { lastWorkSummary } from "../lib/workLog.js";
 const ITEM_FIELDS = ["itemId", "description", "cavities", "qas", "materialId", "materialDescription", "masterbatchId", "masterbatchDescription", "notes", "sortOrder"];
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const toolKey = (s) => String(s).toUpperCase().replace(/\s+/g, "");
@@ -42,7 +45,7 @@ async function refsFor(moulds) {
 async function respondWithMould(res, id, status = 200, extra = {}) {
   const mould = await Mould.findById(id).lean();
   const [refs, items] = await Promise.all([refsFor([mould]), Item.find({ mouldId: id, deletedAt: null }).sort({ sortOrder: 1, itemId: 1 }).lean()]);
-  res.status(status).json({ success: true, mould: { ...mouldDTO(mould, refs), items: items.map(itemDTO) }, ...extra });
+  res.status(status).json({ success: true, mould: { ...mouldDTO(mould, refs, { totalCavities: totalCavities(items) }), items: items.map(itemDTO) }, ...extra });
 }
 
 async function loadForUpdate(id, session, version) {
@@ -84,6 +87,7 @@ export async function listMoulds(req, res) {
   if (q.awaitingRack) filter.awaitingRack = q.awaitingRack === "true";
   if (q.needsService === "true") filter.status = { $in: SERVICE_STATUSES };
   if (q.problem === "true") filter.openProblem = { $ne: null };
+  if (q.limited === "true") filter["blockedCavities.0"] = { $exists: true };
   if (q.zone) filter.rackId = { $in: (await Rack.find({ zone: q.zone.toUpperCase() }, { _id: 1 }).lean()).map((r) => r._id) };
 
   if (q.q) {
@@ -112,7 +116,7 @@ export async function listMoulds(req, res) {
     Item.aggregate([
       { $match: { mouldId: { $in: ids }, deletedAt: null } },
       { $sort: { sortOrder: 1 } },
-      { $group: { _id: "$mouldId", itemCount: { $sum: 1 }, itemIds: { $push: "$itemId" }, firstImage: { $first: { $arrayElemAt: ["$images.thumbPath", 0] } }, anyImage: { $push: { $arrayElemAt: ["$images.thumbPath", 0] } } } }
+      { $group: { _id: "$mouldId", itemCount: { $sum: 1 }, totalCavities: { $sum: { $cond: [{ $gt: ["$cavities", 0] }, "$cavities", 0] } }, itemIds: { $push: "$itemId" }, firstImage: { $first: { $arrayElemAt: ["$images.thumbPath", 0] } }, anyImage: { $push: { $arrayElemAt: ["$images.thumbPath", 0] } } } }
     ])
   ]);
   const stats = new Map(itemStats.map((s) => [String(s._id), s]));
@@ -121,7 +125,7 @@ export async function listMoulds(req, res) {
     moulds: moulds.map((m) => {
       const s = stats.get(String(m._id));
       const thumb = s?.firstImage || s?.anyImage?.find(Boolean);
-      return mouldDTO(m, refs, { itemCount: s?.itemCount ?? 0, itemIds: s?.itemIds ?? [], thumbUrl: thumb ? `/uploads/${thumb}` : null });
+      return mouldDTO(m, refs, { totalCavities: s?.totalCavities ?? 0, itemCount: s?.itemCount ?? 0, itemIds: s?.itemIds ?? [], thumbUrl: thumb ? `/uploads/${thumb}` : null });
     })
   });
 }
@@ -445,4 +449,51 @@ export async function removeItemImage(req, res) {
 
 export async function reorderItemImages(req, res) {
   await imageChange(req, res, "item.image.reordered", "pictures reordered", (images) => reorderImages(images, req.body.order));
+}
+
+// ---- Running with blocked cavities (step 5) ----
+// POST /api/moulds/:id/cavities  { blocked: [..], reason, problemType?, expectedFixBy?, photo?, version }
+export async function setCavities(req, res) {
+  const { blocked, reason, problemType, expectedFixBy, photo, version } = req.body;
+  let rendered = [];
+  if (photo) {
+    try { rendered = await photosFromDataUrls([photo], "worklogs"); }
+    catch (e) { fail(400, "INVALID_PHOTO", e.message); }
+  }
+  const id = await withTransaction(async (session) => {
+    const doc = await loadForUpdate(req.params.id, session, version);
+    const mould = await withPlace(doc, session);
+    const items = await Item.find({ mouldId: doc._id, deletedAt: null }, { cavities: 1 }).session(session).lean();
+    const plan = planCavities({ mould, user: req.user, blocked, total: totalCavities(items), reason, problemType, expectedFixBy });
+    Object.assign(doc, plan.set);
+    doc.markModified("limitedRun");
+    doc.version += 1;
+    await doc.save({ session });
+    await Movement.create([plan.movement], { session });
+    const [log] = await WorkLog.create([{ ...plan.log, photos: rendered.map(saveRendered) }], { session });
+    doc.lastWork = lastWorkSummary(log, log._id);
+    await doc.save({ session });
+    await audit(req, { action: plan.action, entityType: "Mould", entityId: doc._id, entityLabel: doc.toolId, before: plan.before, after: plan.after, reason: plan.log.description }, session);
+    return doc._id;
+  });
+  await respondWithMould(res, id);
+}
+
+// GET /api/moulds/:id/cavity-downtime[?format=csv] - periods with blocked cavities, newest first.
+export async function getCavityDowntime(req, res) {
+  const mould = await Mould.findById(req.params.id, { toolId: 1, deletedAt: 1 }).lean();
+  if (!mould || (mould.deletedAt && !can(req.user, "mould.delete"))) fail(404, "NOT_FOUND", "Mould not found");
+  const movements = await Movement.find({ mouldId: mould._id, type: "CAVITIES_CHANGED" }).sort({ createdAt: 1 }).lean();
+  const hidden = new Set((req.accountPrivacy?.ids || []).map(String));
+  const users = byId(await User.find({ _id: { $in: movements.map((m) => m.performedBy) } }, { name: 1 }).lean());
+  for (const id of hidden) users.set(id, { name: "Private user" });
+  const periods = buildDowntime(movements, users);
+  if (req.query.format === "csv") {
+    if (!can(req.user, "export.run") && !can(req.user, "worklog.report")) fail(403, "FORBIDDEN", "You do not have permission to export");
+    const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [["Tool ID", "From", "To", "Blocked cavities", "Reason", "Decided by"], ...periods.map((p) => [mould.toolId, new Date(p.from).toISOString(), p.to ? new Date(p.to).toISOString() : "", p.cavities.join(" "), p.reason, p.by])];
+    res.set("Content-Type", "text/csv; charset=utf-8").set("Content-Disposition", `attachment; filename="cavity-downtime-${mould.toolId}.csv"`);
+    return res.send("\uFEFF" + rows.map((r) => r.map(cell).join(",")).join("\r\n"));
+  }
+  res.json({ success: true, toolId: mould.toolId, periods });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import AlertBadges, { hasAlertBadges } from "@/components/AlertBadges";
 import Icon from "./Icon";
 import { assetUrl } from "@/utils/api";
 import { type Dict, type Lang } from "@/utils/i18n";
@@ -55,8 +56,9 @@ export default function MouldCard({ mould, translations, lang, onOpen }: Props) 
           </div>
         )}
         <LastWork mould={mould} translations={translations} lang={lang} />
-        {(mould.openProblem || mould.serviceDue) && (
+        {(mould.openProblem || mould.serviceDue || hasAlertBadges(mould)) && (
           <div className="flex gap-1.5 flex-wrap">
+            <AlertBadges mould={mould} translations={translations} />
             {mould.openProblem && (
               <span
                 className="inline-flex items-center gap-1 text-xs font-semibold tracking-[.1px] px-2 py-0.5 rounded-[4px] whitespace-nowrap leading-[1.6] bg-danger text-white"

@@ -23,6 +23,8 @@ export const mouldRouteTable = [
   ["post", "/:id/restore", DELETE, c.restoreMould],
   ["post", "/:id/move", MOVE, c.moveMould, s.moveMouldSchema],
   ["post", "/:id/status", ["status.change"], c.changeStatus, s.statusSchema],
+  ["post", "/:id/cavities", ["cavity.manage"], c.setCavities, s.cavitiesSchema],
+  ["get", "/:id/cavity-downtime", VIEW, c.getCavityDowntime],
   ["post", "/:id/shots", ["move.machine", "status.change"], c.recordShots, s.shotsSchema],
   ["post", "/:id/items", EDIT, c.addItem, s.addItemSchema],
   ["patch", "/:id/items/:itemId", EDIT, c.updateItem, s.updateItemSchema],

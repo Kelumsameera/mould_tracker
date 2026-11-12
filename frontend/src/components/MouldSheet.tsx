@@ -227,6 +227,7 @@ export default function MouldSheet({
   const actionIcon: Record<MouldAction, IconName> = {
     MACHINE: "machine",
     PRODUCTION_FLOOR: "floor",
+    ISOLATION: "clock",
     MOULD_ROOM: "mouldRoom",
     TOOL_ROOM: "mouldRoom",
     WORKSHOP: "workshop",
@@ -235,7 +236,11 @@ export default function MouldSheet({
     SHOTS: "shots",
   };
   if (mould && !mould.deletedAt) {
-    const good = mould.status === "GOOD";
+    // Running with blocked cavities may still run on a machine or the floor.
+    const good = mould.status === "GOOD" || mould.status === "RUNNING_LIMITED";
+    // Any status may wait in the Isolation Area; it is the first hop of every non-machine move.
+    if (mould.location !== "ISOLATION" && canMoveTo(user, mould.location, "ISOLATION"))
+      actions.push({ key: "ISOLATION", label: translations.isolation.send });
     if (good && canMoveTo(user, mould.location, "MACHINE"))
       actions.push({
         key: "MACHINE",
@@ -257,7 +262,7 @@ export default function MouldSheet({
           key: "TOOL_ROOM",
           label: translations.act.toMouldRoom(translations.loc.TOOL_ROOM),
         });
-    } else if (good && canMoveTo(user, mould.location, "MOULD_ROOM"))
+    } else if (mould.status === "GOOD" && canMoveTo(user, mould.location, "MOULD_ROOM"))
       actions.push({
         key: "MOULD_ROOM",
         label:

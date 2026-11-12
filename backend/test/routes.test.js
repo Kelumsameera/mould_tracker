@@ -57,6 +57,8 @@ const EXPECTED = {
   "moulds POST /": ADMINS, "moulds PATCH /:id": ADMINS, "moulds DELETE /:id": ADMINS, "moulds POST /:id/restore": ADMINS,
   "moulds POST /:id/move": WORKERS, // each role has some move; lib/workflow.js narrows it (tested in workflow.test.js)
   "moulds POST /:id/status": ["super_admin", "admin", "mould_technician", "mould_maker"],
+  "moulds POST /:id/cavities": ["super_admin", "admin", "production_supervisor", "mould_technician", "mould_maker"],
+  "moulds GET /:id/cavity-downtime": ALL,
   "moulds POST /:id/shots": WORKERS.filter((r) => r !== "production_supervisor" || true),
   "moulds POST /:id/items": ADMINS, "moulds PATCH /:id/items/:itemId": ADMINS, "moulds DELETE /:id/items/:itemId": ADMINS,
   "moulds POST /:id/items/:itemId/images": ADMINS, "moulds PUT /:id/items/:itemId/images/order": ADMINS,

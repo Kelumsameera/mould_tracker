@@ -3,7 +3,7 @@ import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { immutable } from "../lib/immutable.js";
 import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
 
-export const MOVEMENT_TYPES = ["CREATED", "EDITED", "MOVED", "STATUS_CHANGED", "DELETED", "RESTORED", "IMPORTED"];
+export const MOVEMENT_TYPES = ["CREATED", "EDITED", "MOVED", "STATUS_CHANGED", "DELETED", "RESTORED", "IMPORTED", "CAVITIES_CHANGED"];
 
 const ref = (model) => ({ type: mongoose.Schema.Types.ObjectId, ref: model, default: null });
 const snapshot = { type: String, default: null };

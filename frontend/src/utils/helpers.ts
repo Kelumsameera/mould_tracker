@@ -29,6 +29,8 @@ export const TOOL_ID_TAG = "font-sign font-bold text-[15px] tracking-[.5px] text
 export const TONE_TEXT: Record<string, string> = {
   MACHINE: "text-machine",
   PRODUCTION_FLOOR: "text-floor",
+  ISOLATION: "text-warn",
+  limited: "text-warn",
   MOULD_ROOM: "text-room",
   TOOL_ROOM: "text-room",
   WORKSHOP: "text-workshop",
@@ -65,6 +67,8 @@ export const PAGE_PATHS = {
   extrusion: "/extrusion",
   racks: "/racks",
   workshop: "/workshop",
+  isolation: "/isolation",
+  dashboard: "/dashboard",
   workReport: "/work-report",
   rackAdmin: "/rack-admin",
   machines: "/machines",

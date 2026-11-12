@@ -106,6 +106,15 @@ export const createMouldSchema = z.object({
   overrideReason,
   items: z.array(createItemSchema).max(100).default([])
 });
+// Run with blocked cavities: the cavity numbers closed now ([] restores all).
+export const cavitiesSchema = z.object({
+  blocked: z.array(z.number().int().min(1).max(1000)).max(1000),
+  reason: z.string().trim().max(1000).default(""),
+  problemType: z.string().trim().max(100).nullable().optional(),
+  expectedFixBy: z.iso.datetime({ offset: true }).nullable().optional(),
+  photo: z.string().max(9_000_000).optional(),
+  version: z.number().int().positive().optional()
+});
 export const updateMouldSchema = z.object({ toolId: upperId("Tool ID").optional(), ...mouldFields, remarks, version });
 export const moveMouldSchema = z.object({
   outOfServiceDetails: dispatchDetailsSchema.optional(),
@@ -138,6 +147,7 @@ export const listMouldsQuery = z.object({
   awaitingRack: z.enum(["true", "false"]).optional(),
   needsService: z.enum(["true", "false"]).optional(),
   problem: z.enum(["true", "false"]).optional(),
+  limited: z.enum(["true", "false"]).optional(),
   deleted: z.enum(["true", "false"]).optional()
 });
 
@@ -162,9 +172,10 @@ export const auditQuery = z.object({
 });
 
 // ---- Work log ----
-const WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];
+const MANUAL_WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];
+const WORK_TYPES = [...MANUAL_WORK_TYPES, "CAVITY_BLOCK", "CAVITY_RESTORE"]; // report filters include cavity entries
 export const createWorkLogSchema = z.object({
-  type: z.enum(WORK_TYPES),
+  type: z.enum(MANUAL_WORK_TYPES),
   description: z.string().trim().min(1, "Say what was done").max(2000),
   partsUsed: z.string().trim().max(1000).default(""),
   timeSpentMinutes: z.number().int().min(0).max(100000).nullable().optional(),

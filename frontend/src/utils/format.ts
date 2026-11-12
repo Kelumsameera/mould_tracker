@@ -4,7 +4,7 @@ import type { Location, Mould, Movement, MouldStatus } from "@/utils/types";
 
 // Build the location text shown on mould cards.
 export function locationLine(
-  mould: Pick<Mould, 'location' | 'machine' | 'rack' | 'status'>,
+  mould: Pick<Mould, 'location' | 'machine' | 'rack' | 'status' | 'isolation'>,
   text: Dict,
 ): string {
   const placeName = locationName(mould.location, text);
@@ -22,7 +22,21 @@ export function locationLine(
   if (mould.location === 'WORKSHOP' && mould.status !== 'GOOD') {
     return `${placeName} – ${text.status[mould.status]}`;
   }
+  if (mould.location === 'ISOLATION' && mould.isolation) {
+    // ISOLATION AREA · waiting 3h → MOULD ROOM
+    const plan = mould.isolation.intendedDestination ? ` → ${locationName(mould.isolation.intendedDestination, text)}` : '';
+    return `${placeName} · ${text.isolation.waiting(since(mould.isolation.since, text))}${plan}`;
+  }
   return placeName;
+}
+
+// "3h 20m", "2d 4h" since a date (or between two dates).
+export function since(from: string | Date, text: Dict, to: Date = new Date()) {
+  return duration(Math.max(0, to.getTime() - new Date(from).getTime()) / 60000, text);
+}
+export function duration(totalMinutes: number, text: Dict) {
+  const minutes = Math.floor(totalMinutes);
+  return text.duration(Math.floor(minutes / 1440), Math.floor((minutes % 1440) / 60), minutes % 60);
 }
 
 function placeText(

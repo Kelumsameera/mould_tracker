@@ -1,10 +1,13 @@
 import type { Permission, Role } from "@/utils/permissions";
 
 export type { Role };
-export type Location = 'MACHINE' | 'PRODUCTION_FLOOR' | 'WORKSHOP' | 'MOULD_ROOM' | 'TOOL_ROOM' | 'OUT_OF_SERVICE';
+export type Location = 'MACHINE' | 'PRODUCTION_FLOOR' | 'ISOLATION' | 'WORKSHOP' | 'MOULD_ROOM' | 'TOOL_ROOM' | 'OUT_OF_SERVICE';
 export type ToolType = 'INJECTION_MOULD' | 'EXTRUSION_DIE';
-export type MouldStatus = 'GOOD' | 'NEEDS_SERVICE' | 'NEEDS_REPAIR' | 'IN_SERVICE' | 'IN_REPAIR';
-export const LOCATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'MOULD_ROOM', 'TOOL_ROOM', 'WORKSHOP', 'OUT_OF_SERVICE'];
+export type MouldStatus = 'GOOD' | 'NEEDS_SERVICE' | 'NEEDS_REPAIR' | 'IN_SERVICE' | 'IN_REPAIR' | 'RUNNING_LIMITED';
+export type AlertLevel = 'amber' | 'red' | null;
+export const LOCATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'ISOLATION', 'MOULD_ROOM', 'TOOL_ROOM', 'WORKSHOP', 'OUT_OF_SERVICE'];
+// Where a mould waiting in the Isolation Area may be planned to go next.
+export const INTENDED_DESTINATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'MOULD_ROOM', 'TOOL_ROOM', 'WORKSHOP'];
 export const STATUSES: MouldStatus[] = ['GOOD', 'NEEDS_SERVICE', 'NEEDS_REPAIR', 'IN_SERVICE', 'IN_REPAIR'];
 export const SERVICE_STATUSES: MouldStatus[] = ['NEEDS_SERVICE', 'NEEDS_REPAIR', 'IN_SERVICE', 'IN_REPAIR'];
 
@@ -26,8 +29,14 @@ export interface Item {
 
 export interface DispatchDetails { recipientName: string; address: string; repairDetails: string; sentAt: string; returnedAt: string | null }
 
+export interface IsolationStay { since: string; fromLocation: Location | null; intendedDestination: Location | null; remarks: string; level: AlertLevel }
+export interface LimitedRun { since: string; reason: string; problemType: string | null; decidedBy: { userId: string | null; name: string } | null; decidedAt: string | null; expectedFixBy: string | null; level: AlertLevel }
 export interface Mould {
   outOfServiceDetails: DispatchDetails | null;
+  isolation?: IsolationStay | null;
+  blockedCavities?: number[];
+  totalCavities?: number | null;
+  limitedRun?: LimitedRun | null;
   toolType: ToolType;
   id: string; toolId: string; toolSetCount: string; size: string; owner: string | null; capableMachines: string[];
   status: MouldStatus; location: Location; machine: MachineRef | null; rack: RackRef | null; awaitingRack: boolean;
@@ -49,6 +58,7 @@ export interface Movement {
   fromMachineCode: string | null; toMachineCode: string | null; fromRackLocationId: string | null; toRackLocationId: string | null;
   remarks: string; overrideReason: string; by: { id: string | null; name: string } | null; createdAt: string;
   changes?: { before: Record<string, unknown>; after: Record<string, unknown> } | null;
+  intendedDestination?: Location | null; dwellMinutes?: number | null; blockedCavities?: number[] | null;
 }
 
 export interface Machine { id: string; code: string; name: string; active: boolean; mould: { id: string; toolId: string } | null }
@@ -60,6 +70,7 @@ export interface Zone { id: string; code: string; name: string; active: boolean;
 export interface Stats {
   total: number; byLocation: Partial<Record<Location, number>>; byStatus: Partial<Record<MouldStatus, number>>;
   needsAttention: number; serviceDueNotFlagged: number; awaitingRack: number; problemsReported: number;
+  isolation?: number; isolationTooLong?: number; isolationMaxWaitHours?: number; runningWithBlockedCavities?: number;
 }
 
 export interface AuditEntry {
@@ -74,7 +85,7 @@ export interface MouldInput {
 export type ItemInput = Partial<Omit<Item, 'id' | 'images'>> & { itemId?: string; photo?: string };
 export interface MoveInput {
   outOfServiceDetails?: Pick<DispatchDetails, "recipientName" | "address" | "repairDetails">;
-  to: Location; machineId?: string; rackId?: string; status?: MouldStatus; remarks?: string; overrideReason?: string; version?: number;
+  to: Location; machineId?: string; rackId?: string; status?: MouldStatus; remarks?: string; overrideReason?: string; version?: number; intendedDestination?: Location | null;
 }
 
 export type WorkType = 'REPAIR' | 'SERVICE' | 'MINOR_FIX' | 'INSPECTION' | 'CLEANING' | 'OTHER';

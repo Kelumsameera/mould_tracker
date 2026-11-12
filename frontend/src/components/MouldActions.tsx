@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { errorText, locationLine } from "@/utils/format";
 import { locationName, type Dict } from "@/utils/i18n";
 import { can } from "@/utils/permissions";
-import { STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
+import { INTENDED_DESTINATIONS, STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
 import { useEffect, useState } from "react";
 
 export type MouldAction = Location | "STATUS" | "SHOTS";
@@ -44,6 +44,7 @@ export default function MouldActions({
   const [address, setAddress] = useState("");
   const [reason, setReason] = useState("");
   const [shots, setShots] = useState("");
+  const [plan, setPlan] = useState<Location | "">("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -69,7 +70,7 @@ export default function MouldActions({
   const machine = machines.find((x) => x.id === machineId);
   const needsMachineReason = Boolean(machine && !mould.capableMachines.includes(machine.code));
   const needsZoneReason = Boolean(rack && mould.owner && mould.owner !== rack.zone);
-  const needsRemarks = action === "WORKSHOP" || action === "STATUS" || action === "OUT_OF_SERVICE" || mould.location === "OUT_OF_SERVICE";
+  const needsRemarks = action === "WORKSHOP" || action === "STATUS" || action === "OUT_OF_SERVICE" || mould.location === "OUT_OF_SERVICE" || (action === "ISOLATION" && Boolean(status) && status !== "GOOD");
   const canOverride = can(user, "machines.override");
 
   // Where the mould would go, in the same words as the location line ("Mould Room · FLK · A3").
@@ -81,6 +82,7 @@ export default function MouldActions({
       return `${translations.mouldRoom} · ${rack?.zone} · ${code}`;
     }
     if (action === "WORKSHOP") return locationName("WORKSHOP", translations) + (status ? ` – ${translations.status[status]}` : "");
+    if (action === "ISOLATION") return locationName("ISOLATION", translations) + (plan ? ` → ${locationName(plan, translations)}` : "") + (status ? ` – ${translations.status[status]}` : "");
     return locationName(action as Location, translations);
   }
 
@@ -142,8 +144,11 @@ export default function MouldActions({
         if (action === "MOULD_ROOM" && rack) {
           moveDetails.rackId = rack.id;
         }
-        if (action === "WORKSHOP" && mould.location !== "OUT_OF_SERVICE" && status) {
-          moveDetails.status = status;
+        if ((action === "WORKSHOP" && mould.location !== "OUT_OF_SERVICE" && status) || (action === "ISOLATION" && status)) {
+          moveDetails.status = status as MouldStatus;
+        }
+        if (action === "ISOLATION" && plan) {
+          moveDetails.intendedDestination = plan;
         }
         if (override) {
           moveDetails.overrideReason = reason;
@@ -284,11 +289,31 @@ export default function MouldActions({
           )}
         </>
       )}
-      {((action === "WORKSHOP" && mould.location !== "OUT_OF_SERVICE") || action === "STATUS") && (
+      {action === "ISOLATION" && (
         <>
-          <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.act.status}</label>
+          <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.isolation.choosePlan}</label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {action === "WORKSHOP" && (
+            {(["", ...INTENDED_DESTINATIONS.filter((l) => l !== (mould.toolType === "EXTRUSION_DIE" ? "MOULD_ROOM" : "TOOL_ROOM") && l !== mould.location)] as (Location | "")[]).map((l) => (
+              <button
+                type="button"
+                key={l || "none"}
+                className={
+                  "inline-flex items-center gap-1.5 bg-surface-2 border-[1.5px] border-solid border-line rounded-pill min-h-tap px-4 py-0 text-sm font-bold text-ink cursor-pointer disabled:opacity-45 disabled:cursor-default" +
+                  (plan === l ? " bg-ink! border-ink! text-surface!" : "")
+                }
+                onClick={() => setPlan(l)}
+              >
+                {l ? locationName(l, translations) : translations.isolation.notDecided}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {((action === "WORKSHOP" && mould.location !== "OUT_OF_SERVICE") || action === "STATUS" || action === "ISOLATION") && (
+        <>
+          <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{action === "ISOLATION" ? translations.isolation.setStatus : translations.act.status}</label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {(action === "WORKSHOP" || action === "ISOLATION") && (
               <button
                 type="button"
                 className={
@@ -300,7 +325,7 @@ export default function MouldActions({
                 {translations.act.keepStatus}
               </button>
             )}
-            {STATUSES.filter((s) => s !== mould.status && (action === "STATUS" || s !== "GOOD")).map((s) => (
+            {STATUSES.filter((s) => s !== mould.status && s !== "RUNNING_LIMITED" && (action === "STATUS" || s !== "GOOD")).map((s) => (
               <button
                 type="button"
                 key={s}

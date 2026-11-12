@@ -25,7 +25,7 @@ const origins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",").
 
 app.use(helmet());
 app.use(cors({ origin: origins, credentials: true }));
-app.use(["/api/moulds/:id/worklogs", "/api/moulds/:id/problems", "/api/moulds/:id/items"], express.json({ limit: "8mb" })); // photos as data URLs
+app.use(["/api/moulds/:id/worklogs", "/api/moulds/:id/problems", "/api/moulds/:id/items", "/api/moulds/:id/cavities"], express.json({ limit: "8mb" })); // photos as data URLs
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 

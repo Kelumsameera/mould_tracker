@@ -65,7 +65,9 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
     { key: "find", label: translations.nav.find, icon: "search" },
     { key: "extrusion", label: translations.toolTypes.EXTRUSION_DIE, icon: "mould" },
     { key: "racks", label: translations.nav.racks, icon: "rack" },
+    { key: "isolation", label: translations.isolation.title, icon: "clock" },
     { key: "workshop", label: translations.nav.workshop, icon: "workshop" },
+    { key: "dashboard", label: translations.dashboard.title, icon: "report" },
   ];
   const adminLinks: { key: PageName; label: string; icon: IconName }[] = [];
 

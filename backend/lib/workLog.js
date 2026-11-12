@@ -15,7 +15,7 @@ export const personSnapshot = (u) => ({ userId: u._id, name: u.name, role: u.rol
 export const canDoWork = (u) => Boolean(u && u.active && !u.deletedAt && can(u, "worklog.create"));
 
 // Where the mould is and how it is, at the moment of the entry.
-const placeSnapshot = (mould) => ({
+export const placeSnapshot = (mould) => ({
   mouldId: mould._id,
   toolId: mould.toolId,
   location: mould.location,

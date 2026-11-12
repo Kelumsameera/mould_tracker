@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 import { immutable } from "../lib/immutable.js";
 import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
 
-export const WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];
+// CAVITY_BLOCK / CAVITY_RESTORE are written by the "Run with blocked cavities" action, not by the work log form.
+export const MANUAL_WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];
+export const WORK_TYPES = [...MANUAL_WORK_TYPES, "CAVITY_BLOCK", "CAVITY_RESTORE"];
 export const WORK_OUTCOMES = ["OK", "NEEDS_REPAIR", "NEEDS_SERVICE"];
 
 // Name and role at the time, so the entry stays right if the user is renamed or deleted later.
@@ -44,6 +46,7 @@ const workLogSchema = new mongoose.Schema(
     shots: { type: Number, min: 0, default: null },
     outcome: { type: String, enum: [...WORK_OUTCOMES, null], default: null },
     sentToWorkshop: { type: Boolean, default: false },
+    blockedCavities: { type: [Number], default: undefined }, // CAVITY_BLOCK / CAVITY_RESTORE: blocked set after the entry
     photos: { type: [photoSchema], default: [], validate: [(v) => v.length <= 3, "Up to three photos"] },
     correctsId: { type: mongoose.Schema.Types.ObjectId, ref: "WorkLog", default: null },
     // A problem reported by anyone (e.g. a production supervisor). It never changes status or location.

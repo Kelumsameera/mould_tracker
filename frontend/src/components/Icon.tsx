@@ -132,6 +132,7 @@ export default function Icon({ name, size = 18, label, className }: Props) {
 export const locationIcon: Record<Location, IconName> = {
   MACHINE: "machine",
   PRODUCTION_FLOOR: "floor",
+  ISOLATION: "clock",
   WORKSHOP: "workshop",
   OUT_OF_SERVICE: "attention",
   MOULD_ROOM: "mouldRoom",
