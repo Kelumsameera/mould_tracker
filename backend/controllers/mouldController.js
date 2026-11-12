@@ -22,6 +22,7 @@ const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REP
 import { MOULD_FIELDS, planMouldEdit } from "../lib/mouldEdit.js";
 import { ISOLATION_MAX_WAIT_HOURS } from "../lib/flowConfig.js";
 import { buildDowntime, planCavities, totalCavities } from "../lib/cavities.js";
+import { searchMoulds } from "../lib/mouldSearch.js";
 import WorkLog from "../models/WorkLog.js";
 import { lastWorkSummary } from "../lib/workLog.js";
 const ITEM_FIELDS = ["itemId", "description", "cavities", "qas", "materialId", "materialDescription", "masterbatchId", "masterbatchDescription", "notes", "sortOrder"];
@@ -90,25 +91,12 @@ export async function listMoulds(req, res) {
   if (q.limited === "true") filter["blockedCavities.0"] = { $exists: true };
   if (q.zone) filter.rackId = { $in: (await Rack.find({ zone: q.zone.toUpperCase() }, { _id: 1 }).lean()).map((r) => r._id) };
 
+  // Forgiving search (lib/search.js): one row per mould, best match first, item matches reported.
+  let search = null;
   if (q.q) {
-    const rx = new RegExp(escapeRegex(q.q), "i");
-    const compact = new RegExp(spacedPattern(q.q), "i"); // "FLK 19066" finds "FLK19066" and back
-    const rackText = q.q.toUpperCase().replace(/MOULD\s*ROOM/g, "").replace(/[\s·,]+/g, "-").replace(/^-|-$/g, ""); // "FLK A3" -> FLK-A3
-    const [itemMoulds, machines, racks] = await Promise.all([
-      Item.distinct("mouldId", { deletedAt: null, $or: [{ itemId: compact }, { description: rx }] }),
-      Machine.find({ $or: [{ code: rx }, { code: normalizeMachineCode(q.q) }, { name: rx }] }, { _id: 1 }).lean(),
-      Rack.find({ deletedAt: null, $or: [{ locationId: new RegExp(escapeRegex(rackText), "i") }, { code: rackText }] }, { _id: 1 }).lean()
-    ]);
-    filter.$or = [
-      { toolId: compact },
-      { notes: rx },
-      { _id: { $in: itemMoulds } },
-      { machineId: { $in: machines.map((m) => m._id) } },
-      { rackId: { $in: racks.map((r) => r._id) } },
-      { capableMachines: normalizeMachineCode(q.q) }
-    ];
+    search = await searchMoulds(q.q, filter);
+    filter._id = { $in: search.ranked.map((r) => r.id) };
   }
-
   const moulds = await Mould.find(filter).sort({ toolId: 1 }).collation(NUMERIC_SORT).lean();
   const ids = moulds.map((m) => m._id);
   const [refs, itemStats] = await Promise.all([
@@ -120,12 +108,15 @@ export async function listMoulds(req, res) {
     ])
   ]);
   const stats = new Map(itemStats.map((s) => [String(s._id), s]));
+  const order = new Map((search?.ranked || []).map((r, i) => [r.id, { ...r, pos: i }]));
+  if (search) moulds.sort((x, y) => order.get(String(x._id)).pos - order.get(String(y._id)).pos); // best match first
   res.json({
     success: true,
+    ...(search ? { didYouMean: search.didYouMean, queryWords: search.words } : {}),
     moulds: moulds.map((m) => {
       const s = stats.get(String(m._id));
       const thumb = s?.firstImage || s?.anyImage?.find(Boolean);
-      return mouldDTO(m, refs, { totalCavities: s?.totalCavities ?? 0, itemCount: s?.itemCount ?? 0, itemIds: s?.itemIds ?? [], thumbUrl: thumb ? `/uploads/${thumb}` : null });
+      return mouldDTO(m, refs, { matchedItem: order.get(String(m._id))?.matchedItem ?? null, totalCavities: s?.totalCavities ?? 0, itemCount: s?.itemCount ?? 0, itemIds: s?.itemIds ?? [], thumbUrl: thumb ? `/uploads/${thumb}` : null });
     })
   });
 }
@@ -497,4 +488,19 @@ export async function getCavityDowntime(req, res) {
     return res.send("\uFEFF" + rows.map((r) => r.map(cell).join(",")).join("\r\n"));
   }
   res.json({ success: true, toolId: mould.toolId, periods });
+}
+
+// GET /api/moulds/suggest?q= - live suggestions while typing: up to 8, grouped as moulds and items.
+export async function suggestMoulds(req, res) {
+  const { ranked, didYouMean } = await searchMoulds(req.validQuery.q, toolTypeFilter(req.validQuery.toolType), { limit: 8 });
+  const moulds = await Mould.find({ _id: { $in: ranked.map((r) => r.id) }, deletedAt: null }).lean();
+  const refs = await refsFor(moulds);
+  const byId = new Map(moulds.map((m) => [String(m._id), m]));
+  const rows = ranked.filter((r) => byId.has(r.id)).map((r) => ({ ...mouldDTO(byId.get(r.id), refs), matchedItem: r.matchedItem }));
+  res.json({
+    success: true,
+    didYouMean,
+    moulds: rows.filter((r) => !r.matchedItem),
+    items: rows.filter((r) => r.matchedItem)
+  });
 }

@@ -23,6 +23,7 @@ import User from "../models/User.js";
 import { normalizeMachineCode, parseCapableMachines } from "../lib/machines.js";
 import { UPLOAD_DIR } from "../lib/uploads.js";
 import { renderImage } from "../lib/images.js";
+import { itemSearchKey } from "../lib/search.js";
 import { storageLocation } from "../lib/mouldState.js";
 
 const BACKEND_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -424,6 +425,7 @@ async function applyPlan(plan, images, actor, sheetName) {
           // Keep pictures not from the sheet, and keep a cleaned (background-removed) version of a sheet picture.
           const current = new Map((p.old.images || []).filter(fromSheet).map((i) => [i.source, i]));
           set.images = [...(p.old.images || []).filter((i) => !fromSheet(i)), ...sheetImages.map((img) => current.get(img.source) ?? img)];
+          set.searchKey = itemSearchKey({ ...p.old, ...set });
           await Item.updateOne({ _id: p.old._id }, { $set: set }, { session });
           itemChanges.push({ itemId: p.item.itemId, changed: Object.keys(p.changed), images: p.imagesChanged });
         }

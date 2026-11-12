@@ -1,3 +1,4 @@
+import { mouldSearchKey } from "../lib/search.js";
 import mongoose from "mongoose";
 import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { LOCATIONS, STORED_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
@@ -51,7 +52,8 @@ const mouldSchema = new mongoose.Schema(
     openProblem: { type: mongoose.Schema.Types.Mixed, default: null },
     deletedAt: { type: Date, default: null, index: true },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-    version: { type: Number, default: 1 } // optimistic locking
+    version: { type: Number, default: 1 }, // optimistic locking
+    searchKey: { type: String, default: null } // normalized Tool ID, machines, owner (lib/search.js)
   },
   { timestamps: true, versionKey: false }
 );
@@ -61,6 +63,8 @@ mouldSchema.index({ machineId: 1 }, { unique: true, partialFilterExpression: { l
 mouldSchema.index({ capableMachines: 1 });
 mouldSchema.index({ deletedAt: 1, toolType: 1, toolId: 1 }); // catalog: live moulds per process, sorted
 mouldSchema.index({ owner: 1 });
+mouldSchema.index({ searchKey: 1 });
+mouldSchema.pre("save", function () { this.searchKey = mouldSearchKey(this); });
 mouldSchema.index({ "openProblem.at": -1 }, { sparse: true });
 
 export default mongoose.model("Mould", mouldSchema);

@@ -135,9 +135,12 @@ export const statusSchema = z.object({ status: z.enum(MOULD_STATUSES), remarks, 
 export const shotsSchema = z.object({ shots: z.number().int().min(1).max(10_000_000), version });
 export const reasonSchema = z.object({ reason: z.string().trim().max(1000).default("") });
 
+// Search text: any characters are allowed (punctuation is ignored by the search); long input is cut, never rejected.
+const searchText = z.string().transform((s) => s.trim().slice(0, 64)).optional();
+export const suggestQuery = z.object({ q: searchText, toolType: z.enum(TOOL_TYPES).optional() });
 export const listMouldsQuery = z.object({
   toolType: z.enum(TOOL_TYPES).optional(),
-  q: z.string().trim().max(100).optional(),
+  q: searchText,
   location: z.enum(LOCATIONS).optional(),
   status: z.enum(MOULD_STATUSES).optional(),
   owner: z.string().trim().max(10).optional(),
@@ -177,7 +180,7 @@ export const catalogQuery = z.object({
   tab: z.enum(["moulds", "products"]).default("moulds"),
   process: z.enum(["INJECTION", "EXTRUSION"]).optional(),
   status: z.enum(MOULD_STATUSES).optional(),
-  owner: catalogText, machine: catalogText, material: catalogText, family: catalogText, q: catalogText,
+  owner: catalogText, machine: catalogText, material: catalogText, family: catalogText, q: searchText,
   sort: z.enum(["toolId", "items", "status", "itemId", "moulds"]).optional(),
   page: z.coerce.number().int().min(1).max(10000).default(1)
 });
@@ -203,7 +206,7 @@ export const createWorkLogSchema = z.object({
 
 const localDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 export const workLogQuery = z.object({
-  q: z.string().trim().max(100).optional(),
+  q: searchText,
   toolId: z.string().trim().max(100).optional(),
   userId: objectId.optional(),
   type: z.enum(WORK_TYPES).optional(),

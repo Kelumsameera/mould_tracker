@@ -3,6 +3,18 @@
 // documents loaded into memory). Soft-deleted moulds and items are always excluded.
 //   mould count != item count: one mould makes several items, one item may come from several moulds.
 import { familyLabel } from "../config/itemFamilies.js";
+import { keyFilter, looseRegex, queryWords } from "./search.js";
+
+// Forgiving search (lib/search.js) on a document's searchKey (and optionally its joined items' keys);
+// documents without a key yet fall back to separator-tolerant matching of their raw fields.
+function searchMatch(q, prefix, legacyFields, itemsPrefix = null) {
+  const words = queryWords(q);
+  if (!words.length) return { _id: { $exists: false } };
+  const loose = looseRegex(words);
+  const or = [keyFilter(words, prefix + "searchKey"), { [prefix + "searchKey"]: null, $or: legacyFields.map((f) => ({ [prefix + f]: loose })) }];
+  if (itemsPrefix) or.push(keyFilter(words, itemsPrefix + "searchKey"), { [itemsPrefix + "notes"]: loose });
+  return { $or: or };
+}
 
 export const PROCESSES = ["INJECTION", "EXTRUSION"];
 // The process is the tool type (one source of truth): extrusion dies vs everything else (injection moulds).
@@ -19,7 +31,6 @@ export const EXPORT_CAP = 5000;
 const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // true when a deletedAt value is null or missing (a missing field is not equal to null in expressions)
 const LIVE = (field) => ({ $not: [{ $ifNull: [field, false] }] });
-const contains = (q) => ({ $regex: escapeRegex(q), $options: "i" });
 
 // Live items joined with their live mould (one row per item-in-mould).
 function itemRows(process) {
@@ -81,7 +92,7 @@ export function mouldListPipeline({ process, status, owner, machine, material, q
   if (machine) match.capableMachines = machine;
   const after = {};
   if (material) after.materials = material;
-  if (q) after.$or = [{ toolId: contains(q) }, { "items.notes": contains(q) }]; // Die ID = Tool ID; Pin ID is on the items
+  if (q) Object.assign(after, searchMatch(q, "", ["toolId"], "items.")); // Die ID = Tool ID; Pin ID is in the items' keys
   return [
     { $match: match },
     { $lookup: { from: "items", localField: "_id", foreignField: "mouldId", as: "items" } },
@@ -112,7 +123,7 @@ export function productListPipeline({ process, family, material, q, sort = "item
   const match = {};
   if (material) match.materialId = material;
   if (family) match.key = { $regex: `^${escapeRegex(family.toUpperCase())}(?![A-Z])` };
-  if (q) match.$or = [{ key: contains(q) }, { description: contains(q) }];
+  if (q) Object.assign(match, searchMatch(q, "", ["itemId", "description"]));
   return [
     ...itemRows(process),
     ...(Object.keys(match).length ? [{ $match: match }] : []),

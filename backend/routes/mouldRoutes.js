@@ -15,6 +15,7 @@ const MOVE = ["move.outOfService", "move.machine", "move.floor", "move.mouldroom
 export const mouldRouteTable = [
   ["get", "/", VIEW, c.listMoulds, null, s.listMouldsQuery],
   ["get", "/stats", VIEW, c.mouldStats, null, s.listMouldsQuery],
+  ["get", "/suggest", VIEW, c.suggestMoulds, null, s.suggestQuery],
   ["get", "/:id", VIEW, c.getMould],
   ["get", "/:id/history", VIEW, c.getMouldHistory],
   ["post", "/", ["mould.create"], c.createMould, s.createMouldSchema],

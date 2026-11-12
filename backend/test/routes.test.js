@@ -54,7 +54,7 @@ after(() => { server?.close(); mock.restoreAll(); });
 
 // Who the spec's permission table allows on each route.
 const EXPECTED = {
-  "moulds GET /": ALL, "moulds GET /stats": ALL, "moulds GET /:id": ALL, "moulds GET /:id/history": ALL,
+  "moulds GET /": ALL, "moulds GET /stats": ALL, "moulds GET /suggest": ALL, "moulds GET /:id": ALL, "moulds GET /:id/history": ALL,
   "moulds POST /": ADMINS, "moulds PATCH /:id": ADMINS, "moulds DELETE /:id": ADMINS, "moulds POST /:id/restore": ADMINS,
   "moulds POST /:id/move": WORKERS, // each role has some move; lib/workflow.js narrows it (tested in workflow.test.js)
   "moulds POST /:id/status": ["super_admin", "admin", "mould_technician", "mould_maker"],

@@ -11,12 +11,11 @@ import { visibleUsersFilter } from "../lib/permissions.js";
 import { fail } from "../utils/ApiError.js";
 import { workLogDTO } from "../utils/serializers.js";
 import { displayStatus } from "../lib/mouldState.js";
+import { itemMouldIdsFor } from "../lib/mouldSearch.js";
 import { audit } from "../lib/audit.js";
 import { canDoWork, lastWorkSummary, planProblemReport, planWorkLog } from "../lib/workLog.js";
 import { EXPORT_CAP, buildWorkLogFilter, describeFilters } from "../lib/workLogFilter.js";
 import { photosFromDataUrls, saveRendered } from "../lib/images.js";
-
-const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const problemOpenedFrom = (doc) => doc.openProblem?.workLogId;
 
 // Ids of entries that a later entry corrects.
@@ -96,7 +95,7 @@ export async function createWorkLog(req, res) {
 
 // Shared filters for the report, the summary and the export (search also looks at the mould's Item IDs).
 export async function reportFilter(q, privacy) {
-  const itemMouldIds = q.q ? await Item.distinct("mouldId", { deletedAt: null, itemId: new RegExp(escapeRegex(q.q.trim()), "i") }) : [];
+  const itemMouldIds = q.q ? await itemMouldIdsFor(q.q) : [];
   return buildWorkLogFilter(q, { itemMouldIds, hiddenUserIds: privacy?.ids ?? [] });
 }
 

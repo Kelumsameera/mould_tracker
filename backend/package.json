@@ -12,6 +12,7 @@
     "seed:sysadmin": "node scripts/seed-sysadmin.mjs",
     "migrate:permissions": "node scripts/migrate-permissions.mjs",
     "migrate:conditional": "node scripts/migrate-conditional-status.mjs",
+    "backfill:search": "node scripts/backfill-search-keys.mjs",
     "migrate:supabase": "node migrateSupabase.js"
   },
   "dependencies": {

@@ -75,7 +75,10 @@ test("product detail lists every live mould that makes the item", () => {
 });
 
 test("special characters in filters never break the pipeline", () => {
-  for (const q of ["a(b", "*", "\\", "??", "[x"]) assert.equal(shapeList(run(moulds, mouldListPipeline({ q })), "moulds").total, 0);
+  for (const q of ["a(b", "*", "\\", "??", "%$#@!"]) assert.equal(shapeList(run(moulds, mouldListPipeline({ q })), "moulds").total, 0, q);
+  // Punctuation is ignored: "[x" searches "x", "flk-100" and "FLK 100" find FLK100.
+  assert.deepEqual(shapeList(run(moulds, mouldListPipeline({ q: "[x" })), "moulds").rows.map((r) => r.toolId), ["LEX01D"]);
+  for (const q of ["flk-100", "FLK 100", "flk_100"]) assert.deepEqual(shapeList(run(moulds, mouldListPipeline({ q })), "moulds").rows.map((r) => r.toolId), ["FLK100"], q);
 });
 
 test("families, export header text and cap", () => {

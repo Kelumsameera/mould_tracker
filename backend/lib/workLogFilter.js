@@ -1,4 +1,5 @@
 import { statusQuery } from "./mouldState.js";
+import { looseRegex, queryWords } from "./search.js";
 import mongoose from "mongoose";
 import { normalizeMachineCode } from "./machines.js";
 import { APP_TIMEZONE, dateWindow } from "./dateRange.js";
@@ -25,11 +26,14 @@ export function buildWorkLogFilter(q, { itemMouldIds = [], hiddenUserIds = [], n
   const window = dateWindow(q, now, tz);
   if (window) and.push({ doneAt: window });
   if (q.q) {
-    const rx = new RegExp(escapeRegex(q.q.trim()), "i");
+    // Forgiving search: punctuation, case and spacing never matter (lib/search.js).
+    const words = queryWords(q.q);
+    if (!words.length) return { _id: { $exists: false } };
+    const rx = looseRegex(words);
     const machine = normalizeMachineCode(q.q);
     and.push({
       $or: [
-        { description: rx }, { partsUsed: rx }, { toolId: spacedId(q.q) }, { machineCode: rx }, ...(machine !== q.q.trim().toUpperCase() ? [{ machineCode: machine }] : []),
+        { description: rx }, { partsUsed: rx }, { toolId: rx }, { machineCode: rx }, ...(machine !== q.q.trim().toUpperCase() ? [{ machineCode: machine }] : []),
         ...(hidden.length ? [
           { doneBy: { $elemMatch: { name: rx, userId: { $nin: hidden } } } },
           { "recordedBy.name": rx, "recordedBy.userId": { $nin: hidden } }
