@@ -11,7 +11,7 @@ export const DIRECT_MOUNT_FROM = ["PRODUCTION_FLOOR", ISOLATION, "MOULD_ROOM", "
 export const ISOLATION_EXEMPT = ["OUT_OF_SERVICE"];
 
 // Running with blocked cavities (limited run).
-export const LIMITED_RUN_STATUS = "RUNNING_LIMITED";
+export { CONDITIONAL_STATUS as LIMITED_RUN_STATUS } from "./mouldState.js";
 export const LIMITED_RUN_LOCATIONS = ["MACHINE", "PRODUCTION_FLOOR", ISOLATION];
 // Running limited longer than this (or past expectedFixBy) is red.
 export const LIMITED_RUN_ALERT_DAYS = num(process.env.LIMITED_RUN_ALERT_DAYS, 7);

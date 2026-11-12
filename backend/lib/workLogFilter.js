@@ -1,3 +1,4 @@
+import { statusQuery } from "./mouldState.js";
 import mongoose from "mongoose";
 import { normalizeMachineCode } from "./machines.js";
 import { APP_TIMEZONE, dateWindow } from "./dateRange.js";
@@ -19,7 +20,7 @@ export function buildWorkLogFilter(q, { itemMouldIds = [], hiddenUserIds = [], n
   if (q.type) and.push({ type: q.type });
   if (q.machine) and.push({ machineCode: normalizeMachineCode(q.machine) });
   if (q.outcome) and.push({ outcome: q.outcome === "NONE" ? null : q.outcome });
-  if (q.status) and.push({ statusAfter: q.status });
+  if (q.status) and.push({ statusAfter: statusQuery(q.status) });
   if (q.problem === "true") and.push({ problemReported: true });
   const window = dateWindow(q, now, tz);
   if (window) and.push({ doneAt: window });

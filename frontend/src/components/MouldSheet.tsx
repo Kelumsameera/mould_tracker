@@ -1,4 +1,5 @@
 "use client";
+import { CONDITIONAL_STATUS } from "@/utils/types";
 import { useConfirm } from "@/components/ConfirmHost";
 import Icon, { locationIcon, type IconName } from "@/components/Icon";
 import LastWork from "@/components/LastWork";
@@ -241,7 +242,7 @@ export default function MouldSheet({
   };
   if (mould && !mould.deletedAt) {
     // Running with blocked cavities may still run on a machine or the floor.
-    const good = mould.status === "GOOD" || mould.status === "RUNNING_LIMITED";
+    const good = mould.status === "GOOD" || mould.status === CONDITIONAL_STATUS;
     // Any status may wait in the Isolation Area; it is the first hop of every non-machine move.
     if (mould.location !== "ISOLATION" && canMoveTo(user, mould.location, "ISOLATION"))
       actions.push({ key: "ISOLATION", label: translations.isolation.send });

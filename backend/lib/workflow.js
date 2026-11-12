@@ -10,7 +10,7 @@
 import { dispatchDetailsSchema } from "./outOfService.js";
 import { fail } from "../utils/ApiError.js";
 import { can } from "./permissions.js";
-import { LOCATIONS, MOULD_STATUSES, isStorage, storageLocation } from "./mouldState.js";
+import { LOCATIONS, MOULD_STATUSES, displayStatus, isStorage, storageLocation } from "./mouldState.js";
 import { DIRECT_MOUNT_FROM, ISOLATION, ISOLATION_EXEMPT, LIMITED_RUN_LOCATIONS, LIMITED_RUN_STATUS } from "./flowConfig.js";
 
 // Isolation routing (Change Pack 2, step 4). Returns an error code or null.
@@ -76,7 +76,8 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
   if (from === "OUT_OF_SERVICE" && status !== undefined && status !== mould.status) fail(400, "OUT_OF_SERVICE_STATUS", "Return to the Workshop before changing the status");
   if (to === "OUT_OF_SERVICE" || from === "OUT_OF_SERVICE") requireRemarks(remarks, "when sending out or returning from Out of Service");
   // A limited-run mould that reaches the Workshop is in repair (its blocked cavities stay until a work log restores them).
-  const nextStatus = status ?? (to === "WORKSHOP" && mould.status === LIMITED_RUN_STATUS ? "IN_REPAIR" : mould.status);
+  const current = displayStatus(mould.status); // a not-yet-migrated RUNNING_LIMITED counts as CONDITIONAL
+  const nextStatus = status ?? (to === "WORKSHOP" && current === LIMITED_RUN_STATUS ? "IN_REPAIR" : current);
   if (to === ISOLATION && status !== undefined && status !== "GOOD") requireRemarks(remarks, "when setting a service or repair status");
   const warnings = [];
   const set = { location: to, status: nextStatus, machineId: null, rackId: null, awaitingRack: false, isolation: null };

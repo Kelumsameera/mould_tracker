@@ -7,7 +7,7 @@ import SkeletonCards from "@/components/SkeletonCards";
 import { api } from "@/utils/api";
 import { locationName } from "@/utils/i18n";
 import { can } from "@/utils/permissions";
-import { LOCATIONS, STATUSES, type Mould, type Stats } from "@/utils/types";
+import { CONDITIONAL_STATUS, LOCATIONS, STATUSES, type Mould, type Stats } from "@/utils/types";
 
 // Management view (Executive landing page; read-only). Built only from existing queries:
 // mould stats, the limited-run / isolation lists, service-due flag and this month's work log count.
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             <section className="rounded-lg border border-solid border-line bg-surface p-4">
               <h3 className="text-md font-extrabold mb-2">{t.dashboard.byStatus}</h3>
               <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
-                {[...STATUSES, "RUNNING_LIMITED" as const].filter((s) => stats.byStatus[s]).map((s) => (
+                {[...STATUSES, CONDITIONAL_STATUS].filter((s) => stats.byStatus[s]).map((s) => (
                   <li key={s} className="flex items-center gap-2 text-sm"><span className="flex-1">{t.status[s]}</span><b className="tabular-nums">{stats.byStatus[s]}</b></li>
                 ))}
               </ul>

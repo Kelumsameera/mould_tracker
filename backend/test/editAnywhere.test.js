@@ -13,7 +13,7 @@ const mouldAt = (location, status, extra = {}) => ({
   capableMachines: ["INJ-01"], shotsToService: 1000, notes: "", ...extra
 });
 // Every place a mould can be, with every status (including unusual combinations already in the data).
-const combos = [...LOCATIONS, "ISOLATION"].flatMap((l) => [...MOULD_STATUSES, "RUNNING_LIMITED"].map((s) => [l, s]));
+const combos = [...LOCATIONS, "ISOLATION"].flatMap((l) => [...MOULD_STATUSES, "CONDITIONAL"].map((s) => [l, s]));
 
 test("details, machines and shots-to-service can be edited at every location and status", () => {
   for (const [location, status] of combos) {

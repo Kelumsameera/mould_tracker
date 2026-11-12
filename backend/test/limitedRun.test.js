@@ -31,16 +31,16 @@ test("allowed on a machine, the Production Floor and in Isolation", () => {
     const m = mould({ location, ...extra });
     const plan = block(m, [3, 7, 11, 15]);
     const next = apply(m, plan);
-    assert.equal(next.status, "RUNNING_LIMITED", location);
+    assert.equal(next.status, "CONDITIONAL", location);
     assert.deepEqual(next.blockedCavities, [3, 7, 11, 15]);
     assert.equal(mouldStateError(next), null, location);
   }
 });
 
-test("rejected in the Mould Room (and the model refuses RUNNING_LIMITED there)", () => {
+test("rejected in the Mould Room (and the model refuses CONDITIONAL there)", () => {
   const m = mould({ location: "MOULD_ROOM", machineId: null, machine: null, rackId: oid() });
   assert.throws(() => block(m, [1]), code("LIMITED_RUN_LOCATION"));
-  assert.ok(mouldStateError({ ...m, status: "RUNNING_LIMITED" }));
+  assert.ok(mouldStateError({ ...m, status: "CONDITIONAL" }));
 });
 
 test("input checks: numbering, at least one active cavity, a reason, real cavity count", () => {
@@ -63,7 +63,7 @@ test("every change is recorded: movement, work log entry with snapshots, audit b
   assert.match(plan.movement.remarks, /12 of 16 cavities active/);
   assert.equal(new Movement(plan.movement).validateSync(), undefined);
   assert.equal(plan.log.type, "CAVITY_BLOCK");
-  assert.deepEqual([plan.log.doneBy[0].name, plan.log.recordedBy.name, plan.log.statusBefore, plan.log.statusAfter], ["Tech", "Tech", "GOOD", "RUNNING_LIMITED"]);
+  assert.deepEqual([plan.log.doneBy[0].name, plan.log.recordedBy.name, plan.log.statusBefore, plan.log.statusAfter], ["Tech", "Tech", "GOOD", "CONDITIONAL"]);
   assert.equal(new WorkLog(plan.log).validateSync(), undefined);
   assert.deepEqual(plan.before.blockedCavities, []);
   assert.deepEqual([plan.after.limitedRun.since, plan.after.limitedRun.problemType], [now, "core pin"]);
@@ -83,7 +83,7 @@ test("sending a limited-run mould to the Workshop makes it IN_REPAIR and keeps t
   const running = apply(mould(), block(mould(), [5]));
   const toIsolation = planMove({ mould: running, user: { ...tech, role: "super_admin" }, to: "ISOLATION", intendedDestination: "WORKSHOP" });
   const waiting = apply(running, toIsolation);
-  assert.equal(waiting.status, "RUNNING_LIMITED", "still limited while waiting");
+  assert.equal(waiting.status, "CONDITIONAL", "still limited while waiting");
   assert.equal(mouldStateError(waiting), null);
   const toShop = planMove({ mould: waiting, user: { ...tech, role: "super_admin" }, to: "WORKSHOP", remarks: "fix pins" });
   const shop = apply(waiting, toShop);
@@ -97,9 +97,9 @@ test("sending a limited-run mould to the Workshop makes it IN_REPAIR and keeps t
 
 test("a limited-run mould may keep running on a machine but cannot go into the Mould Room", () => {
   const running = apply(mould({ location: "ISOLATION", machineId: null, machine: null }), block(mould({ location: "ISOLATION", machineId: null, machine: null }), [1]));
-  assert.equal(planMove({ mould: running, user: { ...tech, role: "super_admin" }, to: "MACHINE", machine: INJ3 }).set.status, "RUNNING_LIMITED");
+  assert.equal(planMove({ mould: running, user: { ...tech, role: "super_admin" }, to: "MACHINE", machine: INJ3 }).set.status, "CONDITIONAL");
   assert.throws(() => planMove({ mould: running, user: { ...tech, role: "super_admin" }, to: "MOULD_ROOM", rack: { _id: oid(), locationId: "X", active: true, zoneActive: true } }), code("NOT_GOOD"));
-  assert.throws(() => planMove({ mould: mould(), user: { ...tech, role: "super_admin" }, to: "ISOLATION", status: "RUNNING_LIMITED", remarks: "x" }), code("USE_CAVITY_ACTION"));
+  assert.throws(() => planMove({ mould: mould(), user: { ...tech, role: "super_admin" }, to: "ISOLATION", status: "CONDITIONAL", remarks: "x" }), code("USE_CAVITY_ACTION"));
 });
 
 test("badge level: amber while running limited, red after the limit or past the expected fix date", () => {
@@ -109,7 +109,7 @@ test("badge level: amber while running limited, red after the limit or past the 
   assert.equal(limitedRunLevel({ since: daysAgo(3) }, now), "amber");
   assert.equal(limitedRunLevel({ since: daysAgo(LIMITED_RUN_ALERT_DAYS + 1) }, now), "red");
   assert.equal(limitedRunLevel({ since: daysAgo(1), expectedFixBy: daysAgo(0.5) }, now), "red");
-  const dto = mouldDTO({ ...mould(), status: "RUNNING_LIMITED", blockedCavities: [1, 2], limitedRun: { since: new Date(), reason: "x" } }, {}, { totalCavities: 16 });
+  const dto = mouldDTO({ ...mould(), status: "CONDITIONAL", blockedCavities: [1, 2], limitedRun: { since: new Date(), reason: "x" } }, {}, { totalCavities: 16 });
   assert.deepEqual([dto.blockedCavities, dto.totalCavities, dto.limitedRun.level], [[1, 2], 16, "amber"]);
 });
 
@@ -118,14 +118,14 @@ test("permission cavity.manage is needed (matrix default and per-user)", () => {
   const denied = { _id: oid(), role: "mould_technician", name: "T", permissionOverrides: { grant: [], deny: ["cavity.manage"] } };
   assert.throws(() => planCavities({ mould: mould(), user: denied, blocked: [1], total: 16, reason: "x" }), code("FORBIDDEN"));
   const granted = { _id: oid(), role: "executive", name: "E", permissionOverrides: { grant: ["cavity.manage"], deny: [] } };
-  assert.equal(planCavities({ mould: mould(), user: granted, blocked: [1], total: 16, reason: "x" }).set.status, "RUNNING_LIMITED");
+  assert.equal(planCavities({ mould: mould(), user: granted, blocked: [1], total: 16, reason: "x" }).set.status, "CONDITIONAL");
 });
 
 test("cavity work log types are report-only, not typed into the work log form; model accepts them", () => {
   assert.equal(createWorkLogSchema.safeParse({ type: "CAVITY_BLOCK", description: "x" }).success, false);
   assert.ok(WorkLog.schema.path("type").enumValues.includes("CAVITY_RESTORE"));
   assert.equal(cavitiesSchema.safeParse({ blocked: [1, 2], reason: "x" }).success, true);
-  assert.equal(new Mould({ ...mould(), status: "RUNNING_LIMITED", blockedCavities: [1] }).validateSync(), undefined);
+  assert.equal(new Mould({ ...mould(), status: "CONDITIONAL", blockedCavities: [1] }).validateSync(), undefined);
 });
 
 test("cavity downtime: one period per blocked set, open until restored", () => {
@@ -139,4 +139,25 @@ test("cavity downtime: one period per blocked set, open until restored", () => {
     { type: "CAVITIES_CHANGED", createdAt: t(14), blockedCavities: [9], remarks: "new crack", performedBy: u }
   ], new Map([[String(u), { name: "Tech" }]]));
   assert.deepEqual(periods.map((p) => [p.cavities, p.from.getUTCHours(), p.to ? p.to.getUTCHours() : null, p.by]), [[[9], 14, null, "Tech"], [[3], 10, 12, "Tech"], [[3, 7], 8, 10, "Tech"]]);
+});
+
+test("legacy RUNNING_LIMITED: mapped to CONDITIONAL in rules, DTOs and history; migration plan is idempotent", async () => {
+  const { displayStatus, statusQuery, MOULD_STATUSES } = await import("../lib/mouldState.js");
+  const { conditionalStatusPlan } = await import("../scripts/migrate-conditional-status.mjs");
+  const { movementDTO, workLogDTO } = await import("../utils/serializers.js");
+  assert.ok(MOULD_STATUSES.includes("CONDITIONAL") && !MOULD_STATUSES.includes("RUNNING_LIMITED"));
+  assert.equal(displayStatus("RUNNING_LIMITED"), "CONDITIONAL");
+  assert.deepEqual(statusQuery("CONDITIONAL"), { $in: ["CONDITIONAL", "RUNNING_LIMITED"] });
+  assert.equal(statusQuery("GOOD"), "GOOD");
+  const legacy = mould({ status: "RUNNING_LIMITED", blockedCavities: [2], limitedRun: { since: new Date(), reason: "x" } });
+  assert.equal(mouldDTO(legacy).status, "CONDITIONAL");
+  assert.equal(mouldStateError(legacy), null);
+  assert.equal(planCavities({ mould: legacy, user: tech, blocked: [], total: 16, reason: "" }).set.status, "GOOD");
+  assert.equal(planMove({ mould: { ...legacy, location: "ISOLATION", machineId: null, machine: null }, user: { ...tech, role: "super_admin" }, to: "WORKSHOP", remarks: "x" }).set.status, "IN_REPAIR");
+  // History stays as stored (models still accept it) and is shown with the new key.
+  assert.equal(new Movement({ mouldId: oid(), toolId: "A", type: "STATUS_CHANGED", toStatus: "RUNNING_LIMITED", performedBy: oid() }).validateSync(), undefined);
+  assert.equal(movementDTO({ _id: oid(), toStatus: "RUNNING_LIMITED", fromStatus: "GOOD" }).toStatus, "CONDITIONAL");
+  assert.equal(workLogDTO({ _id: oid(), mouldId: oid(), statusBefore: "RUNNING_LIMITED", statusAfter: "GOOD", doneBy: [], recordedBy: { name: "x" }, photos: [] }).statusBefore, "CONDITIONAL");
+  const [plan] = conditionalStatusPlan();
+  assert.deepEqual([plan.filter, plan.update.$set], [{ status: "RUNNING_LIMITED" }, { status: "CONDITIONAL" }]); // re-running matches nothing once applied
 });

@@ -10,6 +10,7 @@ import { withTransaction } from "../config/db.js";
 import { visibleUsersFilter } from "../lib/permissions.js";
 import { fail } from "../utils/ApiError.js";
 import { workLogDTO } from "../utils/serializers.js";
+import { displayStatus } from "../lib/mouldState.js";
 import { audit } from "../lib/audit.js";
 import { canDoWork, lastWorkSummary, planProblemReport, planWorkLog } from "../lib/workLog.js";
 import { EXPORT_CAP, buildWorkLogFilter, describeFilters } from "../lib/workLogFilter.js";
@@ -186,8 +187,8 @@ const EXPORT_COLUMNS = [
   ["Parts used", (l) => l.partsUsed],
   ["Minutes", (l) => l.timeSpentMinutes ?? ""],
   ["Location", (l) => [l.location, l.machineCode, l.rackLocationId].filter(Boolean).join(" ")],
-  ["Status before", (l) => l.statusBefore],
-  ["Status after", (l) => l.statusAfter],
+  ["Status before", (l) => displayStatus(l.statusBefore)],
+  ["Status after", (l) => displayStatus(l.statusAfter)],
   ["Outcome", (l) => l.outcome ?? ""],
   ["Sent to Workshop", (l) => (l.sentToWorkshop ? "yes" : "")],
   ["Shots", (l) => l.shots ?? ""],

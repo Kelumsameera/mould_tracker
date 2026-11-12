@@ -16,6 +16,7 @@ export default function StatusBadge({ status, translations }: Props) {
         "inline-flex items-center gap-1 text-xs font-semibold tracking-[.1px] px-2 py-0.5 rounded-[4px] whitespace-nowrap leading-[1.6] " +
         statusTone(status)
       }
+      title={translations.statusHint[status]}
     >
       <Icon name={statusIcon(status)} size={13} />
       {translations.status[status]}

@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { errorText, locationLine } from "@/utils/format";
 import { locationName, type Dict } from "@/utils/i18n";
 import { can } from "@/utils/permissions";
-import { INTENDED_DESTINATIONS, STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
+import { CONDITIONAL_STATUS, INTENDED_DESTINATIONS, STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
 import { useEffect, useState } from "react";
 
 export type MouldAction = Location | "STATUS" | "SHOTS" | "CAVITIES";
@@ -325,7 +325,7 @@ export default function MouldActions({
                 {translations.act.keepStatus}
               </button>
             )}
-            {STATUSES.filter((s) => s !== mould.status && s !== "RUNNING_LIMITED" && (action === "STATUS" || s !== "GOOD")).map((s) => (
+            {STATUSES.filter((s) => s !== mould.status && s !== CONDITIONAL_STATUS && (action === "STATUS" || s !== "GOOD")).map((s) => (
               <button
                 type="button"
                 key={s}

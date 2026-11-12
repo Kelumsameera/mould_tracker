@@ -4,6 +4,7 @@ import { fail } from "../utils/ApiError.js";
 import { can } from "./permissions.js";
 import { LIMITED_RUN_LOCATIONS, LIMITED_RUN_STATUS } from "./flowConfig.js";
 import { personSnapshot, placeSnapshot } from "./workLog.js";
+import { displayStatus } from "./mouldState.js";
 
 const text = (s) => String(s ?? "").trim();
 const sameSet = (a, b) => a.length === b.length && a.every((n, i) => n === b[i]);
@@ -36,10 +37,10 @@ export function planCavities({ mould, user, blocked, total, reason, problemType 
   const fixBy = expectedFixBy ? new Date(expectedFixBy) : null;
   if (fixBy && Number.isNaN(fixBy.getTime())) fail(400, "INVALID_DATE", "Invalid date");
 
-  // Status: running -> RUNNING_LIMITED; at the Workshop it stays (IN_REPAIR); a full restore makes a running mould GOOD.
+  // Status: running -> CONDITIONAL; at the Workshop it stays (IN_REPAIR); a full restore makes a running mould GOOD.
   let status = mould.status;
   if (!restoring && !atWorkshop) status = LIMITED_RUN_STATUS;
-  if (restoring && mould.status === LIMITED_RUN_STATUS) status = "GOOD";
+  if (restoring && displayStatus(mould.status) === LIMITED_RUN_STATUS) status = "GOOD";
 
   const by = personSnapshot(user);
   const limitedRun = restoring ? null : {

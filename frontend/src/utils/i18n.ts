@@ -29,7 +29,8 @@ const en = {
   brandTitle: 'Mould Tracker',
   brandSub: 'Find any mould in seconds',
   loc: { MACHINE: 'Machine', PRODUCTION_FLOOR: 'Production Floor', ISOLATION: 'Isolation Area', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' } as Record<Exclude<Location, 'MOULD_ROOM'>, string>,
-  status: { GOOD: 'Good', NEEDS_SERVICE: 'Needs service', NEEDS_REPAIR: 'Needs repair', IN_SERVICE: 'In service', IN_REPAIR: 'In repair', RUNNING_LIMITED: 'Running – needs repair' } as Record<MouldStatus, string>,
+  status: { GOOD: 'Good', NEEDS_SERVICE: 'Needs service', NEEDS_REPAIR: 'Needs repair', IN_SERVICE: 'In service', IN_REPAIR: 'In repair', CONDITIONAL: 'Conditional' } as Record<MouldStatus, string>,
+  statusHint: { CONDITIONAL: 'Running with blocked cavities / temporary fix' } as Partial<Record<MouldStatus, string>>,
   isolation: {
     title: 'Isolation Area', hint: 'Moulds waiting between the Production Floor, the Mould Room and the Workshop. Every move that does not end on a machine passes here.',
     empty: 'Nothing is waiting in the Isolation Area.', send: 'Send to Isolation Area', moveOn: 'Move on', plannedFor: 'Waiting to go to', notDecided: 'Not decided yet',
@@ -365,7 +366,8 @@ const si: Dict = {
   brandTitle: 'Mould සෙවුම',
   brandSub: 'ඕනෑම mould එකක් තත්පර කිහිපයකින් සොයන්න',
   loc: { MACHINE: 'මැෂිම', PRODUCTION_FLOOR: 'Production Floor', ISOLATION: 'Isolation කලාපය', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' },
-  status: { GOOD: 'හොඳ තත්ත්වයේ', NEEDS_SERVICE: 'Service කළ යුතුයි', NEEDS_REPAIR: 'අලුත්වැඩියා කළ යුතුයි', IN_SERVICE: 'Service වෙමින්', IN_REPAIR: 'අලුත්වැඩියා වෙමින්', RUNNING_LIMITED: 'Run වෙනවා – අලුත්වැඩියා කළ යුතුයි' },
+  status: { GOOD: 'හොඳ තත්ත්වයේ', NEEDS_SERVICE: 'Service කළ යුතුයි', NEEDS_REPAIR: 'අලුත්වැඩියා කළ යුතුයි', IN_SERVICE: 'Service වෙමින්', IN_REPAIR: 'අලුත්වැඩියා වෙමින්', CONDITIONAL: 'කොන්දේසි සහිත' },
+  statusHint: { CONDITIONAL: 'Cavities වසා run වෙනවා / තාවකාලික විසඳුම' },
   isolation: {
     title: 'Isolation කලාපය', hint: 'Production Floor, Mould කාමරය සහ Workshop අතර රැඳී සිටින moulds. Machine එකකින් අවසන් නොවන හැම ගෙනයාමක්ම මෙතනින් යනවා.',
     empty: 'Isolation කලාපයේ කිසිවක් රැඳී නැහැ.', send: 'Isolation කලාපයට යවන්න', moveOn: 'ඉදිරියට ගෙනයන්න', plannedFor: 'යන්න බලාපොරොත්තු තැන', notDecided: 'තවම තීරණය කර නැහැ',

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { immutable } from "../lib/immutable.js";
-import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
+import { LOCATIONS, STORED_STATUSES as MOULD_STATUSES } from "../lib/mouldState.js";
 
 // CAVITY_BLOCK / CAVITY_RESTORE are written by the "Run with blocked cavities" action, not by the work log form.
 export const MANUAL_WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];

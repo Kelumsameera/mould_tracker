@@ -15,7 +15,7 @@ import { can } from "../lib/permissions.js";
 import { resolveProblem } from "./workLogController.js";
 import { photosFromDataUrls, saveRendered } from "../lib/images.js";
 import { addImage, keysOf, removeImage, reorderImages, replaceImage } from "../lib/itemImages.js";
-import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
+import { displayStatus, mouldStateError, statusQuery, toolTypeFilter } from "../lib/mouldState.js";
 
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
@@ -80,7 +80,7 @@ export async function listMoulds(req, res) {
   const q = req.validQuery;
   const filter = { ...toolTypeFilter(q.toolType), deletedAt: q.deleted === "true" && can(req.user, "mould.delete") ? { $ne: null } : null };
   if (q.location) filter.location = q.location;
-  if (q.status) filter.status = q.status;
+  if (q.status) filter.status = statusQuery(q.status);
   if (q.owner) filter.owner = q.owner.toUpperCase();
   if (q.machineId) filter.machineId = q.machineId;
   if (q.rackId) filter.rackId = q.rackId;
@@ -143,7 +143,8 @@ export async function mouldStats(req, res) {
     Mould.countDocuments({ ...live, location: "ISOLATION", "isolation.since": { $lte: tooLongSince } }),
     Mould.countDocuments({ ...live, "blockedCavities.0": { $exists: true } })
   ]);
-  const toObj = (rows) => Object.fromEntries(rows.map((r) => [r._id, r.n]));
+  // Legacy stored statuses (e.g. RUNNING_LIMITED) are counted under their current key.
+  const toObj = (rows) => rows.reduce((o, r) => { const k = displayStatus(r._id); o[k] = (o[k] || 0) + r.n; return o; }, {});
   const status = toObj(byStatus);
   res.json({
     success: true,

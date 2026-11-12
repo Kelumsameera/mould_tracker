@@ -3,7 +3,9 @@ import type { Permission, Role } from "@/utils/permissions";
 export type { Role };
 export type Location = 'MACHINE' | 'PRODUCTION_FLOOR' | 'ISOLATION' | 'WORKSHOP' | 'MOULD_ROOM' | 'TOOL_ROOM' | 'OUT_OF_SERVICE';
 export type ToolType = 'INJECTION_MOULD' | 'EXTRUSION_DIE';
-export type MouldStatus = 'GOOD' | 'NEEDS_SERVICE' | 'NEEDS_REPAIR' | 'IN_SERVICE' | 'IN_REPAIR' | 'RUNNING_LIMITED';
+export type MouldStatus = 'GOOD' | 'NEEDS_SERVICE' | 'NEEDS_REPAIR' | 'IN_SERVICE' | 'IN_REPAIR' | 'CONDITIONAL';
+// "Conditional": running with blocked cavities / temporary fix (server: CONDITIONAL_STATUS).
+export const CONDITIONAL_STATUS = 'CONDITIONAL' as const;
 export type AlertLevel = 'amber' | 'red' | null;
 export const LOCATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'ISOLATION', 'MOULD_ROOM', 'TOOL_ROOM', 'WORKSHOP', 'OUT_OF_SERVICE'];
 // Where a mould waiting in the Isolation Area may be planned to go next.

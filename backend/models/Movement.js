@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { immutable } from "../lib/immutable.js";
-import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
+import { LOCATIONS, STORED_STATUSES as MOULD_STATUSES } from "../lib/mouldState.js";
 
 export const MOVEMENT_TYPES = ["CREATED", "EDITED", "MOVED", "STATUS_CHANGED", "DELETED", "RESTORED", "IMPORTED", "CAVITIES_CHANGED"];
 

@@ -1,6 +1,7 @@
 import { normalizeOverrides, overridesActive, permissionsFor, rolePermissionsFor } from "../lib/permissions.js";
 import { isServiceDue } from "../lib/workflow.js";
 import { isolationLevel, limitedRunLevel } from "../lib/flowConfig.js";
+import { displayStatus } from "../lib/mouldState.js";
 
 // Turns Mongoose documents into the flat JSON shape the frontend uses.
 const plain = (d) => (d && typeof d.toObject === "function" ? d.toObject() : d);
@@ -55,7 +56,7 @@ export function mouldDTO(m, refs = {}, summary = {}) {
     size: o.size || "",
     owner: o.owner ?? null,
     capableMachines: o.capableMachines || [],
-    status: o.status,
+    status: displayStatus(o.status),
     location: o.location,
     machine: machineRef(refs.machines?.get(idOf(o.machineId))),
     rack: rackRef(refs.racks?.get(idOf(o.rackId))),
@@ -89,8 +90,8 @@ export const movementDTO = (m, users = new Map()) => ({
   type: m.type,
   fromLocation: m.fromLocation,
   toLocation: m.toLocation,
-  fromStatus: m.fromStatus,
-  toStatus: m.toStatus,
+  fromStatus: displayStatus(m.fromStatus),
+  toStatus: displayStatus(m.toStatus),
   fromMachineCode: m.fromMachineCode,
   toMachineCode: m.toMachineCode,
   fromRackLocationId: m.fromRackLocationId,
@@ -136,8 +137,8 @@ export const workLogDTO = (l, corrected = false) => ({
   location: l.location,
   machineCode: l.machineCode ?? null,
   rackLocationId: l.rackLocationId ?? null,
-  statusBefore: l.statusBefore,
-  statusAfter: l.statusAfter,
+  statusBefore: displayStatus(l.statusBefore),
+  statusAfter: displayStatus(l.statusAfter),
   shots: l.shots ?? null,
   outcome: l.outcome ?? null,
   sentToWorkshop: Boolean(l.sentToWorkshop),

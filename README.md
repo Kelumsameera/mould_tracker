@@ -114,7 +114,8 @@ first sign-in (also true for the optional Super Admin from `npm run seed`). `npm
 
 After upgrading from an older version run `npm run migrate:permissions` (dry run) and then
 `npm run migrate:permissions -- --apply` to rewrite stored permission names; the app already reads the old
-names correctly, so this is housekeeping.
+names correctly, so this is housekeeping. Likewise `npm run migrate:conditional` (then `-- --apply`) renames the
+old mould status `RUNNING_LIMITED` to `CONDITIONAL`; history keeps the old value and is shown as Conditional.
 
 ## Workflow rules (enforced on the server, `backend/lib/workflow.js`)
 
@@ -131,7 +132,7 @@ names correctly, so this is housekeeping.
    `ISOLATION_MAX_WAIT_HOURS` shows amber, twice that red.
 4. Mount only on a capable machine unless an Admin overrides with a reason; one mould per machine
    (also a unique database index).
-5. **Running with blocked cavities**: status `RUNNING_LIMITED` ("Running – needs repair"), allowed only on a
+5. **Running with blocked cavities**: status `CONDITIONAL` ("Conditional" / "කොන්දේසි සහිත"; tooltip "Running with blocked cavities / temporary fix"), allowed only on a
    machine, the Production Floor or in Isolation. Cavities are numbered 1…N (N = total cavities of the
    items); a reason is required; each change writes a movement, a work log entry (`CAVITY_BLOCK` /
    `CAVITY_RESTORE`) and an audit entry. Sending such a mould to the Workshop makes it `IN_REPAIR` and keeps

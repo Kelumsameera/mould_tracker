@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { dispatchDetailsSchema } from "./DispatchDetails.js";
-import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
+import { LOCATIONS, STORED_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
 
 // One Tool ID from the tools list. The products it makes are Item documents.
 const mouldSchema = new mongoose.Schema(
@@ -11,7 +11,7 @@ const mouldSchema = new mongoose.Schema(
     size: { type: String, default: "", trim: true, maxlength: 50 },
     owner: { type: String, default: null, trim: true, uppercase: true, maxlength: 10 }, // zone code, e.g. FLK
     capableMachines: { type: [{ type: String, trim: true, uppercase: true, maxlength: 50 }], default: [] },
-    status: { type: String, enum: MOULD_STATUSES, default: "GOOD", index: true },
+    status: { type: String, enum: STORED_STATUSES, default: "GOOD", index: true }, // legacy values load until migrated
     location: {
       type: String,
       enum: LOCATIONS,
