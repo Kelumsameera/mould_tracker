@@ -48,6 +48,7 @@ export interface Movement {
   fromLocation: Location | null; toLocation: Location | null; fromStatus: MouldStatus | null; toStatus: MouldStatus | null;
   fromMachineCode: string | null; toMachineCode: string | null; fromRackLocationId: string | null; toRackLocationId: string | null;
   remarks: string; overrideReason: string; by: { id: string | null; name: string } | null; createdAt: string;
+  changes?: { before: Record<string, unknown>; after: Record<string, unknown> } | null;
 }
 
 export interface Machine { id: string; code: string; name: string; active: boolean; mould: { id: string; toolId: string } | null }

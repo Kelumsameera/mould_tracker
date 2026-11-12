@@ -653,6 +653,15 @@ export default function MouldSheet({
                         {entry.movement.remarks}
                       </div>
                     )}
+                    {entry.movement.type === "EDITED" && entry.movement.changes && (
+                      <ul className="font-medium text-ink-soft text-xs [margin-top:2px] list-none p-0 m-0">
+                        {Object.keys(entry.movement.changes.after).map((field) => (
+                          <li key={field} className="break-words">
+                            <b>{field}</b>: {showValue(entry.movement.changes!.before[field])} → {showValue(entry.movement.changes!.after[field])}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     {entry.movement.overrideReason && (
                       <div className="font-medium text-ink-soft text-sm [margin-top:2px]">
                         {translations.hist.override}: {entry.movement.overrideReason}
@@ -829,3 +838,10 @@ const Fact = ({ label, value }: { label: string; value: string }) => (
 );
 
 // The form for one action. Server rules decide; this only collects what the move needs.
+
+// Short text for an edited value in the timeline ("—" for empty).
+const showValue = (v: unknown) => {
+  if (v == null || v === "") return "—";
+  const text = Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v) : String(v);
+  return text.length > 80 ? text.slice(0, 80) + "…" : text;
+};

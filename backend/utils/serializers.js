@@ -91,6 +91,7 @@ export const movementDTO = (m, users = new Map()) => ({
   fromRackLocationId: m.fromRackLocationId,
   toRackLocationId: m.toRackLocationId,
   remarks: m.remarks || "",
+  changes: m.changes ?? null,
   outOfServiceDetails: m.outOfServiceDetails ?? null,
   overrideReason: m.overrideReason || "",
   by: userRef(users.get(idOf(m.performedBy))),

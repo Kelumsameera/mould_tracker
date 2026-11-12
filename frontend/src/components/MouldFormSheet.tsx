@@ -100,7 +100,8 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
   const [error, setError] = useState("");
-  const carryError = useRef(""); // shown after the form switches to the newly saved mould
+  const carryError = useRef("");
+  const version = useRef<number | undefined>(undefined); // latest mould version this form saw (stale-edit check) // shown after the form switches to the newly saved mould
 
   // Effects: load data and update the screen
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
       .catch(() => {});
     const type = mould?.toolType ?? defaultToolType;
     setToolType(type);
+    version.current = mould?.version;
     setError(carryError.current);
     carryError.current = "";
     setTried(false);
@@ -181,7 +183,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
     if (!form.toolId.trim() || (!editing && start === "MOULD_ROOM" && !rackId)) return; // shown at the fields
     if (!editing && items.some((index) => !index.itemId.trim())) return setError(translations.form.itemIdRequired);
     if (editing && mould) {
-      const response = await saveWithFeedback(() => api.updateMould(mould.id, getMouldChanges(), mould.version), translations.form.saved(form.toolId.trim()));
+      const response = await saveWithFeedback(() => api.updateMould(mould.id, getMouldChanges(), version.current ?? mould.version), translations.form.saved(form.toolId.trim()));
       if (response) {
         onSaved(response.mould, true);
       }
@@ -225,7 +227,8 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         for (const picture of entry.pending) {
           try {
             if (!item) throw new Error("item missing");
-            latest = (await api.addItemImage(latest.id, item.id, picture.src)).mould;
+            latest = (await api.addItemImage(latest.id, item.id, picture.src, latest.version)).mould;
+            version.current = latest.version;
           } catch {
             if (!failed.includes(entry.itemId)) failed.push(entry.itemId);
           }
@@ -243,10 +246,11 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
   async function saveMouldItem(itemDraft: ItemDraft) {
     if (!itemDraft.itemId.trim()) return setError(translations.form.itemIdRequired);
     const res = await saveWithFeedback(
-      () => (itemDraft.id ? api.updateItem(mould!.id, itemDraft.id, fromDraft(itemDraft)) : api.addItem(mould!.id, fromDraft(itemDraft))),
+      () => (itemDraft.id ? api.updateItem(mould!.id, itemDraft.id, fromDraft(itemDraft), version.current) : api.addItem(mould!.id, fromDraft(itemDraft), version.current)),
       translations.form.saved(itemDraft.itemId.trim()),
     );
     if (!res) return;
+    version.current = res.mould.version;
     let latest = res.mould;
     if (!itemDraft.id && itemDraft.pending.length) {
       const result = await uploadPending(latest, [{ itemId: itemDraft.itemId.trim().toUpperCase(), pending: itemDraft.pending }]);
@@ -268,8 +272,9 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
       }))
     )
       return;
-    const res = await saveWithFeedback(() => api.deleteItem(mould!.id, itemDraft.id!), translations.feedback.removed);
+    const res = await saveWithFeedback(() => api.deleteItem(mould!.id, itemDraft.id!, version.current), translations.feedback.removed);
     if (res) {
+      version.current = res.mould.version;
       setItems(res.mould.items?.map(toDraft) ?? []);
       onSaved(res.mould, false);
     }
@@ -288,6 +293,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
   async function serverPictureChange(itemDraft: ItemDraft, work: () => Promise<{ mould: Mould }>) {
     const res = await saveWithFeedback(work, translations.form.saved(itemDraft.itemId));
     if (res) {
+      version.current = res.mould.version;
       setItems(res.mould.items?.map(toDraft) ?? []);
       onSaved(res.mould, false);
     }
@@ -295,11 +301,11 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
   const savedPictureHandlers = (itemDraft: ItemDraft) => ({
     onAdd: async (file: File) => {
       const photo = await readPicture(file);
-      if (photo) await serverPictureChange(itemDraft, () => api.addItemImage(mould!.id, itemDraft.id!, photo));
+      if (photo) await serverPictureChange(itemDraft, () => api.addItemImage(mould!.id, itemDraft.id!, photo, version.current));
     },
     onReplace: async (key: string, file: File) => {
       const photo = await readPicture(file);
-      if (photo) await serverPictureChange(itemDraft, () => api.replaceItemImage(mould!.id, itemDraft.id!, key, photo));
+      if (photo) await serverPictureChange(itemDraft, () => api.replaceItemImage(mould!.id, itemDraft.id!, key, photo, version.current));
     },
     onRemove: async (key: string) => {
       const ok = await confirm({
@@ -308,12 +314,12 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         confirmText: translations.confirm.removeBtn,
         tone: "danger",
       });
-      if (ok) await serverPictureChange(itemDraft, () => api.removeItemImage(mould!.id, itemDraft.id!, key));
+      if (ok) await serverPictureChange(itemDraft, () => api.removeItemImage(mould!.id, itemDraft.id!, key, version.current));
     },
     onMove: async (key: string, step: -1 | 1) => {
       const index = itemDraft.saved.findIndex((p) => p.id === key);
       const order = moved(itemDraft.saved, index, step).map((p) => p.id);
-      await serverPictureChange(itemDraft, () => api.reorderItemImages(mould!.id, itemDraft.id!, order));
+      await serverPictureChange(itemDraft, () => api.reorderItemImages(mould!.id, itemDraft.id!, order, version.current));
     },
   });
 

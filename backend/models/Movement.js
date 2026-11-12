@@ -28,6 +28,7 @@ const movementSchema = new mongoose.Schema(
     toRackLocationId: snapshot,
     outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
+    changes: { type: mongoose.Schema.Types.Mixed, default: null }, // EDITED: { before, after } of the changed fields
     overrideReason: { type: String, default: "", maxlength: 500 }, // capable-machine or owner/zone override
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     legacyMovementId: { type: mongoose.Schema.Types.ObjectId, default: undefined } // ToolMovement copied from

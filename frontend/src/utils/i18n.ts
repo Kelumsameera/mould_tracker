@@ -86,7 +86,7 @@ const en = {
   },
 
   hist: {
-    CREATED: 'Added', IMPORTED: 'Imported from tools list', EDITED: 'Details changed', DELETED: 'Deleted', RESTORED: 'Restored',
+    CREATED: 'Added', IMPORTED: 'Imported from tools list', EDITED: 'Edited', DELETED: 'Deleted', RESTORED: 'Restored',
     moved: (from: string, to: string) => `${from} → ${to}`, status: (from: string, to: string) => `${from} → ${to}`, override: 'Override', by: 'by'
   },
 
@@ -395,7 +395,7 @@ const si: Dict = {
   },
 
   hist: {
-    CREATED: 'එකතු කළා', IMPORTED: 'Tools list එකෙන් ගත්තා', EDITED: 'විස්තර වෙනස් කළා', DELETED: 'මකා දැමුවා', RESTORED: 'නැවත ගත්තා',
+    CREATED: 'එකතු කළා', IMPORTED: 'Tools list එකෙන් ගත්තා', EDITED: 'සංස්කරණය කළා', DELETED: 'මකා දැමුවා', RESTORED: 'නැවත ගත්තා',
     moved: (from, to) => `${from} → ${to}`, status: (from, to) => `${from} → ${to}`, override: 'Override', by: ''
   },
 

@@ -19,7 +19,7 @@ import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
 
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
-const MOULD_FIELDS = ["toolId", "toolType", "toolSetCount", "size", "owner", "capableMachines", "shotsToService", "notes"];
+import { MOULD_FIELDS, planMouldEdit } from "../lib/mouldEdit.js";
 const ITEM_FIELDS = ["itemId", "description", "cavities", "qas", "materialId", "materialDescription", "masterbatchId", "masterbatchDescription", "notes", "sortOrder"];
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const toolKey = (s) => String(s).toUpperCase().replace(/\s+/g, "");
@@ -206,22 +206,13 @@ export async function updateMould(req, res) {
     if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
     if (fields.toolId && toolKey(fields.toolId) !== toolKey(mould.toolId)) await assertToolIdFree(fields.toolId, mould._id, session);
     const before = mould.toObject();
-    Object.assign(mould, Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)));
-    // Editing never depends on status/location; only a tool type change must still fit where the tool is.
-    if (fields.toolType !== undefined && fields.toolType !== before.toolType) {
-      const stateError = mouldStateError(mould);
-      if (stateError) fail(400, "INVALID_LOCATION", stateError);
-    }
-    const diff = changes(before, mould.toObject(), MOULD_FIELDS);
-    if (!diff.fields.length) fail(400, "NO_CHANGE", "Nothing changed");
-
-    const due = serviceDueChange(mould.toObject(), req.user, "Shot limit changed"); // rule 8
-    if (due.statusSet) Object.assign(mould, due.statusSet);
+    const { set, diff } = planMouldEdit(before, fields); // never touches status or location
+    Object.assign(mould, set);
     mould.version += 1;
     await mould.save({ session });
     await Movement.create([{ mouldId: mould._id, toolId: mould.toolId, type: "EDITED", fromLocation: mould.location, toLocation: mould.location,
-      fromStatus: before.status, toStatus: before.status, remarks: [`Changed: ${diff.fields.join(", ")}`, remarks].filter(Boolean).join(". "), performedBy: req.user._id }], { session });
-    if (due.movement) await Movement.create([due.movement], { session });
+      fromStatus: before.status, toStatus: before.status, remarks: [`Changed: ${diff.fields.join(", ")}`, remarks].filter(Boolean).join(". "), performedBy: req.user._id,
+      changes: { before: diff.before, after: diff.after } }], { session });
     await audit(req, { action: "mould.updated", entityType: "Mould", entityId: mould._id, entityLabel: mould.toolId, before: diff.before, after: diff.after, reason: remarks }, session);
     return mould._id;
   });
@@ -343,7 +334,7 @@ export async function restoreMould(req, res) {
 // ---- Items ----
 async function itemChange(req, mouldId, label, work) {
   return withTransaction(async (session) => {
-    const mould = await loadForUpdate(mouldId, session);
+    const mould = await loadForUpdate(mouldId, session, req.body?.version);
     if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
     const result = await work(mould, session);
     mould.version += 1;
@@ -357,15 +348,16 @@ async function itemChange(req, mouldId, label, work) {
 export async function addItem(req, res) {
   const id = await itemChange(req, req.params.id, (it) => `Item ${it.itemId} added`, async (mould, session) => {
     const count = await Item.countDocuments({ mouldId: mould._id }).session(session);
-    const [item] = await Item.create([{ sortOrder: count, ...req.body, mouldId: mould._id }], { session });
-    await audit(req, { action: "item.created", entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`, after: req.body }, session);
+    const { version: _v, ...fields } = req.body;
+    const [item] = await Item.create([{ sortOrder: count, ...fields, mouldId: mould._id }], { session });
+    await audit(req, { action: "item.created", entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`, after: fields }, session);
     return item;
   });
   await respondWithMould(res, id, 201);
 }
 
 export async function updateItem(req, res) {
-  const { photo, ...fields } = req.body;
+  const { photo, version: _version, ...fields } = req.body;
   let rendered;
   if (photo !== undefined && !can(req.user, "mould.images.manage")) fail(403, "FORBIDDEN", "You do not have permission to change pictures");
   if (photo !== undefined) {
