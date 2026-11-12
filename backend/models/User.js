@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { CUSTOM_PERMISSIONS, LEGACY_ROLE_ALIASES, ROLES } from "../lib/permissions.js";
+import { LEGACY_ROLE_ALIASES, ROLES } from "../lib/permissions.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -8,7 +8,10 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     // Legacy roles stay valid only so old documents load until the upgrade migration rewrites them.
     role: { type: String, enum: [...ROLES, ...Object.keys(LEGACY_ROLE_ALIASES)], default: "mould_technician" },
-    permissionOverrides: { type: [{ type: String, enum: CUSTOM_PERMISSIONS }], default: null },
+    // { grant: [], deny: [], expiresAt: Date|null, reason, updatedAt, updatedBy } or null. Older documents may
+    // still hold a plain permission list; lib/permissions.js normalizeOverrides reads both.
+    permissionOverrides: { type: mongoose.Schema.Types.Mixed, default: null },
+    mustChangePassword: { type: Boolean, default: false }, // seeded / reset accounts change it at first login
     language: { type: String, enum: ["en", "si"], default: "en" },
     active: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null }

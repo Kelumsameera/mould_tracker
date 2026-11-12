@@ -20,13 +20,13 @@ export const isServiceDue = (m) => Number(m.shotsToService) > 0 && Number(m.tota
 
 // Permissions a move needs; the user must hold one permission from every group.
 export function movePermissionGroups(from, to) {
-  if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return [["moves.outOfService"]];
+  if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return [["move.outOfService"]];
   const groups = [];
-  // Mounting is covered by moves.machine, including when taking a tool from storage.
-  if ((isStorage(from) && to !== "MACHINE") || isStorage(to)) groups.push(["moves.mouldRoom"]);
-  if (to === "MACHINE") groups.push(["moves.machine"]);
-  if (to === "WORKSHOP") groups.push(["workshop.work"]);
-  if (to === "PRODUCTION_FLOOR" && !isStorage(from)) groups.push(from === "WORKSHOP" ? ["moves.machine", "workshop.work"] : ["moves.machine"]);
+  // Mounting is covered by move.machine, including when taking a tool from storage.
+  if ((isStorage(from) && to !== "MACHINE") || isStorage(to)) groups.push(["move.mouldroom"]);
+  if (to === "MACHINE") groups.push(["move.machine"]);
+  if (to === "WORKSHOP") groups.push(["move.workshop"]);
+  if (to === "PRODUCTION_FLOOR" && !isStorage(from)) groups.push(from === "WORKSHOP" ? ["move.floor", "move.workshop"] : ["move.floor"]);
   return groups;
 }
 
@@ -131,7 +131,7 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
 // Status change at the Workshop (rules 2, 4, 7, 8).
 export function planStatus({ mould, user, status, remarks = "", now = new Date() }) {
   if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
-  if (!can(user, "workshop.work")) fail(403, "FORBIDDEN", "You do not have permission to change the status");
+  if (!can(user, "status.change")) fail(403, "FORBIDDEN", "You do not have permission to change the status");
   if (!MOULD_STATUSES.includes(status)) fail(400, "INVALID_STATUS", "Unknown status");
   if (status === mould.status) fail(400, "NO_CHANGE", `${mould.toolId} is already ${status.replace(/_/g, " ").toLowerCase()}`);
   if (mould.location !== "WORKSHOP") fail(409, "NOT_AT_WORKSHOP", `Send ${mould.toolId} to the Workshop before changing its status`);
@@ -157,7 +157,7 @@ export function planStatus({ mould, user, status, remarks = "", now = new Date()
 // Shots produced while mounted; rule 8 flags the mould once the limit is reached.
 export function planShots({ mould, user, shots }) {
   if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
-  if (!can(user, "moves.machine") && !can(user, "workshop.work")) fail(403, "FORBIDDEN", "You do not have permission to record shots");
+  if (!can(user, "move.machine") && !can(user, "status.change")) fail(403, "FORBIDDEN", "You do not have permission to record shots");
   if (!Number.isInteger(shots) || shots <= 0) fail(400, "INVALID_SHOTS", "Shots must be a whole number above zero");
   if (mould.location !== "MACHINE") fail(409, "NOT_ON_MACHINE", `${mould.toolId} is not on a machine`);
   const next = { ...mould, totalShots: Number(mould.totalShots || 0) + shots };

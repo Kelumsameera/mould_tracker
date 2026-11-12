@@ -43,9 +43,12 @@ export const createUserSchema = z.object({
   role: role.default("mould_technician")
 });
 
-export const updateUserAccessSchema = z.object({
-  permissions: z.array(z.enum(CUSTOM_PERMISSIONS)).max(CUSTOM_PERMISSIONS.length).refine(values => new Set(values).size === values.length, "Duplicate permissions").nullable()
-}).strict();
+const permissionList = z.array(z.enum(CUSTOM_PERMISSIONS)).max(CUSTOM_PERMISSIONS.length).refine(values => new Set(values).size === values.length, "Duplicate permissions");
+const accessReason = z.string().trim().min(3, "A reason is required").max(500);
+// Role matrix row: a permission list, or null to go back to the role defaults.
+export const roleAccessSchema = z.object({ permissions: permissionList.nullable(), version: z.number().int().min(0).optional(), reason: accessReason }).strict();
+// Per-user overrides: extra (grant) and removed (deny) permissions; both empty = reset to role defaults.
+export const userAccessSchema = z.object({ grant: permissionList.default([]), deny: permissionList.default([]), expiresAt: z.iso.datetime({ offset: true }).nullable().optional(), reason: accessReason }).strict();
 
 export const updateUserSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
@@ -148,6 +151,7 @@ export const auditQuery = z.object({
   entityId: objectId.optional(),
   action: z.string().trim().max(100).optional(),
   actorId: objectId.optional(),
+  category: z.enum(["access", "edits", "images", "cavities"]).optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
   page: z.coerce.number().int().min(1).default(1),

@@ -267,7 +267,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </nav>
 
       <MouldSheet
-        id={can(user, "moulds.view") ? mouldId : null}
+        id={can(user, "mould.view") ? mouldId : null}
         user={user}
         translations={translations}
         lang={lang}

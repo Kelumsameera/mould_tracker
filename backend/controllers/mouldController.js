@@ -74,7 +74,7 @@ async function rackForMove(rackId, mouldId, session) {
 // GET /api/moulds - search by Tool ID, Item ID, item description, machine or rack, plus filters.
 export async function listMoulds(req, res) {
   const q = req.validQuery;
-  const filter = { ...toolTypeFilter(q.toolType), deletedAt: q.deleted === "true" && can(req.user, "moulds.manage") ? { $ne: null } : null };
+  const filter = { ...toolTypeFilter(q.toolType), deletedAt: q.deleted === "true" && can(req.user, "mould.delete") ? { $ne: null } : null };
   if (q.location) filter.location = q.location;
   if (q.status) filter.status = q.status;
   if (q.owner) filter.owner = q.owner.toUpperCase();
@@ -153,7 +153,7 @@ export async function mouldStats(req, res) {
 
 export async function getMould(req, res) {
   const mould = await Mould.findById(req.params.id).lean();
-  if (!mould || (mould.deletedAt && !can(req.user, "moulds.manage"))) fail(404, "NOT_FOUND", "Mould not found");
+  if (!mould || (mould.deletedAt && !can(req.user, "mould.delete"))) fail(404, "NOT_FOUND", "Mould not found");
   await respondWithMould(res, mould._id);
 }
 
@@ -189,9 +189,17 @@ export async function createMould(req, res) {
   await respondWithMould(res, id, 201);
 }
 
+// Each part of a mould edit has its own permission (checked separately).
+export function assertEditPermissions(user, fields) {
+  const keys = Object.keys(fields).filter((k) => fields[k] !== undefined);
+  if (keys.includes("capableMachines") && !can(user, "mould.machines.edit")) fail(403, "FORBIDDEN", "You do not have permission to change capable machines");
+  if (keys.some((k) => k !== "capableMachines") && !can(user, "mould.edit")) fail(403, "FORBIDDEN", "You do not have permission to edit mould details");
+}
+
 // PATCH /api/moulds/:id - details only; location and status change through move/status.
 export async function updateMould(req, res) {
   const { version, remarks, ...fields } = req.body;
+  assertEditPermissions(req.user, fields);
   if (fields.capableMachines !== undefined) fields.capableMachines = cleanMachines(fields.capableMachines);
   const id = await withTransaction(async (session) => {
     const mould = await loadForUpdate(req.params.id, session, version);
@@ -199,8 +207,11 @@ export async function updateMould(req, res) {
     if (fields.toolId && toolKey(fields.toolId) !== toolKey(mould.toolId)) await assertToolIdFree(fields.toolId, mould._id, session);
     const before = mould.toObject();
     Object.assign(mould, Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)));
-    const stateError = mouldStateError(mould);
-    if (stateError) fail(400, "INVALID_LOCATION", stateError);
+    // Editing never depends on status/location; only a tool type change must still fit where the tool is.
+    if (fields.toolType !== undefined && fields.toolType !== before.toolType) {
+      const stateError = mouldStateError(mould);
+      if (stateError) fail(400, "INVALID_LOCATION", stateError);
+    }
     const diff = changes(before, mould.toObject(), MOULD_FIELDS);
     if (!diff.fields.length) fail(400, "NO_CHANGE", "Nothing changed");
 
@@ -356,6 +367,7 @@ export async function addItem(req, res) {
 export async function updateItem(req, res) {
   const { photo, ...fields } = req.body;
   let rendered;
+  if (photo !== undefined && !can(req.user, "mould.images.manage")) fail(403, "FORBIDDEN", "You do not have permission to change pictures");
   if (photo !== undefined) {
     try { [rendered] = await photosFromDataUrls([photo], "items"); }
     catch (e) { fail(400, "INVALID_PHOTO", e.message); }

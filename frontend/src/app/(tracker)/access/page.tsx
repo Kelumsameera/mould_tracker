@@ -115,7 +115,7 @@ export default function AccessPage() {
             <legend className="sr-only">{text.title}</legend>
             <div className="grid gap-2 sm:grid-cols-2">
               {catalog.map(permission => <label key={permission} className="flex items-start gap-3 min-h-11 rounded-md bg-surface-2 p-3 cursor-pointer">
-                <input className="mt-1" type="checkbox" disabled={permission === "moves.outOfService" && selected.role !== "super_admin"} checked={draft.includes(permission)} onChange={event => {
+                <input className="mt-1" type="checkbox" disabled={permission === "move.outOfService" && selected.role !== "super_admin"} checked={draft.includes(permission)} onChange={event => {
                   setDraft(current => event.target.checked ? [...current, permission] : current.filter(value => value !== permission));
                 }} />
                 <span className="text-sm font-bold">{text.labels[permission]}</span>

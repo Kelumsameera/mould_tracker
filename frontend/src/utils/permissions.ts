@@ -14,21 +14,21 @@ export const ROLES = [
 export type Role = (typeof ROLES)[number];
 
 export type Permission =
-  | "moves.outOfService"
+  | "move.outOfService"
   | "access.manage"
   | "settings.manage"
-  | "racks.manage"
-  | "racks.view"
+  | "rack.manage"
+  | "rack.view"
   | "import.run"
   | "export.run"
   | "audit.view"
   | "users.manage"
   | "moulds.manage"
   | "moves.machine"
-  | "moves.mouldRoom"
+  | "move.mouldroom"
   | "workshop.work"
   | "machines.override"
-  | "moulds.view"
+  | "mould.view"
   | "worklog.create"
   | "worklog.view"
   | "worklog.report"
@@ -39,14 +39,14 @@ export const can = (user: User | null | undefined, permission: Permission) =>
 
 export function canVisitPage(user: User, page: PageName) {
   if (page === "access") return can(user, "access.manage");
-  if (["find", "extrusion", "workshop"].includes(page)) return can(user, "moulds.view");
-  if (page === "racks") return can(user, "racks.view");
+  if (["find", "extrusion", "workshop"].includes(page)) return can(user, "mould.view");
+  if (page === "racks") return can(user, "rack.view");
   if (page === "machines") return can(user, "moulds.manage");
   if (page === "audit") return can(user, "audit.view");
   if (page === "workReport") return can(user, "worklog.report");
   if (page === "users") return can(user, "users.manage");
   if (page === "rackAdmin") {
-    return can(user, "racks.manage") || can(user, "moulds.manage");
+    return can(user, "rack.manage") || can(user, "moulds.manage");
   }
   return true;
 }
@@ -66,14 +66,14 @@ export function canMoveTo(
   to: string,
 ) {
   if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") {
-    return from !== to && can(user, "moves.outOfService");
+    return from !== to && can(user, "move.outOfService");
   }
   const groups: Permission[][] = [];
   if (
     (["MOULD_ROOM", "TOOL_ROOM"].includes(from) && to !== "MACHINE") ||
     ["MOULD_ROOM", "TOOL_ROOM"].includes(to)
   )
-    groups.push(["moves.mouldRoom"]);
+    groups.push(["move.mouldroom"]);
   if (to === "MACHINE") groups.push(["moves.machine"]);
   if (to === "WORKSHOP") groups.push(["workshop.work"]);
   if (to === "PRODUCTION_FLOOR" && !["MOULD_ROOM", "TOOL_ROOM"].includes(from))

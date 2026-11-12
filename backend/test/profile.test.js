@@ -7,7 +7,7 @@ import User from '../models/User.js';
 import { updateProfile } from '../controllers/authController.js';
 import { updateProfileSchema } from '../validators/schemas.js';
 afterEach(() => mock.restoreAll());
-beforeEach(() => mock.method(RoleAccess, 'findOne', async () => null));
+beforeEach(() => { mock.method(RoleAccess, 'findOne', async () => null); mock.method(RoleAccess, 'find', async () => []); });
 for (const role of ['admin', 'operator', 'viewer']) {
   test(`${role} can update only their own profile and hash a new password`, async () => {
     const user = { _id: 'own-id', role, name: 'Old', email: 'old@example.com', passwordHash: await bcrypt.hash('old-password', 4), async save() {} };

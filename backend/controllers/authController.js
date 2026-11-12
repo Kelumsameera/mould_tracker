@@ -31,6 +31,7 @@ export async function changePassword(req, res) {
     throw new ApiError(400, "Current password is incorrect");
   }
   user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
+  user.mustChangePassword = false;
   await user.save();
   res.json({ success: true });
 }
@@ -42,7 +43,7 @@ export async function updateProfile(req, res) {
   }
   user.name = req.body.name;
   user.email = req.body.email;
-  if (req.body.newPassword) user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
+  if (req.body.newPassword) { user.passwordHash = await bcrypt.hash(req.body.newPassword, 12); user.mustChangePassword = false; }
   await user.save();
   res.json({ success: true, user: userDTO(await loadRoleAccess(user)) });
 }

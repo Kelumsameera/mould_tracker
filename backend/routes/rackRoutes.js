@@ -2,8 +2,8 @@ import * as c from "../controllers/rackController.js";
 import * as s from "../validators/schemas.js";
 import { routerFrom } from "./table.js";
 
-const VIEW = ["racks.view"];
-const MANAGE = ["racks.manage"]; // Super Admin only; Admin sees racks read-only
+const VIEW = ["rack.view"];
+const MANAGE = ["rack.manage"]; // Super Admin only; Admin sees racks read-only
 
 export const rackRouteTable = [
   ["get", "/", VIEW, c.listRacks],

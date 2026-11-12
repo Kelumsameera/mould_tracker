@@ -1,4 +1,4 @@
-import { permissionsFor } from "../lib/permissions.js";
+import { normalizeOverrides, overridesActive, permissionsFor, rolePermissionsFor } from "../lib/permissions.js";
 import { isServiceDue } from "../lib/workflow.js";
 
 // Turns Mongoose documents into the flat JSON shape the frontend uses.
@@ -17,6 +17,8 @@ export const userDTO = (u) => ({
   role: u.role,
   language: u.language || "en",
   active: u.active,
+  mustChangePassword: Boolean(u.mustChangePassword),
+  hasAccessOverrides: overridesActive(normalizeOverrides(u.permissionOverrides, rolePermissionsFor(u))),
   permissions: permissionsFor(u)
 });
 

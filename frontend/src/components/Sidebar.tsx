@@ -85,7 +85,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
       icon: "report",
     });
   }
-  if (can(user, "racks.manage") || can(user, "moulds.manage")) {
+  if (can(user, "rack.manage") || can(user, "moulds.manage")) {
     adminLinks.push({
       key: "rackAdmin",
       label: translations.nav.rackAdmin,

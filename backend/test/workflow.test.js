@@ -223,7 +223,7 @@ describe("who may move what (one user per role)", () => {
       assert.equal(canMove(PS, "MACHINE", location), false);
       assert.throws(() => planMove({ mould: current, user: PS, to: "MACHINE", machine: INJ9 }), code("NOT_CAPABLE"));
     }
-    assert.equal(canMove({ ...PS, permissionOverrides: ["moulds.view"] }, "MOULD_ROOM", "MACHINE"), false);
+    assert.equal(canMove({ ...PS, permissionOverrides: ["mould.view"] }, "MOULD_ROOM", "MACHINE"), false);
   });
   for (const [key, row] of Object.entries(MATRIX)) {
     test(key.replace(">", " -> "), () => {

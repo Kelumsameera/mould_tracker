@@ -13,7 +13,7 @@ import { type Rack, type Zone } from "@/utils/types";
 
 export default function RackAdminPage() {
   const { translations, user } = useApp();
-  const canEdit = can(user, "racks.manage");
+  const canEdit = can(user, "rack.manage");
 
   const { confirm, ask } = useConfirm();
   // Screen state

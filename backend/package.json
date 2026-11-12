@@ -9,6 +9,8 @@
     "test": "node --test",
     "seed": "node seed.js",
     "create:system-admin": "node scripts/create-system-admin.mjs",
+    "seed:sysadmin": "node scripts/seed-sysadmin.mjs",
+    "migrate:permissions": "node scripts/migrate-permissions.mjs",
     "migrate:supabase": "node migrateSupabase.js"
   },
   "dependencies": {

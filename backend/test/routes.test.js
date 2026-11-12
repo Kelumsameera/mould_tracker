@@ -12,15 +12,22 @@ import { errorHandler } from "../middleware/errorMiddleware.js";
 mongoose.set("bufferCommands", false);
 process.env.JWT_SECRET = "test-secret-that-is-at-least-thirty-two-characters";
 
-const ROLES = ["super_admin", "admin", "production_supervisor", "mould_technician", "mould_maker", "system_admin"];
+const ROLES = ["super_admin", "admin", "production_supervisor", "mould_technician", "mould_maker", "system_admin", "executive"];
 const users = Object.fromEntries(ROLES.map((role) => [role, { _id: new mongoose.Types.ObjectId(), role, name: role, active: true, deletedAt: null }]));
 const ALL = ROLES, ADMINS = ["super_admin", "admin"], SA = ["super_admin"];
+const WORKERS = ROLES.filter((r) => r !== "executive"); // executive is read-only
 
 let server, base, tables;
 before(async () => {
   mock.method(RoleAccess, "findOne", async () => null);
   mock.method(RoleAccess, "find", async () => []);
-  mock.method(User, "findById", (id) => ({ select: async () => Object.values(users).find((u) => String(u._id) === String(id)) }));
+  // requireAuth uses findById(...).select(); controllers await findById() directly and get a plain account to act on.
+  const target = () => ({ _id: new mongoose.Types.ObjectId(), role: "mould_maker", name: "t", email: "t@x.test", active: true, deletedAt: null,
+    toObject() { return { ...this }; }, async save() { throw new Error("no database"); } });
+  mock.method(User, "findById", (id) => ({
+    select: async () => Object.values(users).find((u) => String(u._id) === String(id)),
+    then: (ok, ko) => Promise.resolve(target()).then(ok, ko)
+  }));
   // Let privacy setup finish so permission tests still exercise the route handler.
   mock.method(User, "find", () => ({
     sort() { return this; },
@@ -48,9 +55,9 @@ after(() => { server?.close(); mock.restoreAll(); });
 const EXPECTED = {
   "moulds GET /": ALL, "moulds GET /stats": ALL, "moulds GET /:id": ALL, "moulds GET /:id/history": ALL,
   "moulds POST /": ADMINS, "moulds PATCH /:id": ADMINS, "moulds DELETE /:id": ADMINS, "moulds POST /:id/restore": ADMINS,
-  "moulds POST /:id/move": ALL, // each role has some move; lib/workflow.js narrows it (tested in workflow.test.js)
+  "moulds POST /:id/move": WORKERS, // each role has some move; lib/workflow.js narrows it (tested in workflow.test.js)
   "moulds POST /:id/status": ["super_admin", "admin", "mould_technician", "mould_maker"],
-  "moulds POST /:id/shots": ALL,
+  "moulds POST /:id/shots": WORKERS.filter((r) => r !== "production_supervisor" || true),
   "moulds POST /:id/items": ADMINS, "moulds PATCH /:id/items/:itemId": ADMINS, "moulds DELETE /:id/items/:itemId": ADMINS,
   "moulds POST /:id/items/:itemId/images": ADMINS, "moulds PUT /:id/items/:itemId/images/order": ADMINS,
   "moulds PUT /:id/items/:itemId/images/:key": ADMINS, "moulds DELETE /:id/items/:itemId/images/:key": ADMINS,
@@ -64,9 +71,9 @@ const EXPECTED = {
   // Work log: production supervisors view only; the report and export are for Admins.
   "moulds GET /:id/worklogs": ALL,
   "moulds POST /:id/worklogs": ["super_admin", "admin", "mould_technician", "mould_maker"],
-  "moulds POST /:id/problems": ALL, // anyone may report a problem
+  "moulds POST /:id/problems": WORKERS, // anyone but the read-only executive may report a problem
   "worklogs GET /workers": ["super_admin", "admin", "mould_technician", "mould_maker"],
-  "worklogs GET /summary": ADMINS, "worklogs GET /export": ADMINS, "worklogs GET /": ADMINS
+  "worklogs GET /summary": [...ADMINS, "executive"], "worklogs GET /export": [...ADMINS, "executive"], "worklogs GET /": [...ADMINS, "executive"]
 };
 
 const cookie = (u) => `access_token=${jwt.sign({ sub: String(u._id) }, process.env.JWT_SECRET)}`;

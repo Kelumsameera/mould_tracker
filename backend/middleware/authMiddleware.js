@@ -14,10 +14,14 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ success: false, message: "Invalid user session" });
     }
     req.user = await loadRoleAccess(user);
-    next();
   } catch {
     return res.status(401).json({ success: false, message: "Invalid or expired session" });
   }
+  // Seeded accounts must pick their own password before using anything but their own account.
+  if (req.user.mustChangePassword && !String(req.originalUrl || "").startsWith("/api/auth/")) {
+    return res.status(403).json({ success: false, code: "PASSWORD_CHANGE_REQUIRED", message: "Change your password first" });
+  }
+  next();
 }
 
 export function requireRole(...roles) {

@@ -2,11 +2,10 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { userDTO } from "../utils/serializers.js";
-import { CUSTOM_PERMISSIONS, ROLES, resolveRole, can, canManageUser, canViewUser, rolePermissionsFor, visibleUsersFilter } from "../lib/permissions.js";
+import { CUSTOM_PERMISSIONS, ROLES, ASSIGNABLE_ROLES, resolveRole, can, canManageUser, canViewUser, roleDefaults, rolePermissionsFor, effectivePermissions, normalizeOverrides, overridesActive, upgradePermissions, visibleUsersFilter } from "../lib/permissions.js";
 import { audit, changes } from "../lib/audit.js";
 import RoleAccess from "../models/RoleAccess.js";
-import { loadRoleAccess } from "../lib/roleAccess.js";
-import { updateUserAccessSchema } from "../validators/schemas.js";
+import { invalidateRoleAccess, loadRoleAccess, roleMatrix } from "../lib/roleAccess.js";
 
 export async function listUsers(req, res) {
   const users = await User.find({ deletedAt: null, ...visibleUsersFilter(req.user) }).sort({ name: 1 });
@@ -33,6 +32,7 @@ export async function updateUser(req, res) {
     throw new ApiError(400, "You cannot disable your own account or change your own role");
   }
 
+  if ((req.body.role !== undefined && req.body.role !== user.role) || req.body.active === false) await assertNotLastSystemAdmin(user);
   const before = user.toObject();
   const { name, email, role, active, password } = req.body;
   if (name !== undefined) user.name = name;
@@ -43,7 +43,7 @@ export async function updateUser(req, res) {
   await user.save();
   const diff = changes(before, user.toObject(), ["name", "email", "role", "active"]);
   if (password) diff.after.password = "changed"; // never the password itself
-  await audit(req, { action: "user.updated", entityType: "User", entityId: user._id, entityLabel: user.email, before: diff.before, after: diff.after });
+  await audit(req, { action: diff.fields.includes("role") ? "user.role.changed" : "user.updated", entityType: "User", entityId: user._id, entityLabel: user.email, before: diff.before, after: diff.after });
 
   res.json({ success: true, user: canViewUser(req.user, user) ? userDTO(await loadRoleAccess(user)) : null });
 }
@@ -54,6 +54,7 @@ export async function deleteUser(req, res) {
   if (!user || user.deletedAt || !canViewUser(req.user, user)) throw new ApiError(404, "User not found");
   if (user._id.equals(req.user._id)) throw new ApiError(400, "You cannot delete your own account");
   if (!canManageUser(req.user, user)) throw new ApiError(403, "You cannot delete this account");
+  await assertNotLastSystemAdmin(user);
   user.deletedAt = new Date();
   user.active = false;
   await user.save();
@@ -62,57 +63,83 @@ export async function deleteUser(req, res) {
 }
 
 
-const accessDTO = user => ({
+// There must always be at least one active System Administrator.
+export async function assertNotLastSystemAdmin(target) {
+  if (target?.role !== "system_admin") return;
+  const others = await User.countDocuments({ role: "system_admin", active: true, deletedAt: null, _id: { $ne: target._id } });
+  if (!others) throw new ApiError(409, "The last System Administrator cannot be removed, disabled or demoted", { code: "LAST_SYSTEM_ADMIN" });
+}
+
+const overridesDTO = (user) => {
+  const o = normalizeOverrides(user.permissionOverrides, rolePermissionsFor(user));
+  return o ? { grant: o.grant, deny: o.deny, expiresAt: o.expiresAt, reason: o.reason, active: overridesActive(o) } : null;
+};
+
+const accessDTO = (user) => ({
   ...userDTO(user),
-  permissionOverrides: user.permissionOverrides ?? null,
-  rolePermissions: rolePermissionsFor(user)
+  permissionOverrides: overridesDTO(user),
+  rolePermissions: rolePermissionsFor(user),
+  effectivePermissions: effectivePermissions(user)
 });
 
+async function rolesDTO() {
+  const matrix = await roleMatrix();
+  return ROLES.filter((role) => role !== "system_admin").map((role) => {
+    const row = matrix.get(role);
+    const saved = row ? upgradePermissions(row.permissions) : null;
+    return { role, customised: Boolean(row), version: row?.version ?? 0, defaults: roleDefaults(role).filter((p) => p !== "access.manage"),
+      permissions: rolePermissionsFor({ role, rolePermissionOverrides: saved }) };
+  });
+}
+
+// GET /api/users/access - matrix + every non-protected user's overrides (System Administrator only).
 export async function listUserAccess(req, res) {
   if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage user access");
   const users = await User.find({ deletedAt: null, role: { $ne: "system_admin" } }).sort({ name: 1 });
-  const configs = await RoleAccess.find({});
-  const roles = ROLES.filter(role => role !== "system_admin").map(role => {
-    const config = configs.find(config => config.role === role);
-    const permissionOverrides = config ? [...config.permissions] : null;
-    return { role, permissionOverrides, permissions: rolePermissionsFor({ role, rolePermissionOverrides: permissionOverrides }) };
-  });
-  for (const user of users) user.rolePermissionOverrides = roles.find(config => config.role === resolveRole(user.role))?.permissionOverrides ?? null;
-  res.json({ success: true, permissions: CUSTOM_PERMISSIONS, roles, users: users.map(accessDTO) });
+  for (const user of users) await loadRoleAccess(user);
+  res.json({ success: true, permissions: CUSTOM_PERMISSIONS, assignableRoles: ASSIGNABLE_ROLES, roles: await rolesDTO(), users: users.map(accessDTO) });
 }
 
+// PATCH /api/users/roles/:role/access  { permissions: [...] | null (reset to defaults), version?, reason }
 export async function updateRoleAccess(req, res) {
   if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage role access");
   const { role } = req.params;
-  if (!ROLES.includes(role) || role === "system_admin") throw new ApiError(400, "This role cannot be configured");
-  const parsed = updateUserAccessSchema.safeParse(req.body);
-  if (!parsed.success) throw new ApiError(400, "Invalid permissions");
-  const { permissions } = parsed.data;
-  if (permissions?.includes("moves.outOfService") && role !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins");
+  if (!ROLES.includes(role) || role === "system_admin") throw new ApiError(400, "This role cannot be configured", { code: "ROLE_LOCKED" });
+  const { permissions, version, reason } = req.body;
+  if (permissions?.includes("move.outOfService") && role !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins", { code: "SUPER_ADMIN_ONLY" });
   const previous = await RoleAccess.findOne({ role });
+  if (version !== undefined && version !== (previous?.version ?? 0)) throw new ApiError(409, "Someone else changed this role meanwhile", { code: "STALE_ACCESS" });
+  const before = previous ? upgradePermissions(previous.permissions) : roleDefaults(role);
   if (permissions === null) await RoleAccess.deleteOne({ role });
-  else await RoleAccess.findOneAndUpdate({ role }, { $set: { permissions } }, { upsert: true, runValidators: true });
-  await audit(req, { action: "role.access.updated", entityType: "RoleAccess", entityLabel: role,
-    before: { permissions: previous?.permissions ?? null }, after: { permissions } });
-  res.json({ success: true, role: { role, permissionOverrides: permissions,
-    permissions: rolePermissionsFor({ role, rolePermissionOverrides: permissions }) } });
+  else await RoleAccess.findOneAndUpdate({ role }, { $set: { permissions }, $inc: { version: 1 } }, { upsert: true, runValidators: true });
+  invalidateRoleAccess();
+  await audit(req, { action: permissions === null ? "role.access.reset" : "role.access.updated", entityType: "RoleAccess", entityLabel: role,
+    before: { permissions: before }, after: { permissions: permissions ?? roleDefaults(role) }, reason });
+  res.json({ success: true, role: (await rolesDTO()).find((r) => r.role === role) });
 }
 
+// PATCH /api/users/:id/access  { grant, deny, expiresAt?, reason }  (empty grant + deny = reset to role defaults)
 export async function updateUserAccess(req, res) {
   if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage user access");
   const user = await User.findById(req.params.id);
   if (!user || user.deletedAt || !canViewUser(req.user, user)) throw new ApiError(404, "User not found");
-  if (user.role === "system_admin") throw new ApiError(403, "System Administrator access cannot be restricted");
-  // Defend this boundary even when called without route validation.
-  const permissions = req.body.permissions;
-  if (permissions !== null && (!Array.isArray(permissions) || permissions.some(permission => !CUSTOM_PERMISSIONS.includes(permission)) || new Set(permissions).size !== permissions.length)) {
-    throw new ApiError(400, "Invalid permissions");
-  }
-  if (permissions?.includes("moves.outOfService") && user.role !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins");
-  const before = user.permissionOverrides ?? null;
-  user.permissionOverrides = permissions;
+  if (user.role === "system_admin") throw new ApiError(403, "System Administrator access is always everything", { code: "ROLE_LOCKED" });
+  const grant = req.body.grant ?? [], deny = req.body.deny ?? [];
+  const known = (list) => Array.isArray(list) && list.every((p) => CUSTOM_PERMISSIONS.includes(p)) && new Set(list).size === list.length;
+  if (!known(grant) || !known(deny) || grant.some((p) => deny.includes(p))) throw new ApiError(400, "Invalid permissions", { code: "INVALID_PERMISSIONS" });
+  if (grant.includes("move.outOfService") && resolveRole(user.role) !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins", { code: "SUPER_ADMIN_ONLY" });
+  const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
+  if (expiresAt && expiresAt <= new Date()) throw new ApiError(400, "The expiry must be in the future", { code: "INVALID_EXPIRY" });
+
+  await loadRoleAccess(user);
+  const before = overridesDTO(user);
+  const beforeEffective = effectivePermissions(user);
+  const reset = !grant.length && !deny.length;
+  user.permissionOverrides = reset ? null : { grant, deny, expiresAt, reason: req.body.reason, updatedAt: new Date(), updatedBy: req.user._id };
+  user.markModified("permissionOverrides");
   await user.save();
-  await audit(req, { action: "user.access.updated", entityType: "User", entityId: user._id, entityLabel: user.email,
-    before: { permissionOverrides: before }, after: { permissionOverrides: permissions } });
-  res.json({ success: true, user: accessDTO(await loadRoleAccess(user)) });
+  await audit(req, { action: reset ? "user.access.reset" : "user.access.updated", entityType: "User", entityId: user._id, entityLabel: user.email,
+    before: { overrides: before, effective: beforeEffective }, after: { overrides: overridesDTO(user), effective: effectivePermissions(user) }, reason: req.body.reason });
+  res.json({ success: true, user: accessDTO(user) });
 }
+
