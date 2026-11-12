@@ -1,5 +1,6 @@
 import { normalizeOverrides, overridesActive, permissionsFor, rolePermissionsFor } from "../lib/permissions.js";
 import { isServiceDue } from "../lib/workflow.js";
+import { isolationLevel, limitedRunLevel } from "../lib/flowConfig.js";
 
 // Turns Mongoose documents into the flat JSON shape the frontend uses.
 const plain = (d) => (d && typeof d.toObject === "function" ? d.toObject() : d);
@@ -66,6 +67,10 @@ export function mouldDTO(m, refs = {}, summary = {}) {
     notes: o.notes || "",
     remarks: o.remarks || "",
     outOfServiceDetails: o.outOfServiceDetails ?? null,
+    isolation: o.isolation?.since ? { since: o.isolation.since, fromLocation: o.isolation.fromLocation ?? null, intendedDestination: o.isolation.intendedDestination ?? null, remarks: o.isolation.remarks || "", level: isolationLevel(o.isolation.since) } : null,
+    blockedCavities: o.blockedCavities || [],
+    totalCavities: summary.totalCavities ?? null,
+    limitedRun: o.limitedRun?.since ? { since: o.limitedRun.since, reason: o.limitedRun.reason || "", problemType: o.limitedRun.problemType ?? null, decidedBy: o.limitedRun.decidedBy ?? null, decidedAt: o.limitedRun.decidedAt ?? null, expectedFixBy: o.limitedRun.expectedFixBy ?? null, level: limitedRunLevel(o.limitedRun) } : null,
     lastMovedAt: o.lastMovedAt ?? null,
     lastMovedBy: userRef(refs.users?.get(idOf(o.lastMovedBy))),
     lastWork: o.lastWork ? { type: o.lastWork.type, names: o.lastWork.names || [], doneAt: o.lastWork.doneAt } : null,
@@ -92,6 +97,9 @@ export const movementDTO = (m, users = new Map()) => ({
   toRackLocationId: m.toRackLocationId,
   remarks: m.remarks || "",
   changes: m.changes ?? null,
+  intendedDestination: m.intendedDestination ?? null,
+  dwellMinutes: m.dwellMinutes ?? null,
+  blockedCavities: m.blockedCavities ?? null,
   outOfServiceDetails: m.outOfServiceDetails ?? null,
   overrideReason: m.overrideReason || "",
   by: userRef(users.get(idOf(m.performedBy))),

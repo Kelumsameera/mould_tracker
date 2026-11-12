@@ -28,7 +28,11 @@ const movementSchema = new mongoose.Schema(
     toRackLocationId: snapshot,
     outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
-    changes: { type: mongoose.Schema.Types.Mixed, default: null }, // EDITED: { before, after } of the changed fields
+    changes: { type: mongoose.Schema.Types.Mixed, default: null },
+    intendedDestination: { type: String, default: null }, // sent to Isolation: where it should go next
+    dwellMinutes: { type: Number, default: null }, // left Isolation: how long this stay lasted
+    isolationSince: { type: Date, default: null },
+    blockedCavities: { type: [Number], default: undefined }, // cavity block / restore: the blocked set after the change // EDITED: { before, after } of the changed fields
     overrideReason: { type: String, default: "", maxlength: 500 }, // capable-machine or owner/zone override
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     legacyMovementId: { type: mongoose.Schema.Types.ObjectId, default: undefined } // ToolMovement copied from

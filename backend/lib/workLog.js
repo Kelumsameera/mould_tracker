@@ -92,8 +92,10 @@ export function planWorkLog({ mould, user, input, workers = [], corrected = null
   } else if (input.outcome === "NEEDS_REPAIR" || input.outcome === "NEEDS_SERVICE") {
     const target = input.outcome;
     if (input.sendToWorkshop && mould.location !== "WORKSHOP") {
-      if (canMove(user, mould.location, "WORKSHOP")) {
-        move = planMove({ mould, user, to: "WORKSHOP", status: target, remarks: `${input.type}: ${description}`, now });
+      // From Isolation straight to the Workshop; from anywhere else to Isolation first, planned for the Workshop.
+      const to = mould.location === "ISOLATION" ? "WORKSHOP" : "ISOLATION";
+      if (canMove(user, mould.location, to)) {
+        move = planMove({ mould, user, to, status: target, remarks: `${input.type}: ${description}`, now, ...(to === "ISOLATION" ? { intendedDestination: "WORKSHOP" } : {}) });
         statusAfter = target;
       } else warnings.push("WORKSHOP_MOVE_NOT_ALLOWED");
     }

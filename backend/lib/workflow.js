@@ -11,6 +11,21 @@ import { dispatchDetailsSchema } from "./outOfService.js";
 import { fail } from "../utils/ApiError.js";
 import { can } from "./permissions.js";
 import { LOCATIONS, MOULD_STATUSES, isStorage, storageLocation } from "./mouldState.js";
+import { DIRECT_MOUNT_FROM, ISOLATION, ISOLATION_EXEMPT, LIMITED_RUN_LOCATIONS, LIMITED_RUN_STATUS } from "./flowConfig.js";
+
+// Isolation routing (Change Pack 2, step 4). Returns an error code or null.
+//   - mounting on a machine is direct from DIRECT_MOUNT_FROM;
+//   - every other move ends in or starts from the Isolation Area (Out of Service and new moulds excepted).
+export function isolationRouteError(from, to) {
+  if (from == null || ISOLATION_EXEMPT.includes(from) || ISOLATION_EXEMPT.includes(to)) return null;
+  if (to === "MACHINE") return DIRECT_MOUNT_FROM.includes(from) ? null : "ISOLATION_FIRST";
+  if (to === ISOLATION) return from === ISOLATION ? "NO_CHANGE" : null;
+  if (from === to) return null; // e.g. another rack in the Mould Room, a new status at the Workshop
+  return from === ISOLATION ? null : "ISOLATION_FIRST";
+}
+export const INTENDED_DESTINATIONS = ["MACHINE", "PRODUCTION_FLOOR", "MOULD_ROOM", "TOOL_ROOM", "WORKSHOP"];
+// Where a status other than GOOD may go.
+const allowsStatus = (to, status) => status === "GOOD" || ["WORKSHOP", "OUT_OF_SERVICE", ISOLATION].includes(to) || (status === LIMITED_RUN_STATUS && LIMITED_RUN_LOCATIONS.includes(to));
 
 const id = (v) => (v == null ? null : String(v._id ?? v));
 const sameId = (a, b) => id(a) === id(b);
@@ -24,6 +39,7 @@ export function movePermissionGroups(from, to) {
   const groups = [];
   // Mounting is covered by move.machine, including when taking a tool from storage.
   if ((isStorage(from) && to !== "MACHINE") || isStorage(to)) groups.push(["move.mouldroom"]);
+  if (to === ISOLATION) groups.push(["move.isolation"]); // leaving Isolation needs the destination's permission
   if (to === "MACHINE") groups.push(["move.machine"]);
   if (to === "WORKSHOP") groups.push(["move.workshop"]);
   if (to === "PRODUCTION_FLOOR" && !isStorage(from)) groups.push(from === "WORKSHOP" ? ["move.floor", "move.workshop"] : ["move.floor"]);
@@ -43,20 +59,27 @@ function requireRemarks(remarks, what) {
 //   machine:  target machine (to MACHINE)            occupant: mould currently on that machine, if any
 //   rack:     target rack (to MOULD_ROOM), with zoneActive from its zone    rackOccupancy: moulds on it now, this one excluded
 //   status:   optional new status, only when sending to the Workshop
-export function planMove({ mould, user, to, machine = null, occupant = null, rack = null, rackOccupancy = 0, remarks = "", overrideReason = "", status, outOfServiceDetails, now = new Date() }) {
+export function planMove({ mould, user, to, machine = null, occupant = null, rack = null, rackOccupancy = 0, remarks = "", overrideReason = "", status, outOfServiceDetails, intendedDestination, now = new Date() }) {
   if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
   if (!LOCATIONS.includes(to)) fail(400, "INVALID_LOCATION", "Unknown location");
   if (isStorage(to) && to !== storageLocation(mould.toolType)) fail(400, "INVALID_LOCATION", "Use the Tool Room for extrusion dies and the Mould Room for injection moulds");
   const from = mould.location;
   if (!canMove(user, from, to)) fail(403, "FORBIDDEN_MOVE", "You do not have permission to make this move");
-  if (status !== undefined && to !== "WORKSHOP") fail(400, "STATUS_ONLY_AT_WORKSHOP", "A status can only be set when sending a mould to the Workshop");
+  const route = isolationRouteError(from, to);
+  if (route === "ISOLATION_FIRST") fail(409, "ISOLATION_FIRST", "Send to Isolation Area first");
+  if (route === "NO_CHANGE") fail(400, "NO_CHANGE", `${mould.toolId} is already in the Isolation Area`);
+  if (status !== undefined && !["WORKSHOP", ISOLATION].includes(to)) fail(400, "STATUS_ONLY_AT_WORKSHOP", "A status can only be set when sending a mould to the Workshop or the Isolation Area");
+  if (status === LIMITED_RUN_STATUS) fail(400, "USE_CAVITY_ACTION", "Use \"Run with blocked cavities\" to run a mould with closed cavities");
+  if (intendedDestination !== undefined && intendedDestination !== null && (to !== ISOLATION || !INTENDED_DESTINATIONS.includes(intendedDestination))) fail(400, "INVALID_DESTINATION", "A planned destination can only be given when sending to the Isolation Area");
   if (status !== undefined && !MOULD_STATUSES.includes(status)) fail(400, "INVALID_STATUS", "Unknown status");
 
   if (from === "OUT_OF_SERVICE" && status !== undefined && status !== mould.status) fail(400, "OUT_OF_SERVICE_STATUS", "Return to the Workshop before changing the status");
   if (to === "OUT_OF_SERVICE" || from === "OUT_OF_SERVICE") requireRemarks(remarks, "when sending out or returning from Out of Service");
-  const nextStatus = status ?? mould.status;
+  // A limited-run mould that reaches the Workshop is in repair (its blocked cavities stay until a work log restores them).
+  const nextStatus = status ?? (to === "WORKSHOP" && mould.status === LIMITED_RUN_STATUS ? "IN_REPAIR" : mould.status);
+  if (to === ISOLATION && status !== undefined && status !== "GOOD") requireRemarks(remarks, "when setting a service or repair status");
   const warnings = [];
-  const set = { location: to, status: nextStatus, machineId: null, rackId: null, awaitingRack: false };
+  const set = { location: to, status: nextStatus, machineId: null, rackId: null, awaitingRack: false, isolation: null };
   const movement = {
     mouldId: mould._id, toolId: mould.toolId, type: "MOVED",
     fromLocation: from, toLocation: to, fromStatus: mould.status, toStatus: nextStatus,
@@ -78,8 +101,18 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
     }
   }
 
-  // Rules 1 and 2: only GOOD moulds leave the Workshop.
-  if (!["WORKSHOP", "OUT_OF_SERVICE"].includes(to) && nextStatus !== "GOOD") {
+  // Isolation stay: starts when entering, its dwell time is recorded when leaving.
+  if (to === ISOLATION) {
+    set.isolation = { since: now, fromLocation: from, intendedDestination: intendedDestination ?? null, remarks: text(remarks), by: user._id ?? null };
+    movement.intendedDestination = intendedDestination ?? null;
+  }
+  if (from === ISOLATION && mould.isolation?.since) {
+    movement.dwellMinutes = Math.max(0, Math.round((now - new Date(mould.isolation.since)) / 60000));
+    movement.isolationSince = mould.isolation.since;
+  }
+
+  // Rules 1 and 2: only GOOD moulds leave the Workshop / Isolation (limited-run moulds may run on a machine or the floor).
+  if (!allowsStatus(to, nextStatus)) {
     fail(409, "NOT_GOOD", `${mould.toolId} is ${nextStatus.replace(/_/g, " ").toLowerCase()}; it can only go to the Workshop`, { status: nextStatus });
   }
 

@@ -80,7 +80,7 @@ test("migration preserves ids, uses four positions per pallet, completes pallets
 
 test("a physical position rejects a second mould and records its full coordinate on movement", () => {
   const rack = { _id: "rack-id", locationId: "FLK-A-P1-1", zone: "FLK", pallet: 1, capacity: 1, active: true, zoneActive: true };
-  const mould = { _id: "m1", toolId: "M1", location: "PRODUCTION_FLOOR", status: "GOOD", owner: "FLK" };
+  const mould = { _id: "m1", toolId: "M1", location: "ISOLATION", status: "GOOD", owner: "FLK" };
   const user = { _id: "u1", role: "mould_maker" };
   assert.throws(() => planMove({ mould, user, to: "MOULD_ROOM", rack, rackOccupancy: 1 }), error => error.details?.code === "RACK_FULL");
   const result = planMove({ mould, user, to: "MOULD_ROOM", rack, rackOccupancy: 0 });

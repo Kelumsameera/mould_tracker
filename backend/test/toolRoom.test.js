@@ -12,7 +12,7 @@ import { planWorkLog } from '../lib/workLog.js';
 
 const oid = () => new mongoose.Types.ObjectId();
 const admin = { _id: oid(), role: 'super_admin' };
-const die = { _id: oid(), toolId: 'LEX01D', toolType: 'EXTRUSION_DIE', status: 'GOOD', location: 'PRODUCTION_FLOOR', capableMachines: ['EX02'] };
+const die = { _id: oid(), toolId: 'LEX01D', toolType: 'EXTRUSION_DIE', status: 'GOOD', location: 'ISOLATION', capableMachines: ['EX02'] };
 const code = expected => error => error.details?.code === expected;
 
 test('extrusion dies store in Tool Room without a mould rack or waiting flag', () => {

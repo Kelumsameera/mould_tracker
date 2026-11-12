@@ -114,6 +114,7 @@ export const moveMouldSchema = z.object({
   machineCode: z.string().trim().min(1).max(50).optional(),
   rackId: objectId.optional(),
   status: z.enum(MOULD_STATUSES).optional(),
+  intendedDestination: z.enum(["MACHINE", "PRODUCTION_FLOOR", "MOULD_ROOM", "TOOL_ROOM", "WORKSHOP"]).nullable().optional(),
   remarks,
   overrideReason,
   version

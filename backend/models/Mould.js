@@ -36,6 +36,12 @@ const mouldSchema = new mongoose.Schema(
     lastServicedAt: { type: Date, default: null },
     notes: { type: String, default: "", maxlength: 2000 },
     outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
+    // Current Isolation Area stay: { since, fromLocation, intendedDestination, remarks, by }. Null outside Isolation.
+    isolation: { type: mongoose.Schema.Types.Mixed, default: null },
+    // Running with blocked cavities: cavity numbers 1..N (N = total cavities of the items) that are closed.
+    blockedCavities: { type: [{ type: Number, min: 1 }], default: [] },
+    // { since, reason, problemType, decidedBy: { userId, name }, decidedAt, expectedFixBy } while cavities are blocked.
+    limitedRun: { type: mongoose.Schema.Types.Mixed, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
     lastMovedAt: { type: Date, default: null },
     lastMovedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },

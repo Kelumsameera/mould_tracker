@@ -20,6 +20,7 @@ import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
 import { MOULD_FIELDS, planMouldEdit } from "../lib/mouldEdit.js";
+import { ISOLATION_MAX_WAIT_HOURS, isolationLevel, limitedRunLevel } from "../lib/flowConfig.js";
 const ITEM_FIELDS = ["itemId", "description", "cavities", "qas", "materialId", "materialDescription", "masterbatchId", "masterbatchDescription", "notes", "sortOrder"];
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const toolKey = (s) => String(s).toUpperCase().replace(/\s+/g, "");
@@ -128,12 +129,15 @@ export async function listMoulds(req, res) {
 // GET /api/moulds/stats - dashboard counts.
 export async function mouldStats(req, res) {
   const live = { deletedAt: null, ...toolTypeFilter(req.validQuery?.toolType) };
-  const [byLocation, byStatus, awaitingRack, serviceDue, problems] = await Promise.all([
+  const tooLongSince = new Date(Date.now() - ISOLATION_MAX_WAIT_HOURS * 3_600_000);
+  const [byLocation, byStatus, awaitingRack, serviceDue, problems, isolationTooLong, limitedRun] = await Promise.all([
     Mould.aggregate([{ $match: live }, { $group: { _id: "$location", n: { $sum: 1 } } }]),
     Mould.aggregate([{ $match: live }, { $group: { _id: "$status", n: { $sum: 1 } } }]),
     Mould.countDocuments({ ...live, awaitingRack: true }),
     Mould.countDocuments({ ...live, status: "GOOD", shotsToService: { $gt: 0 }, $expr: { $gte: ["$totalShots", "$shotsToService"] } }),
-    Mould.countDocuments({ ...live, openProblem: { $ne: null } })
+    Mould.countDocuments({ ...live, openProblem: { $ne: null } }),
+    Mould.countDocuments({ ...live, location: "ISOLATION", "isolation.since": { $lte: tooLongSince } }),
+    Mould.countDocuments({ ...live, "blockedCavities.0": { $exists: true } })
   ]);
   const toObj = (rows) => Object.fromEntries(rows.map((r) => [r._id, r.n]));
   const status = toObj(byStatus);
@@ -146,7 +150,11 @@ export async function mouldStats(req, res) {
       needsAttention: SERVICE_STATUSES.reduce((n, s) => n + (status[s] || 0), 0),
       serviceDueNotFlagged: serviceDue,
       awaitingRack,
-      problemsReported: problems
+      problemsReported: problems,
+      isolation: toObj(byLocation).ISOLATION || 0,
+      isolationTooLong,
+      isolationMaxWaitHours: ISOLATION_MAX_WAIT_HOURS,
+      runningWithBlockedCavities: limitedRun
     }
   });
 }
@@ -221,7 +229,7 @@ export async function updateMould(req, res) {
 
 // POST /api/moulds/:id/move
 export async function moveMould(req, res) {
-  const { to, machineId, machineCode, rackId, status, remarks, overrideReason, version, outOfServiceDetails } = req.body;
+  const { to, machineId, machineCode, rackId, status, remarks, overrideReason, version, outOfServiceDetails, intendedDestination } = req.body;
   let warnings = [];
   const id = await withTransaction(async (session) => {
     const doc = await loadForUpdate(req.params.id, session, version);
@@ -236,7 +244,7 @@ export async function moveMould(req, res) {
     }
     const { rack, rackOccupancy } = to === "MOULD_ROOM" ? await rackForMove(rackId, doc._id, session) : { rack: null, rackOccupancy: 0 };
 
-    const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status, outOfServiceDetails });
+    const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status, outOfServiceDetails, intendedDestination });
     warnings = plan.warnings;
     Object.assign(doc, plan.set);
     if (to === "WORKSHOP") {
@@ -249,7 +257,8 @@ export async function moveMould(req, res) {
     await audit(req, {
       action: "mould.moved", entityType: "Mould", entityId: doc._id, entityLabel: doc.toolId,
       before: { location: mould.location, status: mould.status, machine: mould.machine?.code ?? null, rack: mould.rack?.locationId ?? null },
-      after: { location: doc.location, status: doc.status, machine: machine?.code ?? null, rack: rack?.locationId ?? null, outOfServiceDetails: doc.outOfServiceDetails ?? null },
+      after: { location: doc.location, status: doc.status, machine: machine?.code ?? null, rack: rack?.locationId ?? null, outOfServiceDetails: doc.outOfServiceDetails ?? null,
+        ...(plan.movement.intendedDestination ? { intendedDestination: plan.movement.intendedDestination } : {}), ...(plan.movement.dwellMinutes != null ? { dwellMinutes: plan.movement.dwellMinutes } : {}) },
       reason: [remarks, overrideReason && `Override: ${overrideReason}`].filter(Boolean).join(" | ")
     }, session);
     return doc._id;
