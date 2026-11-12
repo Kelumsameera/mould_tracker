@@ -290,6 +290,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             if (close) {
               setFormFor(null);
               openMould(mould.id);
+            } else if (formFor === "new") {
+              setFormFor(mould); // created, but some pictures failed: keep the form open on the saved mould
             }
           }}
         />

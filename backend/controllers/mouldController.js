@@ -14,6 +14,7 @@ import { planInitialLocation, planMove, planShots, planStatus, serviceDueChange 
 import { can } from "../lib/permissions.js";
 import { resolveProblem } from "./workLogController.js";
 import { photosFromDataUrls, saveRendered } from "../lib/images.js";
+import { addImage, keysOf, removeImage, reorderImages, replaceImage } from "../lib/itemImages.js";
 import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
 
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
@@ -384,4 +385,51 @@ export async function deleteItem(req, res) {
     return item;
   });
   await respondWithMould(res, id);
+}
+
+// ---- Item pictures: add / replace / remove / reorder (rules in lib/itemImages.js). Each is an "EDITED" entry + audit. ----
+async function renderOne(photo) {
+  try { return (await photosFromDataUrls([photo], "items"))[0]; }
+  catch (e) { fail(400, "INVALID_PHOTO", e.message); }
+}
+
+async function imageChange(req, res, action, what, next) {
+  const id = await itemChange(req, req.params.id, (r) => r.label, async (mould, session) => {
+    const item = await Item.findOne({ _id: req.params.itemId, mouldId: mould._id, deletedAt: null }).session(session);
+    if (!item) fail(404, "NOT_FOUND", "Item not found");
+    const current = item.images.map((i) => i.toObject());
+    item.images = next(current);
+    await item.save({ session });
+    await audit(req, { action, entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`,
+      before: { images: keysOf(current) }, after: { images: keysOf(item.images) }, reason: req.body?.reason || "" }, session);
+    return { label: `Item ${item.itemId}: ${what}` };
+  });
+  await respondWithMould(res, id);
+}
+
+export async function addItemImage(req, res) {
+  const rendered = await renderOne(req.body.photo);
+  await imageChange(req, res, "item.image.added", "picture added", (images) => {
+    const next = addImage(images, { path: rendered.path, thumbPath: rendered.thumbPath, width: rendered.width, height: rendered.height });
+    saveRendered(rendered); // write files only once the change is allowed
+    return next;
+  });
+}
+
+export async function replaceItemImage(req, res) {
+  const rendered = await renderOne(req.body.photo);
+  await imageChange(req, res, "item.image.replaced", "picture replaced", (images) => {
+    const next = replaceImage(images, req.params.key, { path: rendered.path, thumbPath: rendered.thumbPath, width: rendered.width, height: rendered.height });
+    saveRendered(rendered);
+    return next;
+  });
+}
+
+export async function removeItemImage(req, res) {
+  // Files stay on disk: names are content hashes and may be shared by other items.
+  await imageChange(req, res, "item.image.removed", "picture removed", (images) => removeImage(images, req.params.key));
+}
+
+export async function reorderItemImages(req, res) {
+  await imageChange(req, res, "item.image.reordered", "pictures reordered", (images) => reorderImages(images, req.body.order));
 }

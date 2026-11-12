@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sheet from "@/components/Sheet";
 import RackPicker from "@/components/RackPicker";
 import { api, assetUrl } from "@/utils/api";
@@ -9,12 +9,13 @@ import { errorText } from "@/utils/format";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/components/ConfirmHost";
 import Icon from "@/components/Icon";
+import PictureStrip, { type Picture } from "@/components/PictureStrip";
 import type { Item, ItemInput, Location, Mould, ToolType, Zone } from "@/utils/types";
 
 type ItemDraft = {
   id?: string;
-  photo?: string;
-  imageUrl?: string;
+  saved: Picture[]; // pictures on the server (id = picture key)
+  pending: Picture[]; // picked before the item exists; uploaded right after saving
   itemId: string;
   description: string;
   cavities: string;
@@ -25,6 +26,8 @@ type ItemDraft = {
   masterbatchDescription: string;
 };
 const blankItem = (): ItemDraft => ({
+  saved: [],
+  pending: [],
   itemId: "",
   description: "",
   cavities: "",
@@ -36,7 +39,8 @@ const blankItem = (): ItemDraft => ({
 });
 const toDraft = (index: Item): ItemDraft => ({
   id: index.id,
-  imageUrl: assetUrl(index.images[0]?.thumbUrl),
+  saved: index.images.map((image) => ({ id: image.key, src: assetUrl(image.thumbUrl) })),
+  pending: [],
   itemId: index.itemId,
   description: index.description,
   cavities: index.cavities == null ? "" : String(index.cavities),
@@ -55,8 +59,13 @@ const fromDraft = (itemDraft: ItemDraft): ItemInput => ({
   materialDescription: itemDraft.materialDescription.trim() || null,
   masterbatchId: itemDraft.masterbatchId.trim() || null,
   masterbatchDescription: itemDraft.masterbatchDescription.trim() || null,
-  ...(itemDraft.photo ? { photo: itemDraft.photo } : {}),
 });
+const moved = <T,>(list: T[], index: number, step: -1 | 1) => {
+  const next = [...list];
+  [next[index], next[index + step]] = [next[index + step], next[index]];
+  return next;
+};
+let pendingSeq = 0;
 
 type Props = {
   open: boolean;
@@ -91,6 +100,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState(false);
   const [error, setError] = useState("");
+  const carryError = useRef(""); // shown after the form switches to the newly saved mould
 
   // Effects: load data and update the screen
   useEffect(() => {
@@ -101,7 +111,8 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
       .catch(() => {});
     const type = mould?.toolType ?? defaultToolType;
     setToolType(type);
-    setError("");
+    setError(carryError.current);
+    carryError.current = "";
     setTried(false);
     setRackId(null);
     setStart(type === "EXTRUSION_DIE" ? "TOOL_ROOM" : "MOULD_ROOM");
@@ -187,10 +198,47 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
       rackId: initialRackId,
       items: items.map(fromDraft),
     };
+    const pendingByItem = items.filter((d) => d.pending.length).map((d) => ({ itemId: d.itemId.trim().toUpperCase(), pending: d.pending }));
     const response = await saveWithFeedback(() => api.createMould(newMould), translations.form.added(form.toolId.trim().toUpperCase()));
-    if (response) {
-      onSaved(response.mould, true);
+    if (!response) return; // the form keeps everything, including picked pictures
+    const result = await uploadPending(response.mould, pendingByItem);
+    if (result.failed.length) {
+      carryError.current = translations.form.picturesFailed(result.failed.join(", "));
+      onSaved(result.mould, false); // parent switches the form to editing this mould
+      return;
     }
+    onSaved(result.mould, true);
+  }
+
+  // Uploads pictures picked before saving, item by item; failures are collected, never thrown.
+  async function uploadPending(saved: Mould, list: { itemId: string; pending: Picture[] }[]) {
+    let latest = saved;
+    const failed: string[] = [];
+    const total = list.reduce((n, x) => n + x.pending.length, 0);
+    if (!total) return { mould: latest, failed };
+    let done = 0;
+    const toastId = toast.loading(translations.form.uploadingPictures(0, total));
+    setBusy(true);
+    try {
+      for (const entry of list) {
+        const item = latest.items?.find((it) => it.itemId === entry.itemId);
+        for (const picture of entry.pending) {
+          try {
+            if (!item) throw new Error("item missing");
+            latest = (await api.addItemImage(latest.id, item.id, picture.src)).mould;
+          } catch {
+            if (!failed.includes(entry.itemId)) failed.push(entry.itemId);
+          }
+          done += 1;
+          toast.loading(translations.form.uploadingPictures(done, total), { id: toastId });
+        }
+      }
+    } finally {
+      setBusy(false);
+      if (failed.length) toast.error(translations.form.picturesFailed(failed.join(", ")), { id: toastId });
+      else toast.success(translations.form.picturesUploaded, { id: toastId });
+    }
+    return { mould: latest, failed };
   }
   async function saveMouldItem(itemDraft: ItemDraft) {
     if (!itemDraft.itemId.trim()) return setError(translations.form.itemIdRequired);
@@ -198,11 +246,16 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
       () => (itemDraft.id ? api.updateItem(mould!.id, itemDraft.id, fromDraft(itemDraft)) : api.addItem(mould!.id, fromDraft(itemDraft))),
       translations.form.saved(itemDraft.itemId.trim()),
     );
-    if (res) {
-      setItems(res.mould.items?.map(toDraft) ?? []);
-      setNewItem(blankItem());
-      onSaved(res.mould, false);
+    if (!res) return;
+    let latest = res.mould;
+    if (!itemDraft.id && itemDraft.pending.length) {
+      const result = await uploadPending(latest, [{ itemId: itemDraft.itemId.trim().toUpperCase(), pending: itemDraft.pending }]);
+      latest = result.mould;
+      if (result.failed.length) setError(translations.form.picturesFailed(result.failed.join(", ")));
     }
+    setItems(latest.items?.map(toDraft) ?? []);
+    setNewItem(blankItem());
+    onSaved(latest, false);
   }
   async function removeMouldItem(itemDraft: ItemDraft) {
     if (!itemDraft.id || busy) return;
@@ -222,19 +275,82 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
     }
   }
 
-  async function changePhoto(id: string, file: File | undefined) {
-    if (!file || busy) return;
-    setBusy(true);
-    setError("");
+  async function readPicture(file: File) {
     try {
-      const photo = await shrink(file);
-      setItems((current) => current.map((item) => (item.id === id ? { ...item, photo } : item)));
+      return await shrink(file);
     } catch {
       setError(translations.errors.INVALID_PHOTO());
-    } finally {
-      setBusy(false);
+      return undefined;
     }
   }
+
+  // Saved item: every change goes to the server at once (audited there); removing asks first.
+  async function serverPictureChange(itemDraft: ItemDraft, work: () => Promise<{ mould: Mould }>) {
+    const res = await saveWithFeedback(work, translations.form.saved(itemDraft.itemId));
+    if (res) {
+      setItems(res.mould.items?.map(toDraft) ?? []);
+      onSaved(res.mould, false);
+    }
+  }
+  const savedPictureHandlers = (itemDraft: ItemDraft) => ({
+    onAdd: async (file: File) => {
+      const photo = await readPicture(file);
+      if (photo) await serverPictureChange(itemDraft, () => api.addItemImage(mould!.id, itemDraft.id!, photo));
+    },
+    onReplace: async (key: string, file: File) => {
+      const photo = await readPicture(file);
+      if (photo) await serverPictureChange(itemDraft, () => api.replaceItemImage(mould!.id, itemDraft.id!, key, photo));
+    },
+    onRemove: async (key: string) => {
+      const ok = await confirm({
+        title: translations.confirm.removePictureTitle,
+        message: translations.confirm.removePicture(itemDraft.itemId),
+        confirmText: translations.confirm.removeBtn,
+        tone: "danger",
+      });
+      if (ok) await serverPictureChange(itemDraft, () => api.removeItemImage(mould!.id, itemDraft.id!, key));
+    },
+    onMove: async (key: string, step: -1 | 1) => {
+      const index = itemDraft.saved.findIndex((p) => p.id === key);
+      const order = moved(itemDraft.saved, index, step).map((p) => p.id);
+      await serverPictureChange(itemDraft, () => api.reorderItemImages(mould!.id, itemDraft.id!, order));
+    },
+  });
+
+  // Unsaved item: pictures stay in the form until the item is saved.
+  const pendingPictureHandlers = (itemDraft: ItemDraft, set: (d: ItemDraft) => void) => ({
+    onAdd: async (file: File) => {
+      const src = await readPicture(file);
+      if (src) set({ ...itemDraft, pending: [...itemDraft.pending, { id: "p" + ++pendingSeq, src }] });
+    },
+    onReplace: async (id: string, file: File) => {
+      const src = await readPicture(file);
+      if (src) set({ ...itemDraft, pending: itemDraft.pending.map((p) => (p.id === id ? { id: p.id, src } : p)) });
+    },
+    onRemove: async (id: string) => {
+      const ok = await confirm({
+        title: translations.confirm.removePictureTitle,
+        message: translations.confirm.removePicture(itemDraft.itemId || "—"),
+        confirmText: translations.confirm.removeBtn,
+        tone: "danger",
+      });
+      if (ok) set({ ...itemDraft, pending: itemDraft.pending.filter((p) => p.id !== id) });
+    },
+    onMove: (id: string, step: -1 | 1) => {
+      const index = itemDraft.pending.findIndex((p) => p.id === id);
+      set({ ...itemDraft, pending: moved(itemDraft.pending, index, step) });
+    },
+  });
+
+  const renderPictures = (itemDraft: ItemDraft, set: (d: ItemDraft) => void) =>
+    itemDraft.id ? (
+      <PictureStrip pictures={itemDraft.saved} translations={translations} busy={busy} label={itemDraft.itemId} {...savedPictureHandlers(itemDraft)} />
+    ) : (
+      <>
+        <PictureStrip pictures={itemDraft.pending} translations={translations} busy={busy} label={itemDraft.itemId} {...pendingPictureHandlers(itemDraft, set)} />
+        {itemDraft.pending.length > 0 && <p className="text-xs text-ink-soft mt-1">{translations.form.picturesPending(itemDraft.pending.length)}</p>}
+      </>
+    );
 
   const renderTextInput = (key: keyof typeof form, label: string, extra: Record<string, unknown> = {}) => (
     <>
@@ -428,43 +544,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         {items.map((itemDraft, index) => (
           <div className="[border-top:1px_dashed_var(--line)] pt-3 mt-3" key={itemDraft.id ?? index}>
             {renderItemFields(itemDraft, (nd) => setItems(items.map((x, j) => (j === index ? nd : x))))}
-            {editing && itemDraft.id && (
-              <>
-                <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor={"item-photo-" + itemDraft.id}>
-                  {translations.work.photos}
-                </label>
-                <div className="flex gap-2 flex-wrap mt-1">
-                  {(itemDraft.photo || itemDraft.imageUrl) && (
-                    <div className="relative w-19 aspect-[1] rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-pointer [&_img]:size-full [&_img]:object-cover [&_span]:absolute [&_span]:top-0.5 [&_span]:right-1.5 [&_span]:font-black [&_span]:text-white [&_span]:[text-shadow:0_0_3px_#000]">
-                      <img src={itemDraft.photo || itemDraft.imageUrl} alt={itemDraft.itemId} />
-                    </div>
-                  )}
-                  <label className="w-19 aspect-[1] rounded-md [border:1.5px_dashed_var(--ink-faint)] flex flex-col gap-1 items-center justify-center text-center text-xs font-extrabold text-ink-soft cursor-pointer p-1">
-                    <Icon name="camera" size={22} />
-                    {translations.work.addPhoto}
-                    <input
-                      id={"item-photo-" + itemDraft.id}
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={(event) => {
-                        void changePhoto(itemDraft.id!, event.target.files?.[0]);
-                        event.target.value = "";
-                      }}
-                    />
-                  </label>
-                  {itemDraft.photo && (
-                    <button
-                      type="button"
-                      className="bg-transparent border-0 text-action font-extrabold text-sm min-h-tap px-2 py-0 cursor-pointer inline-flex items-center gap-1.5 disabled:text-ink-faint disabled:cursor-default"
-                      onClick={() => setItems(items.map((item, j) => (j === index ? { ...item, photo: undefined } : item)))}
-                    >
-                      {translations.cancel}
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+            {renderPictures(itemDraft, (nd) => setItems((current) => current.map((x, j) => (j === index ? nd : x))))}
             <div className="flex items-center justify-between">
               {editing && (
                 <button
@@ -488,6 +568,7 @@ export default function MouldFormSheet({ open, mould, translations, onClose, onS
         {editing ? (
           <div className="bg-surface-2 rounded-md p-3 mt-3">
             {renderItemFields(newItem, setNewItem)}
+            {renderPictures(newItem, setNewItem)}
             <button
               type="button"
               className="bg-transparent border-0 text-action font-extrabold text-sm min-h-tap px-2 py-0 cursor-pointer inline-flex items-center gap-1.5 disabled:text-ink-faint disabled:cursor-default"

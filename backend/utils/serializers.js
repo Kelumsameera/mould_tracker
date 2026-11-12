@@ -20,7 +20,7 @@ export const userDTO = (u) => ({
   permissions: permissionsFor(u)
 });
 
-export const imageDTO = (i) => ({ url: uploadUrl(i.path), thumbUrl: uploadUrl(i.thumbPath), width: i.width ?? null, height: i.height ?? null });
+export const imageDTO = (i) => ({ key: String(i.path || "").split("/").pop().replace(/\.webp$/, ""), manual: !i.source, url: uploadUrl(i.path), thumbUrl: uploadUrl(i.thumbPath), width: i.width ?? null, height: i.height ?? null });
 
 export function itemDTO(i) {
   const o = plain(i);

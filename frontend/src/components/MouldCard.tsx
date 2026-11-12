@@ -34,7 +34,7 @@ export default function MouldCard({ mould, translations, lang, onOpen }: Props) 
       }}
     >
       <div className="w-13 aspect-square rounded-sm bg-white dark:bg-surface-2 dark:has-[img]:bg-white shrink-0 flex items-center justify-center overflow-hidden border border-solid border-line text-ink-faint">
-        {mould.thumbUrl ? <img src={assetUrl(mould.thumbUrl)} alt="" loading="lazy" decoding="async" className="size-full object-contain" width={72} height={72} /> : <Icon name="mould" size={26} />}
+        {mould.thumbUrl ? <img src={assetUrl(mould.thumbUrl)} alt="" loading="lazy" decoding="async" className="size-full object-contain" width={72} height={72} onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <Icon name="mould" size={26} />}
       </div>
       <div className="flex-1 min-w-0 flex flex-col gap-0.75">
         <div className="flex items-center gap-2 flex-wrap pr-1">

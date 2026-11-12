@@ -94,6 +94,10 @@ export const api = {
   addItem: (id: string, item: ItemInput) => request<{ mould: Mould }>(`/moulds/${id}/items`, "POST", item),
   updateItem: (id: string, itemId: string, item: ItemInput) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "PATCH", item),
   deleteItem: (id: string, itemId: string) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "DELETE", {}),
+  addItemImage: (id: string, itemId: string, photo: string) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images`, "POST", { photo }),
+  replaceItemImage: (id: string, itemId: string, key: string, photo: string) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images/${encodeURIComponent(key)}`, "PUT", { photo }),
+  removeItemImage: (id: string, itemId: string, key: string) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images/${encodeURIComponent(key)}`, "DELETE", {}),
+  reorderItemImages: (id: string, itemId: string, order: string[]) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images/order`, "PUT", { order }),
 
   machines: (all = false) => request<{ machines: Machine[] }>(all ? "/machines?all=true" : "/machines"),
   updateMachine: (id: string, patch: { name?: string; active?: boolean }) => request<{ machine: Machine }>(`/machines/${id}`, "PATCH", patch),

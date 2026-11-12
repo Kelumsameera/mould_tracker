@@ -529,7 +529,7 @@ export default function MouldSheet({
               >
                 {it.images[0] ? (
                   <button
-                    className="w-[76px] [aspect-ratio:1] shrink-0 rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-zoom-in [&_img]:size-full [&_img]:object-contain"
+                    className="relative w-[76px] [aspect-ratio:1] shrink-0 rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-zoom-in [&_img]:size-full [&_img]:object-contain"
                     onClick={() => setImage(assetUrl(it.images[0].url))}
                     aria-label={translations.detail.openImage}
                   >
@@ -537,11 +537,30 @@ export default function MouldSheet({
                       src={assetUrl(it.images[0].thumbUrl)}
                       alt=""
                       loading="lazy"
+                      onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
                     />
+                    {it.images.length > 1 && (
+                      <span className="absolute bottom-0.5 right-0.5 rounded-pill bg-ink/80 text-surface text-[11px] font-extrabold px-1.5">
+                        {translations.detail.morePictures(it.images.length - 1)}
+                      </span>
+                    )}
+                  </button>
+                ) : can(user, "moulds.manage") && !mould.deletedAt ? (
+                  <button
+                    type="button"
+                    className="w-[76px] [aspect-ratio:1] shrink-0 rounded-md [border:1.5px_dashed_var(--ink-faint)] bg-surface-2 p-1 cursor-pointer flex flex-col gap-1 items-center justify-center text-center text-[11px] font-extrabold text-ink-soft"
+                    onClick={() => onEdit(mould)}
+                  >
+                    <Icon name="camera" size={20} />
+                    {translations.detail.addImage}
                   </button>
                 ) : (
-                  <div className="w-[76px] [aspect-ratio:1] shrink-0 rounded-md border border-solid border-line bg-surface-3 p-0 overflow-hidden cursor-default flex items-center justify-center text-ink-faint">
-                    <Icon name="image" size={22} />
+                  <div
+                    className="w-[76px] [aspect-ratio:1] shrink-0 rounded-md border border-solid border-line bg-surface-3 p-1 overflow-hidden cursor-default flex flex-col gap-1 items-center justify-center text-center text-[11px] text-ink-faint"
+                    title={translations.detail.noImage}
+                  >
+                    <Icon name="image" size={20} />
+                    {translations.detail.noImage}
                   </div>
                 )}
                 <div className="flex-1 min-w-0 [&_small]:text-xs">

@@ -80,6 +80,9 @@ const itemFields = {
 };
 export const createItemSchema = z.object({ itemId: upperId("Item ID"), ...itemFields });
 export const updateItemSchema = z.object({ itemId: upperId("Item ID").optional(), ...itemFields, photo: z.string().max(9_000_000).optional() });
+export const itemImageSchema = z.object({ photo: z.string().min(1).max(9_000_000) });
+export const itemImageOrderSchema = z.object({ order: z.array(z.string().min(1).max(64)).min(1).max(20) });
+export const optionalReasonSchema = z.object({ reason: z.string().trim().max(500).default("") });
 
 const mouldFields = {
   toolType: z.enum(TOOL_TYPES).optional(),

@@ -65,7 +65,7 @@ const en = {
     edit: 'Edit mould', remove: 'Delete mould', restore: 'Restore mould', deletedBanner: 'This mould is deleted.',
     deleted: (id: string) => `${id} deleted`, restored: (id: string) => `${id} restored`,
     cavities: (n: number | null) => (n == null ? '' : `${n} cav.`), material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS',
-    openImage: 'Open picture', lastMoved: 'Last moved'
+    openImage: 'Open picture', noImage: 'No picture yet', addImage: 'Add image', morePictures: (n: number) => `+${n}`, lastMoved: 'Last moved'
   },
 
   act: {
@@ -151,7 +151,12 @@ const en = {
     startAt: 'Starts at', items: 'Items', itemId: 'Item ID', description: 'Description', cavities: 'Cavities', qas: 'QAS',
     materialId: 'Material ID', materialDescription: 'Material description', masterbatchId: 'Masterbatch ID', masterbatchDescription: 'Masterbatch description',
     addItem: 'Add item', removeItem: 'Remove item', saveItem: 'Save item',
-    create: 'Add mould', save: 'Save changes', required: 'Required', added: (id: string) => `${id} added`, saved: (id: string) => `${id} saved`, itemIdRequired: 'Every item needs an Item ID'
+    create: 'Add mould', save: 'Save changes', required: 'Required', added: (id: string) => `${id} added`, saved: (id: string) => `${id} saved`, itemIdRequired: 'Every item needs an Item ID',
+    pictures: 'Pictures', picturesHint: (max: number) => `Up to ${max} per item`, addPicture: 'Add picture', takePhoto: 'Camera',
+    replacePicture: 'Replace picture', removePicture: 'Remove picture', moveEarlier: 'Move earlier', moveLater: 'Move later',
+    picturesPending: (n: number) => `${n} picture(s) will upload after saving`,
+    uploadingPictures: (done: number, total: number) => `Uploading pictures ${done}/${total}…`, picturesUploaded: 'Pictures uploaded',
+    picturesFailed: (items: string) => `The mould was saved, but some pictures did not upload (${items}). Add them again below.`
   },
 
   work: {
@@ -195,6 +200,7 @@ const en = {
     deleteMouldTitle: 'Delete mould', deleteMould: (id: string) => `Delete ${id}? It can be restored later and its history is kept.`, reason: 'Reason (optional)', deleteBtn: 'Delete',
     restoreMouldTitle: 'Restore mould', restoreMould: (id: string) => `Restore ${id}? It will appear in searches again.`, restoreBtn: 'Restore',
     removeItemTitle: 'Remove item', removeItem: (item: string, id: string) => `Remove item ${item} from ${id}?`, removeBtn: 'Remove',
+    removePictureTitle: 'Remove picture', removePicture: (item: string) => `Remove this picture from item ${item}?`,
     deleteUserTitle: 'Delete user', deleteUser: (n: string) => `Delete ${n}? They will no longer be able to sign in.`,
     roleTitle: 'Change role', role: (n: string, a: string, b: string) => `Change ${n} from ${a} to ${b}?`, roleBtn: 'Change role',
     disableUserTitle: 'Disable user', disableUser: (n: string) => `Disable ${n}? They cannot sign in until enabled again.`, disableBtn: 'Disable',
@@ -281,6 +287,9 @@ const en = {
     DONE_AT_FUTURE: () => 'The work time cannot be in the future.',
     INVALID_CORRECTION: () => 'The entry being corrected was not found.',
     INVALID_PHOTO: () => 'Photos must be JPEG, PNG or WebP pictures.',
+    TOO_MANY_IMAGES: () => 'This item already has the maximum number of pictures.',
+    DUPLICATE_IMAGE: () => 'This picture is already on the item.',
+    INVALID_ORDER: () => 'The pictures changed meanwhile. Reopen the form and try again.',
     TOO_LARGE: () => 'The photos are too large. Use fewer or smaller photos.',
     EXPORT_TOO_LARGE: (d: D) => `${d.total} entries match. Exports are limited to ${d.cap}; narrow the filters or the dates.`
   } satisfies Record<string, (d: D) => string>
@@ -348,7 +357,7 @@ const si: Dict = {
     edit: 'Mould එක සංස්කරණය', remove: 'Mould එක මකන්න', restore: 'Mould එක නැවත ගන්න', deletedBanner: 'මේ mould එක මකා දමා ඇත.',
     deleted: (id) => `${id} මකා දැමුවා`, restored: (id) => `${id} නැවත ගත්තා`,
     cavities: (n) => (n == null ? '' : `cavities ${n}`), material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS',
-    openImage: 'පින්තූරය විවෘත කරන්න', lastMoved: 'අවසන් වරට ගෙනගියේ'
+    openImage: 'පින්තූරය විවෘත කරන්න', noImage: 'තවම පින්තූරයක් නෑ', addImage: 'පින්තූරයක් එකතු කරන්න', morePictures: (n) => `+${n}`, lastMoved: 'අවසන් වරට ගෙනගියේ'
   },
 
   act: {
@@ -434,7 +443,12 @@ const si: Dict = {
     startAt: 'ආරම්භක තැන', items: 'Items', itemId: 'Item ID', description: 'විස්තරය', cavities: 'Cavities', qas: 'QAS',
     materialId: 'Material ID', materialDescription: 'Material විස්තරය', masterbatchId: 'Masterbatch ID', masterbatchDescription: 'Masterbatch විස්තරය',
     addItem: 'Item එකක් එකතු කරන්න', removeItem: 'Item එක ඉවත් කරන්න', saveItem: 'Item එක save කරන්න',
-    create: 'Mould එක එකතු කරන්න', save: 'වෙනස්කම් save කරන්න', required: 'අනිවාර්යයි', added: (id) => `${id} එකතු කළා`, saved: (id) => `${id} save කළා`, itemIdRequired: 'හැම item එකකටම Item ID එකක් ඕනේ'
+    create: 'Mould එක එකතු කරන්න', save: 'වෙනස්කම් save කරන්න', required: 'අනිවාර්යයි', added: (id) => `${id} එකතු කළා`, saved: (id) => `${id} save කළා`, itemIdRequired: 'හැම item එකකටම Item ID එකක් ඕනේ',
+    pictures: 'පින්තූර', picturesHint: (max) => `item එකකට ${max}ක් දක්වා`, addPicture: 'පින්තූරයක් එකතු කරන්න', takePhoto: 'කැමරාව',
+    replacePicture: 'පින්තූරය මාරු කරන්න', removePicture: 'පින්තූරය ඉවත් කරන්න', moveEarlier: 'ඉස්සරහට', moveLater: 'පස්සට',
+    picturesPending: (n) => `save කළාම පින්තූර ${n}ක් upload වෙනවා`,
+    uploadingPictures: (done, total) => `පින්තූර upload වෙමින් ${done}/${total}…`, picturesUploaded: 'පින්තූර upload කළා',
+    picturesFailed: (items) => `Mould එක save වුණා, නමුත් පින්තූර කිහිපයක් upload වුණේ නෑ (${items}). පහළින් ආයෙත් එකතු කරන්න.`
   },
 
   work: {
@@ -478,6 +492,7 @@ const si: Dict = {
     deleteMouldTitle: 'Mould එක මකන්න', deleteMould: (id) => `${id} මකන්නද? පසුව නැවත ගන්න පුළුවන්; ඉතිහාසය තියෙනවා.`, reason: 'හේතුව (විකල්පයි)', deleteBtn: 'මකන්න',
     restoreMouldTitle: 'Mould එක නැවත ගන්න', restoreMould: (id) => `${id} නැවත ගන්නද? සෙවුම්වල නැවත පෙන්වයි.`, restoreBtn: 'නැවත ගන්න',
     removeItemTitle: 'Item එක ඉවත් කරන්න', removeItem: (item, id) => `${id} එකෙන් ${item} item එක ඉවත් කරන්නද?`, removeBtn: 'ඉවත් කරන්න',
+    removePictureTitle: 'පින්තූරය ඉවත් කරන්න', removePicture: (item) => `${item} item එකෙන් මේ පින්තූරය ඉවත් කරන්නද?`,
     deleteUserTitle: 'User මකන්න', deleteUser: (n) => `${n} මකන්නද? එයාට ආයෙ ඇතුල් වෙන්න බෑ.`,
     roleTitle: 'භූමිකාව වෙනස් කරන්න', role: (n, a, b) => `${n} ගේ භූමිකාව ${a} සිට ${b} ලෙස වෙනස් කරන්නද?`, roleBtn: 'වෙනස් කරන්න',
     disableUserTitle: 'User අක්‍රිය කරන්න', disableUser: (n) => `${n} අක්‍රිය කරන්නද? නැවත සක්‍රිය කරන තුරු ඇතුල් වෙන්න බෑ.`, disableBtn: 'අක්‍රිය කරන්න',
@@ -564,6 +579,9 @@ const si: Dict = {
     DONE_AT_FUTURE: () => 'වැඩ කළ වේලාව අනාගතයේ වෙන්න බෑ.',
     INVALID_CORRECTION: () => 'නිවැරදි කරන සටහන හමු වුණේ නෑ.',
     INVALID_PHOTO: () => 'පින්තූර JPEG, PNG හෝ WebP විය යුතුයි.',
+    TOO_MANY_IMAGES: () => 'මේ item එකට උපරිම පින්තූර ගණන දැනටමත් තියෙනවා.',
+    DUPLICATE_IMAGE: () => 'මේ පින්තූරය දැනටමත් item එකේ තියෙනවා.',
+    INVALID_ORDER: () => 'මේ අතරේ පින්තූර වෙනස් වුණා. Form එක ආයෙත් open කරලා උත්සාහ කරන්න.',
     TOO_LARGE: () => 'පින්තූර විශාල වැඩියි. අඩුවෙන් හෝ කුඩා පින්තූර දාන්න.',
     EXPORT_TOO_LARGE: (d) => `සටහන් ${d.total}ක් ගැලපෙනවා. Export කළ හැක්කේ ${d.cap} දක්වා; පෙරහන් හෝ දින අඩු කරන්න.`
   }

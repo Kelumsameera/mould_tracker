@@ -15,7 +15,7 @@ export interface RoleAccess { role: Role; permissionOverrides: Permission[] | nu
 
 export interface MachineRef { id: string; code: string; name: string }
 export interface RackRef { id: string; zone: string; row: string; number: number; pallet?: number | null; code: string; locationId: string }
-export interface ItemImage { url: string; thumbUrl: string; width: number | null; height: number | null }
+export interface ItemImage { key: string; manual: boolean; url: string; thumbUrl: string; width: number | null; height: number | null }
 
 export interface Item {
   id: string; itemId: string; description: string; cavities: number | null; qas: string | null;

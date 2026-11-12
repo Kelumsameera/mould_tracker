@@ -23,6 +23,10 @@ export const mouldRouteTable = [
   ["post", "/:id/items", MANAGE, c.addItem, s.createItemSchema],
   ["patch", "/:id/items/:itemId", MANAGE, c.updateItem, s.updateItemSchema],
   ["delete", "/:id/items/:itemId", MANAGE, c.deleteItem, s.reasonSchema],
+  ["post", "/:id/items/:itemId/images", MANAGE, c.addItemImage, s.itemImageSchema],
+  ["put", "/:id/items/:itemId/images/order", MANAGE, c.reorderItemImages, s.itemImageOrderSchema],
+  ["put", "/:id/items/:itemId/images/:key", MANAGE, c.replaceItemImage, s.itemImageSchema],
+  ["delete", "/:id/items/:itemId/images/:key", MANAGE, c.removeItemImage, s.optionalReasonSchema],
   ["get", "/:id/worklogs", ["worklog.view"], w.listMouldWorkLogs],
   ["post", "/:id/worklogs", ["worklog.create"], w.createWorkLog, s.createWorkLogSchema],
   ["post", "/:id/problems", ["problem.report"], w.reportProblem, s.reportProblemSchema]

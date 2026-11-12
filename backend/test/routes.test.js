@@ -52,6 +52,8 @@ const EXPECTED = {
   "moulds POST /:id/status": ["super_admin", "admin", "mould_technician", "mould_maker"],
   "moulds POST /:id/shots": ALL,
   "moulds POST /:id/items": ADMINS, "moulds PATCH /:id/items/:itemId": ADMINS, "moulds DELETE /:id/items/:itemId": ADMINS,
+  "moulds POST /:id/items/:itemId/images": ADMINS, "moulds PUT /:id/items/:itemId/images/order": ADMINS,
+  "moulds PUT /:id/items/:itemId/images/:key": ADMINS, "moulds DELETE /:id/items/:itemId/images/:key": ADMINS,
   "racks GET /": ALL, "racks GET /:id": ALL,
   "racks POST /zones": SA, "racks PATCH /zones/:id": SA, "racks DELETE /zones/:id": SA, "racks POST /bulk": SA, "racks POST /remove-row": SA,
   "racks POST /": SA, "racks PATCH /:id": SA, "racks DELETE /:id": SA,

@@ -4,6 +4,10 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { UPLOAD_DIR } from "./uploads.js";
 
+export const MAX_ITEM_IMAGES = 5; // pictures per item
+// Stable key of a stored picture: its content hash (file name without extension).
+export const imageKey = (p) => String(p || "").split("/").pop().replace(/\.webp$/, "");
+
 const IMAGE_MAX = 800;
 const THUMB_MAX = 200;
 
