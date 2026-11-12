@@ -64,6 +64,7 @@ export default function Navbar({
     racks: translations.racks.title,
     workshop: translations.workshop.title,
     isolation: translations.isolation.title,
+    catalog: translations.catalog.title,
     dashboard: translations.dashboard.title,
     workReport: translations.report.title,
     rackAdmin: translations.rackAdmin.title,

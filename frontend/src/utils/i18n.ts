@@ -37,6 +37,17 @@ const en = {
     choosePlan: 'Where should it go next? (optional)', setStatus: 'Status (optional)', waiting: (d: string) => `waiting ${d}`, waitingFor: (d: string) => `Waiting ${d}`,
     tooLong: 'Waiting too long', tooLongCount: (n: number) => `${n} waiting too long`, stayed: (d: string) => `stayed ${d} in Isolation`, from: 'Came from'
   },
+  catalog: {
+    title: 'Catalog', hint: 'Complete totals of moulds and of products for every process. To find where a mould is, use Find.',
+    all: 'All', processes: { INJECTION: 'Injection', EXTRUSION: 'Extrusion' } as Record<string, string>, tabs: { moulds: 'Moulds', products: 'Products' },
+    cards: { moulds: 'Total moulds', uniqueItems: 'Total unique items', perMould: 'Items per mould', perMouldValue: (avg: number, max: number) => `avg ${avg} · max ${max}`, multiItem: 'Moulds with more than 1 item', multiMould: 'Items made by more than 1 mould' },
+    breakdown: { process: 'Process', status: 'Status', owner: 'Owner', machine: 'Capable machine', material: 'Material', family: 'Type / family' } as Record<string, string>,
+    noOwner: 'No owner', search: 'Search Tool ID, Die ID, Pin ID', searchItems: 'Search Item ID or description', clearAll: 'Clear all', remove: 'Remove filter',
+    showLocation: 'Show location', loadMore: 'Load more', shown: (n: number, total: number) => `${n} of ${total}`, empty: 'Nothing matches these filters.',
+    col: { toolId: 'Tool ID', process: 'Process', owner: 'Owner', machines: 'Capable machines', cavities: 'Cavities', items: 'Items', status: 'Status', location: 'Location', itemId: 'Item ID', description: 'Description', material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS', moulds: 'Moulds' },
+    sort: 'Sort', sorts: { toolId: 'Tool ID', items: 'Most items', status: 'Status', itemId: 'Item ID', moulds: 'Most moulds' } as Record<string, string>,
+    madeBy: (n: number) => `Made by ${n} mould${n === 1 ? '' : 's'}`, exportCsv: 'Export CSV', exportXlsx: 'Export Excel', exported: 'Export ready', truncated: (n: number) => `Only the first ${n} rows were exported. Narrow the filters to export the rest.`
+  },
   dashboard: {
     title: 'Dashboard', hint: 'Where every mould is, what needs attention and the work done this month.',
     byLocation: 'By location', byStatus: 'By status', limited: 'Running with blocked cavities', isolationTooLong: 'Waiting too long in Isolation',
@@ -137,7 +148,7 @@ const en = {
     protected: 'System Administrator accounts always have full access and cannot be restricted here.',
     noAccess: 'No permissions selected. This user can still sign in and manage their own account.',
     labels: {
-      'mould.view': 'View moulds, search, history and timeline', 'mould.create': 'Add moulds and dies', 'mould.edit': 'Edit mould details, items and cavities',
+      'mould.view': 'View moulds, search, history and timeline', 'catalog.view': 'Catalog & Totals (all moulds and products)', 'mould.create': 'Add moulds and dies', 'mould.edit': 'Edit mould details, items and cavities',
       'mould.machines.edit': 'Edit capable machines', 'mould.images.manage': 'Add, replace and remove pictures', 'mould.delete': 'Remove and restore moulds',
       'move.machine': 'Mount on a machine', 'move.floor': 'Move to / from the Production Floor', 'move.mouldroom': 'Move into / out of the Mould Room',
       'move.workshop': 'Send to the Workshop', 'move.isolation': 'Send to the Isolation Area', 'move.outOfService': 'Send out of service / return (Super Admin only)',
@@ -374,6 +385,17 @@ const si: Dict = {
     choosePlan: 'ඊළඟට යා යුත්තේ කොහෙටද? (අත්‍යවශ්‍ය නැහැ)', setStatus: 'Status (අත්‍යවශ්‍ය නැහැ)', waiting: (d) => `${d} ක් රැඳී සිටී`, waitingFor: (d) => `${d} ක් රැඳී සිටී`,
     tooLong: 'ඕනෑවට වඩා වෙලා රැඳී සිටී', tooLongCount: (n) => `${n}ක් ඕනෑවට වඩා වෙලා රැඳී සිටී`, stayed: (d) => `Isolation එකේ ${d} ක් සිටියා`, from: 'ආවේ'
   },
+  catalog: {
+    title: 'සමස්ත ලැයිස්තුව', hint: 'හැම process එකකම moulds සහ නිෂ්පාදනවල සම්පූර්ණ ගණන්. Mould එකක් තියෙන තැන සොයන්න Find භාවිත කරන්න.',
+    all: 'සියල්ල', processes: { INJECTION: 'Injection', EXTRUSION: 'Extrusion' }, tabs: { moulds: 'Moulds', products: 'නිෂ්පාදන' },
+    cards: { moulds: 'මුළු moulds', uniqueItems: 'මුළු වෙනස් items', perMould: 'Mould එකකට items', perMouldValue: (avg, max) => `සාමාන්‍ය ${avg} · උපරිම ${max}`, multiItem: 'Items 1කට වඩා ඇති moulds', multiMould: 'Moulds 1කට වඩා හදන items' },
+    breakdown: { process: 'Process', status: 'Status', owner: 'අයිතිය', machine: 'Machine', material: 'Material', family: 'වර්ගය' },
+    noOwner: 'අයිතිය නැත', search: 'Tool ID, Die ID, Pin ID සොයන්න', searchItems: 'Item ID හෝ විස්තරය සොයන්න', clearAll: 'සියල්ල ඉවත් කරන්න', remove: 'පෙරහන ඉවත් කරන්න',
+    showLocation: 'තැන පෙන්වන්න', loadMore: 'තවත් පෙන්වන්න', shown: (n, total) => `${total} න් ${n}`, empty: 'මෙම පෙරහන් වලට ගැළපෙන කිසිවක් නැහැ.',
+    col: { toolId: 'Tool ID', process: 'Process', owner: 'අයිතිය', machines: 'Machines', cavities: 'Cavities', items: 'Items', status: 'Status', location: 'තැන', itemId: 'Item ID', description: 'විස්තරය', material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS', moulds: 'Moulds' },
+    sort: 'පිළිවෙල', sorts: { toolId: 'Tool ID', items: 'වැඩිම items', status: 'Status', itemId: 'Item ID', moulds: 'වැඩිම moulds' },
+    madeBy: (n) => `Moulds ${n}කින් හදනවා`, exportCsv: 'CSV export', exportXlsx: 'Excel export', exported: 'Export සූදානම්', truncated: (n) => `මුල් පේළි ${n} පමණක් export කළා. ඉතිරිය සඳහා පෙරහන් අඩු කරන්න.`
+  },
   dashboard: {
     title: 'Dashboard', hint: 'හැම mould එකක්ම තියෙන තැන, අවධානය ඕනෑ දේ සහ මේ මාසයේ කළ වැඩ.',
     byLocation: 'තැන අනුව', byStatus: 'Status අනුව', limited: 'Cavities වසා run වෙන', isolationTooLong: 'Isolation එකේ ඕනෑවට වඩා රැඳී සිටින',
@@ -474,7 +496,7 @@ const si: Dict = {
     protected: 'System Administratorට සැමවිටම සම්පූර්ණ access ඇත. එම accounts මෙතැනින් සීමා කළ නොහැක.',
     noAccess: 'Permissions තෝරා නැහැ. මේ userට sign in වී තමන්ගේ account එක පාලනය කරන්න තවමත් පුළුවන්.',
     labels: {
-      'mould.view': 'Moulds, සෙවීම, ඉතිහාසය සහ timeline බලන්න', 'mould.create': 'Moulds සහ dies එකතු කරන්න', 'mould.edit': 'Mould විස්තර, items සහ cavities සංස්කරණය',
+      'mould.view': 'Moulds, සෙවීම, ඉතිහාසය සහ timeline බලන්න', 'catalog.view': 'සමස්ත ලැයිස්තුව (සියලු moulds සහ නිෂ්පාදන)', 'mould.create': 'Moulds සහ dies එකතු කරන්න', 'mould.edit': 'Mould විස්තර, items සහ cavities සංස්කරණය',
       'mould.machines.edit': 'යොදන්න පුළුවන් machines සංස්කරණය', 'mould.images.manage': 'පින්තූර එකතු කිරීම, මාරු කිරීම, ඉවත් කිරීම', 'mould.delete': 'Moulds ඉවත් කිරීම සහ නැවත ගැනීම',
       'move.machine': 'Machine එකකට සවි කරන්න', 'move.floor': 'Production Floor එකට / එකෙන් ගෙනයන්න', 'move.mouldroom': 'Mould කාමරයට / කාමරයෙන් ගෙනයන්න',
       'move.workshop': 'Workshop එකට යවන්න', 'move.isolation': 'Isolation කලාපයට යවන්න', 'move.outOfService': 'Out of service යැවීම / ආපසු ගැනීම (Super Admin පමණයි)',

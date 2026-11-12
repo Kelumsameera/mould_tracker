@@ -125,6 +125,24 @@ export const api = {
   workers: () => request<{ workers: Person[] }>("/worklogs/workers"),
   workReport: (f: WorkFilter) => request<{ total: number; workLogs: WorkLog[] }>(`/worklogs${qs({ ...f })}`),
   workSummary: (f: WorkFilter) => request<WorkSummary>(`/worklogs/summary${qs({ ...f, page: undefined, limit: undefined })}`),
+  catalogSummary: (process?: string) => request<{ summary: import("./types").CatalogSummary }>(`/catalog/summary${qs({ process })}`),
+  catalogMoulds: (f: import("./types").CatalogFilter) => request<import("./types").CatalogList<import("./types").CatalogMould>>(`/catalog/moulds${qs({ ...f })}`),
+  catalogProducts: (f: import("./types").CatalogFilter) => request<import("./types").CatalogList<import("./types").CatalogProduct>>(`/catalog/products${qs({ ...f })}`),
+  catalogProduct: (itemId: string) => request<{ product: import("./types").CatalogProductDetail }>(`/catalog/products/${encodeURIComponent(itemId)}`),
+  // Returns true when the file was cut at the export limit.
+  downloadCatalog: async (f: import("./types").CatalogFilter, format: "csv" | "xlsx") => {
+    const res = await fetch(`${BASE}/catalog/export${qs({ ...f, page: undefined, format })}`, { credentials: "include" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, data.message || "Export failed", data.code, data.details || {});
+    }
+    const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || `catalog.${format}`;
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return Boolean(res.headers.get("X-Export-Truncated"));
+  },
   // Downloads the export with the session cookie and hands it to the browser as a file.
   downloadWorkLogs: async (f: WorkFilter, format: "csv" | "xlsx") => {
     const res = await fetch(`${BASE}/worklogs/export${qs({ ...f, page: undefined, limit: undefined, format })}`, { credentials: "include" });

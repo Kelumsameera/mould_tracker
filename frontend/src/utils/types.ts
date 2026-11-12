@@ -94,6 +94,16 @@ export type WorkType = 'REPAIR' | 'SERVICE' | 'MINOR_FIX' | 'INSPECTION' | 'CLEA
 // Types a person picks in the work log form; cavity entries come from "Run with blocked cavities".
 export const WORK_TYPES: WorkType[] = ['REPAIR', 'SERVICE', 'MINOR_FIX', 'INSPECTION', 'CLEANING', 'OTHER'];
 export const REPORT_WORK_TYPES: WorkType[] = [...WORK_TYPES, 'CAVITY_BLOCK', 'CAVITY_RESTORE'];
+// ---- Catalog & Totals ----
+export type Process = 'INJECTION' | 'EXTRUSION';
+export interface CatalogTotals { moulds: number; uniqueItems: number; itemsPerMouldAvg: number; itemsPerMouldMax: number; mouldsWithMultipleItems: number; itemsInMultipleMoulds: number }
+export type CatalogSummary = Record<'all' | Process, CatalogTotals>;
+export interface CatalogChip { value: string | null; label: string | null; count: number }
+export interface CatalogMould { id: string; toolId: string; process: Process; owner: string | null; capableMachines: string[]; cavities: number; itemCount: number; status: MouldStatus; location: Location; materials: string[] }
+export interface CatalogProduct { itemId: string; description: string; thumbUrl: string | null; materialId: string | null; materialDescription: string | null; masterbatchId: string | null; qas: string | null; family: string; processes: Process[]; mouldCount: number; moulds: { id: string; toolId: string }[] }
+export interface CatalogFilter { tab: 'moulds' | 'products'; process?: Process; status?: string; owner?: string; machine?: string; material?: string; family?: string; q?: string; sort?: string; page?: number }
+export interface CatalogList<T> { total: number; pageSize: number; rows: T[]; breakdown: Record<string, CatalogChip[]> }
+export interface CatalogProductDetail { itemId: string; description: string; materialId: string | null; masterbatchId: string | null; qas: string | null; images: ItemImage[]; moulds: { id: string; toolId: string; status: MouldStatus; process: Process; owner: string | null; cavities: number | null }[] }
 export interface DowntimePeriod { from: string; to: string | null; cavities: number[]; reason: string; by: string | null }
 export type WorkOutcome = 'OK' | 'NEEDS_REPAIR' | 'NEEDS_SERVICE';
 export interface Person { id: string; name: string; role: Role }

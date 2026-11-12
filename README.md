@@ -144,6 +144,16 @@ old mould status `RUNNING_LIMITED` to `CONDITIONAL`; history keeps the old value
 7. Every change is recorded (Movement + AuditLog); remarks are required for service/repair.
 8. `totalShots >= shotsToService` flags NEEDS_SERVICE when shots are recorded.
 
+## Catalog & Totals
+
+`/catalog` (permission `catalog.view`, all roles by default) shows complete totals, not locations: total moulds,
+total unique items (unique Item IDs), items per mould, moulds with more than one item and items made by more than
+one mould, for All / Injection / Extrusion (process = tool type). Moulds and Products are separate tabs with
+breakdown chips, search, sorting and server-side paging (20 per page). Product families are the Item ID prefix
+(`backend/config/itemFamilies.js`). CSV/XLSX export of the current tab and filters needs `export.run`, is audited and
+stops at 5,000 rows. Extrusion dies come from the `EXTRUSION 01` sheet (`--sheet "EXTRUSION 01"`; Die ID = Tool ID,
+Pin ID kept on the items).
+
 ## Pictures
 
 Up to 5 pictures per item (`MAX_ITEM_IMAGES`, `backend/lib/images.js`), shrunk in the browser, stored as

@@ -68,6 +68,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
     { key: "isolation", label: translations.isolation.title, icon: "clock" },
     { key: "workshop", label: translations.nav.workshop, icon: "workshop" },
     { key: "dashboard", label: translations.dashboard.title, icon: "report" },
+    { key: "catalog", label: translations.catalog.title, icon: "documentation" },
   ];
   const adminLinks: { key: PageName; label: string; icon: IconName }[] = [];
 

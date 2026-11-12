@@ -68,6 +68,7 @@ export const PAGE_PATHS = {
   racks: "/racks",
   workshop: "/workshop",
   isolation: "/isolation",
+  catalog: "/catalog",
   dashboard: "/dashboard",
   workReport: "/work-report",
   rackAdmin: "/rack-admin",

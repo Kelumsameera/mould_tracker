@@ -16,6 +16,7 @@ export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = [
   "mould.view",
+  "catalog.view",
   "mould.create",
   "mould.edit",
   "mould.machines.edit",
@@ -56,6 +57,7 @@ export function canVisitPage(user: User, page: PageName) {
   if (page === "access") return true; // System Administrator edits; everyone else sees their own access
   if (["find", "extrusion", "workshop", "isolation", "dashboard"].includes(page)) return can(user, "mould.view");
   if (page === "racks") return can(user, "rack.view");
+  if (page === "catalog") return can(user, "catalog.view");
   if (page === "machines") return can(user, "mould.edit");
   if (page === "audit") return can(user, "audit.view");
   if (page === "workReport") return can(user, "worklog.report");
