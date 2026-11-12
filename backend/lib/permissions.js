@@ -44,10 +44,11 @@ export function can(user, permission) {
   if (permission === "access.manage") return false;
   if (permission === "moves.outOfService" && resolveRole(user.role) !== "super_admin") return false;
   if (Array.isArray(user.permissionOverrides)) return user.permissionOverrides.includes(permission);
+  if (Array.isArray(user.rolePermissionOverrides)) return user.rolePermissionOverrides.includes(permission);
   return allowed.includes(resolveRole(user.role));
 }
 
-export const rolePermissionsFor = user => Object.keys(PERMISSIONS).filter(permission => can({ role: user.role }, permission));
+export const rolePermissionsFor = user => Object.keys(PERMISSIONS).filter(permission => can({ role: user.role, rolePermissionOverrides: user.rolePermissionOverrides }, permission));
 export const CUSTOM_PERMISSIONS = Object.keys(PERMISSIONS).filter(permission => permission !== "access.manage");
 
 export const permissionsFor = (user) => Object.keys(PERMISSIONS).filter((p) => can(user, p));

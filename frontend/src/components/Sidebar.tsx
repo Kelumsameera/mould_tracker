@@ -173,12 +173,11 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
 
         <nav className="flex flex-col gap-0.5 mx-0 my-4">
           {mainLinks.filter((link) => canVisitPage(user, link.key)).map(renderNavItem)}
-          {adminLinks.length > 0 && (
-            <div className={"text-[12.5px] font-semibold text-[#7f909c] [border-top:1px_solid_rgba(255,255,255,.07)] pt-3 m-[var(--s4)_var(--s3)_var(--s1)] whitespace-nowrap " + RAIL_HIDE}>
-              {user.role === "system_admin" ? translations.roles.system_admin : can(user, "racks.manage") ? translations.nav.superAdmin : translations.nav.admin}
-            </div>
-          )}
           {adminLinks.map(renderNavItem)}
+          <a className={itemBase} href="/docs/index.html" target="_blank" rel="noopener noreferrer" onClick={onClose} title={translations.nav.documentation} aria-label={translations.nav.documentation}>
+            <Icon name="documentation" size={20} />
+            <span className={"overflow-hidden text-ellipsis " + RAIL_HIDE}>{translations.nav.documentation}</span>
+          </a>
         </nav>
 
         <div className="mt-auto [border-top:1px_solid_rgba(255,255,255,.1)] pt-3 flex flex-col gap-0.5">

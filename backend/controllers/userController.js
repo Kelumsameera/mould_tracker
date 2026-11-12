@@ -2,12 +2,15 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { userDTO } from "../utils/serializers.js";
-import { CUSTOM_PERMISSIONS, can, canManageUser, canViewUser, rolePermissionsFor, visibleUsersFilter } from "../lib/permissions.js";
+import { CUSTOM_PERMISSIONS, ROLES, resolveRole, can, canManageUser, canViewUser, rolePermissionsFor, visibleUsersFilter } from "../lib/permissions.js";
 import { audit, changes } from "../lib/audit.js";
+import RoleAccess from "../models/RoleAccess.js";
+import { loadRoleAccess } from "../lib/roleAccess.js";
+import { updateUserAccessSchema } from "../validators/schemas.js";
 
 export async function listUsers(req, res) {
   const users = await User.find({ deletedAt: null, ...visibleUsersFilter(req.user) }).sort({ name: 1 });
-  res.json({ success: true, users: users.map(userDTO) });
+  res.json({ success: true, users: await Promise.all(users.map(async user => userDTO(await loadRoleAccess(user)))) });
 }
 
 export async function createUser(req, res) {
@@ -15,7 +18,7 @@ export async function createUser(req, res) {
   if (!canManageUser(req.user, { role }, role)) throw new ApiError(403, "You cannot assign that role");
   const user = await User.create({ name, email, role, passwordHash: await bcrypt.hash(password, 12) });
   await audit(req, { action: "user.created", entityType: "User", entityId: user._id, entityLabel: user.email, after: { name, email: user.email, role } });
-  res.status(201).json({ success: true, user: canViewUser(req.user, user) ? userDTO(user) : null });
+  res.status(201).json({ success: true, user: canViewUser(req.user, user) ? userDTO(await loadRoleAccess(user)) : null });
 }
 
 export async function updateUser(req, res) {
@@ -42,7 +45,7 @@ export async function updateUser(req, res) {
   if (password) diff.after.password = "changed"; // never the password itself
   await audit(req, { action: "user.updated", entityType: "User", entityId: user._id, entityLabel: user.email, before: diff.before, after: diff.after });
 
-  res.json({ success: true, user: canViewUser(req.user, user) ? userDTO(user) : null });
+  res.json({ success: true, user: canViewUser(req.user, user) ? userDTO(await loadRoleAccess(user)) : null });
 }
 
 // DELETE /api/users/:id - soft delete: the account can no longer sign in, its history stays.
@@ -68,7 +71,31 @@ const accessDTO = user => ({
 export async function listUserAccess(req, res) {
   if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage user access");
   const users = await User.find({ deletedAt: null, role: { $ne: "system_admin" } }).sort({ name: 1 });
-  res.json({ success: true, permissions: CUSTOM_PERMISSIONS, users: users.map(accessDTO) });
+  const configs = await RoleAccess.find({});
+  const roles = ROLES.filter(role => role !== "system_admin").map(role => {
+    const config = configs.find(config => config.role === role);
+    const permissionOverrides = config ? [...config.permissions] : null;
+    return { role, permissionOverrides, permissions: rolePermissionsFor({ role, rolePermissionOverrides: permissionOverrides }) };
+  });
+  for (const user of users) user.rolePermissionOverrides = roles.find(config => config.role === resolveRole(user.role))?.permissionOverrides ?? null;
+  res.json({ success: true, permissions: CUSTOM_PERMISSIONS, roles, users: users.map(accessDTO) });
+}
+
+export async function updateRoleAccess(req, res) {
+  if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage role access");
+  const { role } = req.params;
+  if (!ROLES.includes(role) || role === "system_admin") throw new ApiError(400, "This role cannot be configured");
+  const parsed = updateUserAccessSchema.safeParse(req.body);
+  if (!parsed.success) throw new ApiError(400, "Invalid permissions");
+  const { permissions } = parsed.data;
+  if (permissions?.includes("moves.outOfService") && role !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins");
+  const previous = await RoleAccess.findOne({ role });
+  if (permissions === null) await RoleAccess.deleteOne({ role });
+  else await RoleAccess.findOneAndUpdate({ role }, { $set: { permissions } }, { upsert: true, runValidators: true });
+  await audit(req, { action: "role.access.updated", entityType: "RoleAccess", entityLabel: role,
+    before: { permissions: previous?.permissions ?? null }, after: { permissions } });
+  res.json({ success: true, role: { role, permissionOverrides: permissions,
+    permissions: rolePermissionsFor({ role, rolePermissionOverrides: permissions }) } });
 }
 
 export async function updateUserAccess(req, res) {
@@ -87,5 +114,5 @@ export async function updateUserAccess(req, res) {
   await user.save();
   await audit(req, { action: "user.access.updated", entityType: "User", entityId: user._id, entityLabel: user.email,
     before: { permissionOverrides: before }, after: { permissionOverrides: permissions } });
-  res.json({ success: true, user: accessDTO(user) });
+  res.json({ success: true, user: accessDTO(await loadRoleAccess(user)) });
 }

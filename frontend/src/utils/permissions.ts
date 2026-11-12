@@ -70,7 +70,7 @@ export function canMoveTo(
   }
   const groups: Permission[][] = [];
   if (
-    ["MOULD_ROOM", "TOOL_ROOM"].includes(from) ||
+    (["MOULD_ROOM", "TOOL_ROOM"].includes(from) && to !== "MACHINE") ||
     ["MOULD_ROOM", "TOOL_ROOM"].includes(to)
   )
     groups.push(["moves.mouldRoom"]);

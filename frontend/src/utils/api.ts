@@ -1,7 +1,7 @@
 import type { Permission } from "@/utils/permissions";
-import type { UserAccess } from "@/utils/types";
+import type { UserAccess, RoleAccess } from "@/utils/types";
 import type { AuditEntry, ItemInput, Machine, Mould, MouldInput, MoveInput, Movement, Person, Rack, Role, Stats, User, WorkFilter, WorkLog, WorkLogInput, WorkSummary, Zone } from "@/utils/types";
-import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/browser';
+import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON } from "@simplewebauthn/browser";
 
 export type PasskeyInfo = { id: string; name: string; createdAt: string; lastUsedAt?: string };
 
@@ -21,16 +21,16 @@ export class ApiError extends Error {
 
 // Full URL for a server path such as an item picture ("/uploads/items/x.webp").
 export const assetUrl = (path: string | null | undefined) => {
-  if (!path) return '';
+  if (!path) return "";
   // Existing cutouts were repaired in place; bypass the old immutable browser cache once.
-  const revision = path.startsWith('/uploads/items/') ? `${path.includes('?') ? '&' : '?'}v=cutouts-20261022-2` : '';
+  const revision = path.startsWith("/uploads/items/") ? `${path.includes("?") ? "&" : "?"}v=cutouts-20261022-2` : "";
   return BASE + path + revision;
 };
 const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
   const p = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== "") p.set(k, String(v));
   const s = p.toString();
-  return s ? `?${s}` : '';
+  return s ? `?${s}` : "";
 };
 
 async function request<T>(path: string, method = "GET", body?: unknown): Promise<T> {
@@ -56,19 +56,32 @@ export const api = {
   me: () => request<{ user: User }>("/auth/me"),
   updateProfile: (input: { name: string; email: string; currentPassword: string; newPassword?: string }) => request<{ user: User }>("/auth/me", "PATCH", input),
   changePassword: (currentPassword: string, newPassword: string) => request<unknown>("/auth/password", "POST", { currentPassword, newPassword }),
-  passkeyCapabilities: () => request<{ enabled: boolean }>('/auth/passkeys/capabilities'),
-  passkeys: () => request<{ passkeys: PasskeyInfo[] }>('/auth/passkeys'),
-  passkeyRegistrationOptions: (currentPassword: string, name: string) => request<{ options: PublicKeyCredentialCreationOptionsJSON }>('/auth/passkeys/register/options', 'POST', { currentPassword, name }),
-  passkeyRegistrationVerify: (response: RegistrationResponseJSON) => request<unknown>('/auth/passkeys/register/verify', 'POST', { response }),
-  passkeyLoginOptions: () => request<{ options: PublicKeyCredentialRequestOptionsJSON }>('/auth/passkeys/login/options', 'POST'),
-  passkeyLoginVerify: (response: AuthenticationResponseJSON) => request<{ user: User }>('/auth/passkeys/login/verify', 'POST', { response }),
-  removePasskey: (id: string, currentPassword: string) => request<unknown>(`/auth/passkeys/${id}`, 'DELETE', { currentPassword }),
+  passkeyCapabilities: () => request<{ enabled: boolean }>("/auth/passkeys/capabilities"),
+  passkeys: () => request<{ passkeys: PasskeyInfo[] }>("/auth/passkeys"),
+  passkeyRegistrationOptions: (currentPassword: string, name: string) =>
+    request<{ options: PublicKeyCredentialCreationOptionsJSON }>("/auth/passkeys/register/options", "POST", { currentPassword, name }),
+  passkeyRegistrationVerify: (response: RegistrationResponseJSON) => request<unknown>("/auth/passkeys/register/verify", "POST", { response }),
+  passkeyLoginOptions: () => request<{ options: PublicKeyCredentialRequestOptionsJSON }>("/auth/passkeys/login/options", "POST"),
+  passkeyLoginVerify: (response: AuthenticationResponseJSON) => request<{ user: User }>("/auth/passkeys/login/verify", "POST", { response }),
+  removePasskey: (id: string, currentPassword: string) => request<unknown>(`/auth/passkeys/${id}`, "DELETE", { currentPassword }),
 
-  setLanguage: (language: 'en' | 'si') => request<{ user: User }>("/auth/me/language", "PATCH", { language }),
+  setLanguage: (language: "en" | "si") => request<{ user: User }>("/auth/me/language", "PATCH", { language }),
 
-  moulds: (filter: { toolType?: import('./types').ToolType; q?: string; location?: string; status?: string; owner?: string; zone?: string; awaitingRack?: boolean; needsService?: boolean; problem?: boolean; deleted?: boolean } = {}) =>
-    request<{ moulds: Mould[] }>(`/moulds${qs(filter)}`),
-  stats: (toolType?: import('./types').ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
+  moulds: (
+    filter: {
+      toolType?: import("./types").ToolType;
+      q?: string;
+      location?: string;
+      status?: string;
+      owner?: string;
+      zone?: string;
+      awaitingRack?: boolean;
+      needsService?: boolean;
+      problem?: boolean;
+      deleted?: boolean;
+    } = {},
+  ) => request<{ moulds: Mould[] }>(`/moulds${qs(filter)}`),
+  stats: (toolType?: import("./types").ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
   mould: (id: string) => request<{ mould: Mould }>(`/moulds/${id}`),
   history: (id: string) => request<{ history: Movement[] }>(`/moulds/${id}/history`),
   createMould: (input: MouldInput & { toolId: string; location: string; rackId?: string; items: ItemInput[] }) => request<{ mould: Mould }>("/moulds", "POST", input),
@@ -90,10 +103,10 @@ export const api = {
   createZone: (z: { code: string; name: string; sortOrder?: number }) => request<unknown>("/racks/zones", "POST", z),
   updateZone: (id: string, z: { code?: string; name?: string; active?: boolean; sortOrder?: number }) => request<unknown>(`/racks/zones/${id}`, "PATCH", z),
   deleteZone: (id: string) => request<unknown>(`/racks/zones/${id}`, "DELETE", {}),
-  bulkRacks: (b: { zone: string; rowFrom: string; rowTo: string; from: number; to: number; capacity: number | null; preview: boolean }) =>
+  bulkRacks: (b: { zone: string; rowFrom: string; rowTo: string; from: number; to: number; palletFrom?: number; palletTo?: number; capacity: number | null; preview: boolean }) =>
     request<{ create: string[]; revive: string[]; existing: string[] }>("/racks/bulk", "POST", b),
-  createRack: (r: { zone: string; row: string; number: number; capacity: number | null; note: string }) => request<{ rack: Rack }>("/racks", "POST", r),
-  updateRack: (id: string, r: { row?: string; number?: number; capacity?: number | null; active?: boolean; note?: string }) => request<{ rack: Rack }>(`/racks/${id}`, "PATCH", r),
+  createRack: (r: { zone: string; row: string; number: number; pallet?: number; capacity: number | null; note: string }) => request<{ rack: Rack }>("/racks", "POST", r),
+  updateRack: (id: string, r: { row?: string; number?: number; pallet?: number; capacity?: number | null; active?: boolean; note?: string }) => request<{ rack: Rack }>(`/racks/${id}`, "PATCH", r),
   deleteRack: (id: string) => request<unknown>(`/racks/${id}`, "DELETE", {}),
   removeRow: (zone: string, row: string) => request<{ removed: string[] }>("/racks/remove-row", "POST", { zone, row }),
 
@@ -106,17 +119,23 @@ export const api = {
   // Downloads the export with the session cookie and hands it to the browser as a file.
   downloadWorkLogs: async (f: WorkFilter, format: "csv" | "xlsx") => {
     const res = await fetch(`${BASE}/worklogs/export${qs({ ...f, page: undefined, limit: undefined, format })}`, { credentials: "include" });
-    if (!res.ok) { const data = await res.json().catch(() => ({})); throw new ApiError(res.status, data.message || "Export failed", data.code, data.details || {}); }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, data.message || "Export failed", data.code, data.details || {});
+    }
     const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || `work-log.${format}`;
     const url = URL.createObjectURL(await res.blob());
     const a = Object.assign(document.createElement("a"), { href: url, download: name });
-    document.body.appendChild(a); a.click(); a.remove();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   },
 
   audit: (f: { entityType?: string; page?: number; limit?: number }) => request<{ total: number; entries: AuditEntry[] }>(`/audit${qs(f)}`),
 
-  userAccess: () => request<{ users: UserAccess[]; permissions: Permission[] }>("/users/access"),
+  userAccess: () => request<{ users: UserAccess[]; roles: RoleAccess[]; permissions: Permission[] }>("/users/access"),
+  updateRoleAccess: (role: Role, permissions: Permission[] | null) => request<{ role: RoleAccess }>(`/users/roles/${role}/access`, "PATCH", { permissions }),
   updateUserAccess: (id: string, permissions: Permission[] | null) => request<{ user: UserAccess }>(`/users/${id}/access`, "PATCH", { permissions }),
   users: () => request<{ users: User[] }>("/users"),
   createUser: (u: { name: string; email: string; password: string; role: Role }) => request<{ user: User | null }>("/users", "POST", u),

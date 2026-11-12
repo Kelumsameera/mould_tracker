@@ -203,7 +203,8 @@ describe("who may move what (one user per role)", () => {
     "MACHINE>WORKSHOP": [1, 1, 0, 1, 1],
     "MACHINE>MOULD_ROOM": [1, 1, 0, 0, 1],
     "MOULD_ROOM>PRODUCTION_FLOOR": [1, 1, 0, 0, 1],
-    "MOULD_ROOM>MACHINE": [1, 1, 0, 0, 0],
+    "MOULD_ROOM>MACHINE": [1, 1, 1, 1, 0],
+    "TOOL_ROOM>MACHINE": [1, 1, 1, 1, 0],
     "MOULD_ROOM>WORKSHOP": [1, 1, 0, 0, 1],
     "MOULD_ROOM>MOULD_ROOM": [1, 1, 0, 0, 1],
     "WORKSHOP>MOULD_ROOM": [1, 1, 0, 0, 1],
@@ -211,6 +212,19 @@ describe("who may move what (one user per role)", () => {
     "WORKSHOP>MACHINE": [1, 1, 1, 1, 0]
   };
   const users = [SA, A, PS, MT, MM];
+  test("supervisors can mount from storage without gaining other storage access", () => {
+    for (const location of ["MOULD_ROOM", "TOOL_ROOM"]) {
+      const current = mould({ location, rackId: oid() });
+      const result = planMove({ mould: current, user: PS, to: "MACHINE", machine: INJ3 });
+      assert.equal(result.set.machineId, INJ3._id);
+      assert.equal(result.set.rackId, null);
+      assert.equal(result.movement.fromLocation, location);
+      assert.equal(canMove(PS, location, "PRODUCTION_FLOOR"), false);
+      assert.equal(canMove(PS, "MACHINE", location), false);
+      assert.throws(() => planMove({ mould: current, user: PS, to: "MACHINE", machine: INJ9 }), code("NOT_CAPABLE"));
+    }
+    assert.equal(canMove({ ...PS, permissionOverrides: ["moulds.view"] }, "MOULD_ROOM", "MACHINE"), false);
+  });
   for (const [key, row] of Object.entries(MATRIX)) {
     test(key.replace(">", " -> "), () => {
       const [from, to] = key.split(">");

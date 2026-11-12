@@ -113,7 +113,7 @@ test("racks: bulk generation, location IDs and the FLK/CCI A1-C10 defaults", asy
   assert.throws(() => buildRacks({ zone: "FLK", rowFrom: "C", rowTo: "A", from: 1, to: 2 }), /in order/);
   assert.throws(() => buildRacks({ zone: "FLK", rowFrom: "A", rowTo: "A", from: 5, to: 1 }), /in order/);
   assert.deepEqual(DEFAULT_ZONES.map((z) => z.code), ["FLK", "CCI"]);
-  assert.deepEqual(DEFAULT_LAYOUT, { rowFrom: "A", rowTo: "C", from: 1, to: 10 });
+  assert.deepEqual(DEFAULT_LAYOUT, { rowFrom: "A", rowTo: "C", palletFrom: 1, palletTo: 3, from: 1, to: 4 });
 
   const rack = new Rack({ zone: "cci", row: "B", number: 7, code: "b7" });
   await rack.validate();

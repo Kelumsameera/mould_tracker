@@ -22,7 +22,8 @@ export const isServiceDue = (m) => Number(m.shotsToService) > 0 && Number(m.tota
 export function movePermissionGroups(from, to) {
   if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return [["moves.outOfService"]];
   const groups = [];
-  if (isStorage(from) || isStorage(to)) groups.push(["moves.mouldRoom"]);
+  // Mounting is covered by moves.machine, including when taking a tool from storage.
+  if ((isStorage(from) && to !== "MACHINE") || isStorage(to)) groups.push(["moves.mouldRoom"]);
   if (to === "MACHINE") groups.push(["moves.machine"]);
   if (to === "WORKSHOP") groups.push(["workshop.work"]);
   if (to === "PRODUCTION_FLOOR" && !isStorage(from)) groups.push(from === "WORKSHOP" ? ["moves.machine", "workshop.work"] : ["moves.machine"]);

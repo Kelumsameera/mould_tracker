@@ -1,3 +1,6 @@
+import RoleAccess from "../models/RoleAccess.js";
+import { beforeEach } from "node:test";
+beforeEach(() => { mock.method(RoleAccess, "findOne", async () => null); mock.method(RoleAccess, "find", async () => []); });
 import { test, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync, randomBytes, sign } from "node:crypto";

@@ -134,9 +134,10 @@ export const listMouldsQuery = z.object({
 
 export const createZoneSchema = z.object({ code: zoneCode, name: z.string().trim().min(1).max(100), sortOrder: z.number().int().min(0).default(0) });
 export const updateZoneSchema = z.object({ code: zoneCode.optional(), name: z.string().trim().min(1).max(100).optional(), active: z.boolean().optional(), sortOrder: z.number().int().min(0).optional() });
-export const createRackSchema = z.object({ zone: zoneCode, row: rowLetter, number: rackNumber, capacity: z.number().int().min(1).nullable().default(null), note: z.string().trim().max(300).default("") });
-export const updateRackSchema = z.object({ row: rowLetter.optional(), number: rackNumber.optional(), capacity: z.number().int().min(1).nullable().optional(), active: z.boolean().optional(), note: z.string().trim().max(300).optional() });
-export const bulkRacksSchema = z.object({ zone: zoneCode, rowFrom: rowLetter, rowTo: rowLetter, from: rackNumber, to: rackNumber, capacity: z.number().int().min(1).nullable().default(null), preview: z.boolean().default(true) });
+const palletNumber = z.number().int().min(1).max(99);
+export const createRackSchema = z.object({ zone: zoneCode, row: rowLetter, number: rackNumber, pallet: palletNumber.optional(), capacity: z.number().int().min(1).nullable().default(null), note: z.string().trim().max(300).default("") });
+export const updateRackSchema = z.object({ row: rowLetter.optional(), number: rackNumber.optional(), pallet: palletNumber.optional(), capacity: z.number().int().min(1).nullable().optional(), active: z.boolean().optional(), note: z.string().trim().max(300).optional() });
+export const bulkRacksSchema = z.object({ zone: zoneCode, rowFrom: rowLetter, rowTo: rowLetter, from: rackNumber, to: rackNumber, palletFrom: palletNumber.optional(), palletTo: palletNumber.optional(), capacity: z.number().int().min(1).nullable().default(null), preview: z.boolean().default(true) });
 export const removeRowSchema = z.object({ zone: zoneCode, row: rowLetter });
 
 export const auditQuery = z.object({

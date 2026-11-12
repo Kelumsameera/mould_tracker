@@ -21,6 +21,12 @@ The external MongoDB volumes `tool-tracker_mongo-data` and
 volumes. A migration backup is stored at
 `/home/flexi/apps/tool-tracker/backups/before-coolify-migration.archive.gz`.
 
+## Public user documentation
+
+Build the website with `npm run build` in `docs/site-builder` and run its `npm test` publication checks. Only the explicitly reviewed content in `docs/public/` belongs on the public site. Publish `docs/site/` to `deploy/lan-certificates/public-docs/`, which Nginx serves at `/docs/`.
+
+Never publish the entire `docs/` folder, internal exports, source references, repository information, configuration, API references or operational documentation. Keep backups and withdrawn documentation outside `deploy/lan-certificates/`. Replace the previous public directory rather than overlaying a larger old release; otherwise stale files may stay accessible.
+
 ## Passkeys and role permissions
 
 Admin manages users and all tool actions. Operator can add, edit and move tools.

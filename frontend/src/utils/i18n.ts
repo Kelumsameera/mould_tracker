@@ -6,6 +6,14 @@ export type Lang = 'en' | 'si';
 type D = Record<string, unknown>; // error detail values sent by the server
 
 const en = {
+  rackLayout: {
+    title: 'Mould storage & identification', format: 'Location format', formatHint: 'Rack – Pallet / Level – Position',
+    layout: 'Storage rack layout', rack: 'Rack', pallet: 'Pallet / level', position: 'Position', legacy: 'Existing locations',
+    search: 'Find a mould or location', searchHint: 'Mould ID, product ID, description or A-P1-1',
+    positions: 'positions', noPositions: 'No storage positions yet.', table: 'Mould location table', showAll: 'Show all',
+    mould: 'Mould ID', product: 'Product ID', description: 'Description', location: 'Location', cavities: 'Cavities', machine: 'Machine / size',
+    noResults: 'No stored moulds match this selection.', palletFrom: 'Pallet / level from', palletTo: 'Pallet / level to',
+  },
   themeLight: 'Switch to light theme',
   themeDark: 'Switch to dark theme',
   toolType: 'Tool category',
@@ -25,6 +33,7 @@ const en = {
   rolesHelp: 'Super Admin: everything • Admin: moulds and users • Production Supervisor: machine changes • Mould Technician: machine changes, service and repair • Mould Maker: Mould Room, service and repair',
 
   nav: {
+    documentation: 'Documentation',
     find: 'Find a mould', racks: 'Rack view', workshop: 'Workshop queue', admin: 'Admin', superAdmin: 'Super Admin',
     machines: 'Machines', users: 'Users', rackAdmin: 'Rack management', audit: 'Audit log', workReport: 'Work log report', account: 'Account details', menu: 'Menu', closeMenu: 'Close menu',
     language: 'Language', findShort: 'Find', racksShort: 'Racks', workshopShort: 'Workshop', more: 'More', expand: 'Expand menu', collapse: 'Collapse menu', accountMenu: 'Account and menu'
@@ -93,6 +102,9 @@ const en = {
 
   dispatch: { title: 'Out of Service dispatch', recipientName: 'Recipient / Company name', address: 'Address', repairDetails: 'Repair details', sentAt: 'Sent at', returnedAt: 'Returned at' },
   accessAdmin: {
+    roleAccess: 'Role access', userAccess: 'User access', chooseRole: 'Select a role', searchRole: 'Find a role', noRoles: 'No roles found.', builtIn: 'Built-in defaults', resetRole: 'Reset to built-in defaults',
+    roleHint: 'Choose access for everyone in this role. Individual custom access takes priority. Reset individual access to role defaults to inherit these settings.',
+    noRoleAccess: 'No permissions selected. Users inheriting this role can still sign in and manage their own account.',
     title: 'User access', search: 'Find a user by name or email', choose: 'Select a user',
     hint: 'Choose what this user can view and do. Enable viewing permissions when the user needs to open the related screens.',
     defaults: 'Role defaults', custom: 'Custom access', reset: 'Reset to role defaults',
@@ -277,6 +289,14 @@ const en = {
 export type Dict = typeof en;
 
 const si: Dict = {
+  rackLayout: {
+    title: 'Mould ගබඩා කිරීම සහ හඳුනාගැනීම', format: 'Location ආකෘතිය', formatHint: 'Rack – Pallet / තට්ටුව – ස්ථානය',
+    layout: 'ගබඩා rack සැලැස්ම', rack: 'Rack', pallet: 'Pallet / තට්ටුව', position: 'ස්ථානය', legacy: 'පැරණි locations',
+    search: 'Mould එකක් හෝ location එකක් සොයන්න', searchHint: 'Mould ID, Product ID, විස්තරය හෝ A-P1-1',
+    positions: 'ස්ථාන', noPositions: 'තවම ගබඩා ස්ථාන නැහැ.', table: 'Mould location වගුව', showAll: 'සියල්ල පෙන්වන්න',
+    mould: 'Mould ID', product: 'Product ID', description: 'විස්තරය', location: 'Location', cavities: 'Cavities', machine: 'Machine / ප්‍රමාණය',
+    noResults: 'මෙම තේරීමට ගැළපෙන moulds නැහැ.', palletFrom: 'Pallet / තට්ටුව සිට', palletTo: 'Pallet / තට්ටුව දක්වා',
+  },
   themeLight: 'Light theme එකට මාරු කරන්න',
   themeDark: 'Dark theme එකට මාරු කරන්න',
   toolType: 'Tool වර්ගය',
@@ -296,6 +316,7 @@ const si: Dict = {
   rolesHelp: 'Super Admin: සියල්ල • Admin: moulds සහ users • නිෂ්පාදන අධීක්ෂක: මැෂින් වෙනස් කිරීම් • Mould තාක්ෂණ ශිල්පී: මැෂින් වෙනස් කිරීම්, service සහ අලුත්වැඩියා • Mould සාදන්නා: Mould කාමරය, service සහ අලුත්වැඩියා',
 
   nav: {
+    documentation: 'භාවිත උපදෙස්',
     find: 'Mould එකක් සොයන්න', racks: 'Racks බලන්න', workshop: 'Workshop පෝලිම', admin: 'Admin', superAdmin: 'Super Admin',
     machines: 'මැෂින්', users: 'Users', rackAdmin: 'Racks කළමනාකරණය', audit: 'Audit සටහන්', workReport: 'වැඩ සටහන් වාර්තාව', account: 'ගිණුම් විස්තර', menu: 'මෙනුව', closeMenu: 'මෙනුව වහන්න',
     language: 'භාෂාව', findShort: 'සොයන්න', racksShort: 'Racks', workshopShort: 'Workshop', more: 'තවත්', expand: 'මෙනුව විහිදන්න', collapse: 'මෙනුව හකුළන්න', accountMenu: 'ගිණුම සහ මෙනුව'
@@ -364,6 +385,9 @@ const si: Dict = {
 
   dispatch: { title: 'Out of Service යැවූ විස්තර', recipientName: 'ලබන්නාගේ / ආයතනයේ නම', address: 'ලිපිනය', repairDetails: 'අලුත්වැඩියා විස්තර', sentAt: 'යැවූ දිනය', returnedAt: 'නැවත ලැබුණු දිනය' },
   accessAdmin: {
+    roleAccess: 'Role access', userAccess: 'User access', chooseRole: 'Role එකක් තෝරන්න', searchRole: 'Role එකක් සොයන්න', noRoles: 'Roles හමු නොවුණි.', builtIn: 'මුල් අවසර', resetRole: 'මුල් අවසර වෙත යළි සකසන්න',
+    roleHint: 'මෙම role එකේ සියලු users සඳහා access තෝරන්න. User කෙනෙකුගේ custom access එකට ප්‍රමුඛතාව ලැබේ. Role access ලබාගැනීමට එම userගේ access role defaults වෙත යළි සකසන්න.',
+    noRoleAccess: 'අවසර තෝරා නැත. මෙම role එකේ අවසර භාවිත කරන usersට login වී තම account එක කළමනාකරණය කළ හැක.',
     title: 'User access පාලනය', search: 'නම හෝ email එකෙන් user සොයන්න', choose: 'User කෙනෙක් තෝරන්න',
     hint: 'මේ userට බලන්න සහ කරන්න පුළුවන් දේ තෝරන්න. අදාළ pages විවෘත කිරීමට view permissions ද ලබා දෙන්න.',
     defaults: 'Role එකේ සාමාන්‍ය access', custom: 'වෙනම සකස් කළ access', reset: 'Role එකේ සාමාන්‍ය access නැවත යොදන්න',

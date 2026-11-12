@@ -1,3 +1,4 @@
+import RoleAccess from "../models/RoleAccess.js";
 import { test, before, after, mock } from "node:test";
 import assert from "node:assert/strict";
 import express from "express";
@@ -17,6 +18,8 @@ const ALL = ROLES, ADMINS = ["super_admin", "admin"], SA = ["super_admin"];
 
 let server, base, tables;
 before(async () => {
+  mock.method(RoleAccess, "findOne", async () => null);
+  mock.method(RoleAccess, "find", async () => []);
   mock.method(User, "findById", (id) => ({ select: async () => Object.values(users).find((u) => String(u._id) === String(id)) }));
   // Let privacy setup finish so permission tests still exercise the route handler.
   mock.method(User, "find", () => ({
@@ -54,7 +57,7 @@ const EXPECTED = {
   "racks POST /": SA, "racks PATCH /:id": SA, "racks DELETE /:id": SA,
   "audit GET /": SA,
   "machines GET /": ALL, "machines POST /": ADMINS, "machines PATCH /:id": ADMINS,
-  "users GET /access": ["system_admin"], "users PATCH /:id/access": ["system_admin"],
+  "users PATCH /roles/:role/access": ["system_admin"], "users GET /access": ["system_admin"], "users PATCH /:id/access": ["system_admin"],
   "users GET /": ADMINS, "users POST /": ADMINS, "users PATCH /:id": ADMINS, "users DELETE /:id": ADMINS,
   // Work log: production supervisors view only; the report and export are for Admins.
   "moulds GET /:id/worklogs": ALL,

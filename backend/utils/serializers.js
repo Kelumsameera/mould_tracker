@@ -7,7 +7,7 @@ const idOf = (v) => (v == null ? null : String(v._id ?? v));
 const uploadUrl = (p) => (p ? `/uploads/${p}` : null); // relative to the API base
 
 export const machineRef = (m) => (m && m.code ? { id: String(m._id), code: m.code, name: m.name } : null);
-export const rackRef = (r) => (r && r.locationId ? { id: String(r._id), zone: r.zone, row: r.row, number: r.number, code: r.code, locationId: r.locationId } : null);
+export const rackRef = (r) => (r && r.locationId ? { id: String(r._id), zone: r.zone, row: r.row, number: r.number, pallet: r.pallet ?? null, code: r.code, locationId: r.locationId } : null);
 const userRef = (u) => (u && u.name ? { id: String(u._id), name: u.name } : null);
 
 export const userDTO = (u) => ({

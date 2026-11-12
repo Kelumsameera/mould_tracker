@@ -62,6 +62,8 @@ async function withPlace(mould, session) {
 async function rackForMove(rackId, mouldId, session) {
   if (!rackId) return { rack: null, rackOccupancy: 0 };
   const rack = await Rack.findById(rackId).session(session).lean();
+  // Serialize placements on a physical position; concurrent moves cannot both claim it.
+  if (rack) await Rack.updateOne({ _id: rack._id }, { $inc: { occupancyVersion: 1 } }, { session });
   if (!rack) fail(404, "NOT_FOUND", "Rack not found");
   const zone = await Zone.findOne({ code: rack.zone }).session(session).lean();
   const rackOccupancy = await Mould.countDocuments({ rackId: rack._id, deletedAt: null, _id: { $ne: mouldId } }).session(session);
@@ -310,6 +312,11 @@ export async function restoreMould(req, res) {
     const doc = await loadForUpdate(req.params.id, session);
     if (!doc.deletedAt) fail(400, "NO_CHANGE", `${doc.toolId} is not deleted`);
     await assertToolIdFree(doc.toolId, doc._id, session);
+    if (doc.location === "MOULD_ROOM" && doc.rackId) {
+      const { rack, rackOccupancy } = await rackForMove(doc.rackId, doc._id, session);
+      if (!rack || !rack.active || rack.deletedAt || !rack.zoneActive) fail(409, "RACK_INACTIVE", "The original storage position is not in use");
+      if (rack.capacity != null && rackOccupancy >= rack.capacity) fail(409, "RACK_FULL", `Position ${rack.locationId} is full; move the occupying mould before restoring`);
+    }
     doc.deletedAt = null;
     doc.deletedBy = null;
     doc.version += 1;

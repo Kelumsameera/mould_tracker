@@ -1,14 +1,15 @@
-// Builds docs/*.md into a static website at docs/site/. Run: cd docs/site-builder && npm install && npm run build
+// Builds only the explicitly approved user guide into docs/site/.
 import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
-import { DOCS, loadPages } from "./pages.mjs";
+import { DOCS } from "./pages.mjs";
+import { loadPublicPages } from "./public-pages.mjs";
 
 const OUT = path.join(DOCS, "site");
 const toHtml = (r) => r.replace(/(^|\/)README\.md$/, "$1index.html").replace(/\.md$/, ".html");
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
-const { pages, byRel, sections } = loadPages();
+const { pages, byRel, sections } = loadPublicPages();
 
 const slug = (t) => t.toLowerCase().replace(/<[^>]+>/g, "").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-");
 
@@ -61,8 +62,7 @@ function render(page) {
 <button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
 <aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)">${nav}</aside>
 <main class="main"><article class="doc">${html.replace("</h1>", `</h1>${page.meta.description ? `<p class="lead">${esc(page.meta.description)}</p>` : ""}<div class="chips">${chips}</div>`)}
-<footer class="foot">Source: <code>docs/${esc(page.rel)}</code></footer></article>${tocHtml}</main>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<footer class="foot">Mould Tracker user guide</footer></article>${tocHtml}</main>
 <script src="${up}assets/docs.js"></script></body></html>`;
 }
 

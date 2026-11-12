@@ -5,6 +5,7 @@ import {
   LuArchiveRestore,
   LuArrowRightLeft,
   LuBox,
+  LuBookOpen,
   LuCamera,
   LuChartBar,
   LuCheck,
@@ -52,6 +53,7 @@ import {
 import type { Location, MouldStatus, WorkType } from "@/utils/types";
 
 export const ICONS = {
+  documentation: LuBookOpen,
   sun: LuSun,
   moon: LuMoon,
   search: LuSearch,

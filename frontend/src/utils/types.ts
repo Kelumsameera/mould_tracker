@@ -11,9 +11,10 @@ export const SERVICE_STATUSES: MouldStatus[] = ['NEEDS_SERVICE', 'NEEDS_REPAIR',
 export interface User { id: string; name: string; email: string; role: Role; language: 'en' | 'si'; active: boolean; permissions: Permission[] }
 
 export interface UserAccess extends User { permissionOverrides: Permission[] | null; rolePermissions: Permission[] }
+export interface RoleAccess { role: Role; permissionOverrides: Permission[] | null; permissions: Permission[] }
 
 export interface MachineRef { id: string; code: string; name: string }
-export interface RackRef { id: string; zone: string; row: string; number: number; code: string; locationId: string }
+export interface RackRef { id: string; zone: string; row: string; number: number; pallet?: number | null; code: string; locationId: string }
 export interface ItemImage { url: string; thumbUrl: string; width: number | null; height: number | null }
 
 export interface Item {
@@ -50,7 +51,7 @@ export interface Movement {
 
 export interface Machine { id: string; code: string; name: string; active: boolean; mould: { id: string; toolId: string } | null }
 
-export interface MouldChip { id: string; toolId: string; status: MouldStatus; owner: string | null }
+export interface MouldChip { id: string; toolId: string; status: MouldStatus; owner: string | null; size?: string; capableMachines?: string[]; items?: (Pick<Item, 'itemId' | 'description' | 'cavities'> & { thumbUrl?: string | null })[] }
 export interface Rack extends RackRef { capacity: number | null; active: boolean; note: string; occupancy: number; moulds: MouldChip[] }
 export interface Zone { id: string; code: string; name: string; active: boolean; sortOrder: number; racks: Rack[] }
 

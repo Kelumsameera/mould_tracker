@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { can } from "../lib/permissions.js";
+import { loadRoleAccess } from "../lib/roleAccess.js";
 
 export async function requireAuth(req, res, next) {
   try {
@@ -12,7 +13,7 @@ export async function requireAuth(req, res, next) {
     if (!user || !user.active || user.deletedAt) {
       return res.status(401).json({ success: false, message: "Invalid user session" });
     }
-    req.user = user;
+    req.user = await loadRoleAccess(user);
     next();
   } catch {
     return res.status(401).json({ success: false, message: "Invalid or expired session" });
