@@ -18,7 +18,7 @@ const ACTION_BTN = "min-h-14 px-3 py-2 rounded-md border-[1.5px] border-solid bo
 const WHERE_BG: Record<string, string> = { MACHINE: "bg-machine-bg", PRODUCTION_FLOOR: "bg-floor-bg", MOULD_ROOM: "bg-room-bg", TOOL_ROOM: "bg-room-bg", WORKSHOP: "bg-workshop-bg" };
 const DOT_TONE: Record<string, string> = { MACHINE: "bg-machine-bg text-machine", PRODUCTION_FLOOR: "bg-floor-bg text-floor", MOULD_ROOM: "bg-room-bg text-room", TOOL_ROOM: "bg-room-bg text-room", WORKSHOP: "bg-workshop-bg text-workshop" };
 import { locationName, type Dict, type Lang } from "@/utils/i18n";
-import { can, canMoveTo } from "@/utils/permissions";
+import { can, canEditMoulds, canMoveTo } from "@/utils/permissions";
 import { type Mould, type MouldStatus, type Movement, type User, type WorkLog, type WorkOutcome } from "@/utils/types";
 import { useCallback, useEffect, useState } from "react";
 import MouldActions, { type MouldAction } from "./MouldActions";
@@ -269,11 +269,11 @@ export default function MouldSheet({
       actions.push({ key: "WORKSHOP", label: mould.location === "OUT_OF_SERVICE" ? translations.act.returnToWorkshop : translations.act.toWorkshop });
     if (canMoveTo(user, mould.location, "OUT_OF_SERVICE"))
       actions.push({ key: "OUT_OF_SERVICE", label: translations.act.outOfService });
-    if (mould.location === "WORKSHOP" && can(user, "workshop.work"))
+    if (mould.location === "WORKSHOP" && can(user, "status.change"))
       actions.push({ key: "STATUS", label: translations.act.changeStatus });
     if (
       mould.location === "MACHINE" &&
-      (can(user, "moves.machine") || can(user, "workshop.work"))
+      (can(user, "move.machine") || can(user, "status.change"))
     )
       actions.push({ key: "SHOTS", label: translations.act.recordShots });
   }
@@ -545,7 +545,7 @@ export default function MouldSheet({
                       </span>
                     )}
                   </button>
-                ) : can(user, "moulds.manage") && !mould.deletedAt ? (
+                ) : can(user, "mould.images.manage") && !mould.deletedAt ? (
                   <button
                     type="button"
                     className="w-[76px] [aspect-ratio:1] shrink-0 rounded-md [border:1.5px_dashed_var(--ink-faint)] bg-surface-2 p-1 cursor-pointer flex flex-col gap-1 items-center justify-center text-center text-[11px] font-extrabold text-ink-soft"
@@ -780,8 +780,9 @@ export default function MouldSheet({
             )}
           </div>
 
-          {can(user, "moulds.manage") &&
+          {(canEditMoulds(user) || can(user, "mould.delete")) &&
             (mould.deletedAt ? (
+              can(user, "mould.delete") &&
               <button
                 className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface text-ink-soft border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
                 disabled={busy}
@@ -792,6 +793,7 @@ export default function MouldSheet({
               </button>
             ) : (
               <>
+                {canEditMoulds(user) && (
                 <button
                   className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface text-ink-soft border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
                   onClick={() => onEdit(mould)}
@@ -799,7 +801,8 @@ export default function MouldSheet({
                   <Icon name="edit" />
                   {translations.detail.edit}
                 </button>
-                {mould.location !== "MACHINE" && (
+                )}
+                {mould.location !== "MACHINE" && can(user, "mould.delete") && (
                   <button
                     className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96 text-danger"
                     disabled={busy}

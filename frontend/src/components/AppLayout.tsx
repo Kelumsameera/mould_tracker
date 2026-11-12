@@ -7,7 +7,7 @@ const BOTTOM_ITEM = "no-underline min-h-(--nav-h) border-0 bg-transparent flex f
 import { PAGE_PATHS, getPageName, type PageName } from "@/utils/helpers";
 import { api, ApiError } from "@/utils/api";
 import { I18N, type Dict, type Lang } from "@/utils/i18n";
-import { can, canVisitPage } from "@/utils/permissions";
+import { can, canEditMoulds, canVisitPage } from "@/utils/permissions";
 import type { Mould, User } from "@/utils/types";
 import Sidebar from "@/components/Sidebar";
 import MouldSheet from "@/components/MouldSheet";
@@ -144,8 +144,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const allowed = user ? canVisitPage(user, view) : true;
   useEffect(() => {
-    if (user && !allowed) router.replace(canVisitPage(user, "find") ? PAGE_PATHS.find : PAGE_PATHS.account);
-  }, [user, allowed, router]);
+    if (user?.mustChangePassword && view !== "account") router.replace(PAGE_PATHS.account); // seeded account: new password first
+    else if (user && !allowed) router.replace(canVisitPage(user, "find") ? PAGE_PATHS.find : PAGE_PATHS.account);
+  }, [user, allowed, router, view]);
 
   // A 401 anywhere means the session ended.
   useEffect(() => {
@@ -214,7 +215,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         {children}
 
         {(view === "find" || view === "extrusion") &&
-          can(user, "moulds.manage") && (
+          can(user, "mould.create") && (
             <button
               className="fixed right-[calc(var(--s4)+var(--safe-r))] bottom-[calc(var(--nav-h)+var(--safe-b)+var(--s4))] md:right-6 md:bottom-6 bg-action text-white border-0 w-14.5 h-14.5 rounded-[18px] [box-shadow:0_12px_24px_rgba(36,107,117,.34)] flex items-center justify-center cursor-pointer z-20"
               onClick={() => setFormFor("new")}
@@ -276,7 +277,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         onChanged={changed}
         onEdit={(mould) => setFormFor(mould)}
       />
-      {can(user, "moulds.manage") && (
+      {(canEditMoulds(user) || can(user, "mould.create")) && (
         <MouldFormSheet
           open={formFor !== null}
           mould={formFor === "new" ? null : formFor}

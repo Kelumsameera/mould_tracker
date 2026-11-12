@@ -1,86 +1,86 @@
-// Mirrors backend/lib/permissions.js. The server decides; /api/auth/me returns the caller's
-// permission list and the UI only uses it to show or hide controls.
+// Mirrors backend/lib/permissions.js. The server decides; /api/auth/me returns the caller's EFFECTIVE
+// permission list (role matrix + personal grants - denies) and the UI only uses it to show or hide controls.
 import type { User } from "@/utils/types";
 import type { PageName } from "./helpers";
 
 export const ROLES = [
+  "system_admin",
   "super_admin",
   "admin",
   "production_supervisor",
   "mould_technician",
   "mould_maker",
-  "system_admin",
+  "executive",
 ] as const;
 export type Role = (typeof ROLES)[number];
 
-export type Permission =
-  | "move.outOfService"
-  | "access.manage"
-  | "settings.manage"
-  | "rack.manage"
-  | "rack.view"
-  | "import.run"
-  | "export.run"
-  | "audit.view"
-  | "users.manage"
-  | "moulds.manage"
-  | "moves.machine"
-  | "move.mouldroom"
-  | "workshop.work"
-  | "machines.override"
-  | "mould.view"
-  | "worklog.create"
-  | "worklog.view"
-  | "worklog.report"
-  | "problem.report";
+export const PERMISSIONS = [
+  "mould.view",
+  "mould.create",
+  "mould.edit",
+  "mould.machines.edit",
+  "mould.images.manage",
+  "mould.delete",
+  "move.machine",
+  "move.floor",
+  "move.mouldroom",
+  "move.workshop",
+  "move.isolation",
+  "move.outOfService",
+  "status.change",
+  "machines.override",
+  "worklog.create",
+  "worklog.view",
+  "worklog.report",
+  "problem.report",
+  "cavity.manage",
+  "rack.view",
+  "rack.manage",
+  "users.manage",
+  "access.manage",
+  "import.run",
+  "audit.view",
+  "export.run",
+  "settings.manage",
+] as const;
+export type Permission = (typeof PERMISSIONS)[number];
 
 export const can = (user: User | null | undefined, permission: Permission) =>
   Boolean(user?.permissions?.includes(permission));
+export const canAny = (user: User | null | undefined, ...permissions: Permission[]) => permissions.some((p) => can(user, p));
+
+// Anything in the mould edit form (details, machines, pictures).
+export const canEditMoulds = (user: User | null | undefined) => canAny(user, "mould.edit", "mould.machines.edit", "mould.images.manage");
 
 export function canVisitPage(user: User, page: PageName) {
-  if (page === "access") return can(user, "access.manage");
-  if (["find", "extrusion", "workshop"].includes(page)) return can(user, "mould.view");
+  if (page === "access") return true; // System Administrator edits; everyone else sees their own access
+  if (["find", "extrusion", "workshop", "isolation", "dashboard"].includes(page)) return can(user, "mould.view");
   if (page === "racks") return can(user, "rack.view");
-  if (page === "machines") return can(user, "moulds.manage");
+  if (page === "machines") return can(user, "mould.edit");
   if (page === "audit") return can(user, "audit.view");
   if (page === "workReport") return can(user, "worklog.report");
   if (page === "users") return can(user, "users.manage");
-  if (page === "rackAdmin") {
-    return can(user, "rack.manage") || can(user, "moulds.manage");
-  }
+  if (page === "rackAdmin") return can(user, "rack.manage") || can(user, "mould.edit");
   return true;
 }
 
-// Only a System Administrator may assign the protected role.
-export const assignableRoles = (
-  user: User | null | undefined,
-): readonly Role[] =>
-  user?.role === "system_admin"
-    ? ROLES
-    : ROLES.filter((r) => r !== "system_admin" && (r !== "super_admin" || user?.role === "super_admin"));
+// Mirrors ASSIGNABLE_ROLES in backend/lib/permissions.js.
+const ASSIGNABLE: Partial<Record<Role, readonly Role[]>> = {
+  system_admin: ROLES,
+  super_admin: ["admin", "production_supervisor", "mould_technician", "mould_maker", "executive"],
+  admin: ["production_supervisor", "mould_technician", "mould_maker", "executive"],
+};
+export const assignableRoles = (user: User | null | undefined): readonly Role[] => (user ? ASSIGNABLE[user.role] ?? [] : []);
 
+const STORAGE = ["MOULD_ROOM", "TOOL_ROOM"];
 // Mirrors movePermissionGroups in backend/lib/workflow.js: one permission from every group is needed.
-export function canMoveTo(
-  user: User | null | undefined,
-  from: string,
-  to: string,
-) {
-  if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") {
-    return from !== to && can(user, "move.outOfService");
-  }
+export function canMoveTo(user: User | null | undefined, from: string, to: string) {
+  if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return from !== to && can(user, "move.outOfService");
   const groups: Permission[][] = [];
-  if (
-    (["MOULD_ROOM", "TOOL_ROOM"].includes(from) && to !== "MACHINE") ||
-    ["MOULD_ROOM", "TOOL_ROOM"].includes(to)
-  )
-    groups.push(["move.mouldroom"]);
-  if (to === "MACHINE") groups.push(["moves.machine"]);
-  if (to === "WORKSHOP") groups.push(["workshop.work"]);
-  if (to === "PRODUCTION_FLOOR" && !["MOULD_ROOM", "TOOL_ROOM"].includes(from))
-    groups.push(
-      from === "WORKSHOP"
-        ? ["moves.machine", "workshop.work"]
-        : ["moves.machine"],
-    );
+  if (to === "ISOLATION") groups.push(["move.isolation"]); // leaving Isolation needs the destination's permission
+  if ((STORAGE.includes(from) && to !== "MACHINE") || STORAGE.includes(to)) groups.push(["move.mouldroom"]);
+  if (to === "MACHINE") groups.push(["move.machine"]);
+  if (to === "WORKSHOP") groups.push(["move.workshop"]);
+  if (to === "PRODUCTION_FLOOR" && !STORAGE.includes(from)) groups.push(from === "WORKSHOP" ? ["move.floor", "move.workshop"] : ["move.floor"]);
   return groups.every((g) => g.some((p) => can(user, p)));
 }

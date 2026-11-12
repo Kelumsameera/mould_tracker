@@ -34,10 +34,8 @@ export default function UsersPage() {
     if (listedUser.id === currentUser.id) {
       return true;
     }
-    if (listedUser.role === "super_admin" && !["system_admin", "super_admin"].includes(currentUser.role)) {
-      return true;
-    }
-    return false;
+    // Only roles the current user may assign can be managed (mirrors ASSIGNABLE_ROLES on the server).
+    return !roles.includes(listedUser.role);
   }
 
   function renderRoleOptions(currentRole?: Role) {
@@ -230,7 +228,12 @@ export default function UsersPage() {
             key={listedUser.id}
           >
             <div className="flex-1 min-w-[180px] flex flex-col text-md [&_small]:text-ink-soft [&_small]:overflow-hidden [&_small]:text-ellipsis">
-              <b>{listedUser.name}</b>
+              <b>
+                {listedUser.name}
+                {listedUser.hasAccessOverrides && (
+                  <span className="ml-2 text-[11px] font-extrabold rounded-pill px-1.5 bg-warn-bg text-warn-ink align-middle">{translations.accessAdmin.overrides}</span>
+                )}
+              </b>
               <small>{listedUser.email}</small>
               <span>
                 <button

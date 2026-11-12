@@ -1,6 +1,7 @@
 // All UI text, English and Sinhala. `si` is typed as `Dict`, so a missing Sinhala string fails the build.
 // "Mould Room" lives in exactly one key (`mouldRoom`); everything else refers to it.
 import type { Location, MouldStatus, Role, WorkType } from "@/utils/types";
+import type { Permission } from "@/utils/permissions";
 
 export type Lang = 'en' | 'si';
 type D = Record<string, unknown>; // error detail values sent by the server
@@ -29,7 +30,7 @@ const en = {
   brandSub: 'Find any mould in seconds',
   loc: { MACHINE: 'Machine', PRODUCTION_FLOOR: 'Production Floor', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' } as Record<Exclude<Location, 'MOULD_ROOM'>, string>,
   status: { GOOD: 'Good', NEEDS_SERVICE: 'Needs service', NEEDS_REPAIR: 'Needs repair', IN_SERVICE: 'In service', IN_REPAIR: 'In repair' } as Record<MouldStatus, string>,
-  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'Production Supervisor', mould_technician: 'Mould Technician', mould_maker: 'Mould Maker' } as Record<Role, string>,
+  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'Production Supervisor', mould_technician: 'Mould Technician', mould_maker: 'Mould Maker', executive: 'Executive' } as Record<Role, string>,
   rolesHelp: 'Super Admin: everything • Admin: moulds and users • Production Supervisor: machine changes • Mould Technician: machine changes, service and repair • Mould Maker: Mould Room, service and repair',
 
   nav: {
@@ -112,15 +113,26 @@ const en = {
     protected: 'System Administrator accounts always have full access and cannot be restricted here.',
     noAccess: 'No permissions selected. This user can still sign in and manage their own account.',
     labels: {
-      'moves.outOfService': 'Send out of service / return to Workshop (Super Admin only)',
-      'settings.manage': 'Manage system settings', 'racks.manage': 'Manage zones and racks', 'racks.view': 'View racks',
-      'import.run': 'Import data', 'export.run': 'Export data', 'audit.view': 'View audit log',
-      'users.manage': 'Manage users and roles', 'moulds.manage': 'Manage moulds, dies, items and machines',
-      'moves.machine': 'Mount and move moulds on machines', 'moves.mouldRoom': 'Move moulds to and from storage',
-      'workshop.work': 'Update workshop status and perform workshop actions', 'machines.override': 'Override machine compatibility with a reason',
-      'worklog.create': 'Record work', 'worklog.view': 'View work history', 'worklog.report': 'View and export work reports',
-      'problem.report': 'Report problems', 'moulds.view': 'View moulds, dies, machines and workshop queue', 'access.manage': 'Manage user access'
-    }
+      'mould.view': 'View moulds, search, history and timeline', 'mould.create': 'Add moulds and dies', 'mould.edit': 'Edit mould details, items and cavities',
+      'mould.machines.edit': 'Edit capable machines', 'mould.images.manage': 'Add, replace and remove pictures', 'mould.delete': 'Remove and restore moulds',
+      'move.machine': 'Mount on a machine', 'move.floor': 'Move to / from the Production Floor', 'move.mouldroom': 'Move into / out of the Mould Room',
+      'move.workshop': 'Send to the Workshop', 'move.isolation': 'Send to the Isolation Area', 'move.outOfService': 'Send out of service / return (Super Admin only)',
+      'status.change': 'Change status at the Workshop', 'machines.override': 'Override machine compatibility with a reason',
+      'worklog.create': 'Record work', 'worklog.view': 'View work history', 'worklog.report': 'Work log report and cavity downtime',
+      'problem.report': 'Report problems', 'cavity.manage': 'Run with blocked cavities / restore cavities',
+      'rack.view': 'View racks', 'rack.manage': 'Manage zones and racks', 'users.manage': 'Manage users and roles',
+      'access.manage': 'Manage access (System Administrator only)', 'import.run': 'Import data', 'audit.view': 'View audit log',
+      'export.run': 'Export reports', 'settings.manage': 'Manage system settings'
+    } as Record<Permission, string>,
+    tabs: { roles: 'Roles', users: 'Users' }, permission: 'Permission', resetDefaults: 'Reset to defaults',
+    fromRole: 'from role', granted: 'extra (granted)', denied: 'removed (denied)', notIncluded: 'not included',
+    expiry: 'Expires (optional)', reason: 'Reason', reasonHint: 'Required. Saved in the audit log.', reasonRequired: 'Enter a reason (3+ characters).',
+    effective: 'Effective permissions', effectiveCount: (n: number) => `${n} permissions`, resetUser: 'Reset this user to role defaults',
+    overrides: 'Custom access', expired: 'expired', expires: (d: string) => `until ${d}`, save: 'Save access',
+    confirmMatrix: (role: string) => `Change the permissions of every ${role}?`, confirmUser: (name: string) => `Change the access of ${name}?`,
+    confirmReset: (name: string) => `Reset ${name} to the role defaults?`, confirmTitle: 'Change access',
+    myAccess: 'My access', myAccessHint: 'Only a System Administrator can change access. This is what you can do now.',
+    tapToCycle: 'Tap a permission to switch it between role default, extra and removed.'
   },
   machineAdmin: {
     search: 'Search machine code, name or mounted mould', retry: 'Try again', empty: 'No machines found.',
@@ -239,7 +251,7 @@ const en = {
   name: 'Name', role: 'Role', active: 'Active', disabled: 'Disabled', userSaved: 'User saved', userAdded: 'User added', userDeleted: 'User deleted',
 
   signIn: 'Sign in', signingIn: 'Signing in…', email: 'Email', password: 'Password', signOut: 'Sign out', loginSub: 'Sign in to see where every mould is.',
-  accountTitle: 'Account details', accountSaved: 'Account details updated', keepPassword: 'Leave new password blank to keep your current password.',
+  accountTitle: 'Account details', mustChangePassword: 'Choose a new password before you continue. Enter your current password and a new one below.', accountSaved: 'Account details updated', keepPassword: 'Leave new password blank to keep your current password.',
   currentPassword: 'Current password', newPassword: 'New password (min 8 characters)', repeatPassword: 'Repeat new password',
   pwMismatch: 'The two new passwords do not match', saveBtn: 'Save changes', close: 'Close', cancel: 'Cancel', loading: 'Loading…', reload: 'Reload',
   install: {
@@ -287,6 +299,12 @@ const en = {
     DONE_AT_FUTURE: () => 'The work time cannot be in the future.',
     INVALID_CORRECTION: () => 'The entry being corrected was not found.',
     INVALID_PHOTO: () => 'Photos must be JPEG, PNG or WebP pictures.',
+    LAST_SYSTEM_ADMIN: () => 'There must always be at least one active System Administrator.',
+    STALE_ACCESS: () => 'Someone else changed this access meanwhile. Reload and try again.',
+    PASSWORD_CHANGE_REQUIRED: () => 'Change your password first.',
+    ROLE_LOCKED: () => 'System Administrator access is always everything.',
+    SUPER_ADMIN_ONLY: () => 'Out of Service access is reserved for Super Admins.',
+    INVALID_EXPIRY: () => 'The expiry must be in the future.',
     TOO_MANY_IMAGES: () => 'This item already has the maximum number of pictures.',
     DUPLICATE_IMAGE: () => 'This picture is already on the item.',
     INVALID_ORDER: () => 'The pictures changed meanwhile. Reopen the form and try again.',
@@ -321,7 +339,7 @@ const si: Dict = {
   brandSub: 'ඕනෑම mould එකක් තත්පර කිහිපයකින් සොයන්න',
   loc: { MACHINE: 'මැෂිම', PRODUCTION_FLOOR: 'Production Floor', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' },
   status: { GOOD: 'හොඳ තත්ත්වයේ', NEEDS_SERVICE: 'Service කළ යුතුයි', NEEDS_REPAIR: 'අලුත්වැඩියා කළ යුතුයි', IN_SERVICE: 'Service වෙමින්', IN_REPAIR: 'අලුත්වැඩියා වෙමින්' },
-  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'නිෂ්පාදන අධීක්ෂක', mould_technician: 'Mould තාක්ෂණ ශිල්පී', mould_maker: 'Mould සාදන්නා' },
+  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'නිෂ්පාදන අධීක්ෂක', mould_technician: 'Mould තාක්ෂණ ශිල්පී', mould_maker: 'Mould සාදන්නා', executive: 'විධායක' },
   rolesHelp: 'Super Admin: සියල්ල • Admin: moulds සහ users • නිෂ්පාදන අධීක්ෂක: මැෂින් වෙනස් කිරීම් • Mould තාක්ෂණ ශිල්පී: මැෂින් වෙනස් කිරීම්, service සහ අලුත්වැඩියා • Mould සාදන්නා: Mould කාමරය, service සහ අලුත්වැඩියා',
 
   nav: {
@@ -404,15 +422,26 @@ const si: Dict = {
     protected: 'System Administratorට සැමවිටම සම්පූර්ණ access ඇත. එම accounts මෙතැනින් සීමා කළ නොහැක.',
     noAccess: 'Permissions තෝරා නැහැ. මේ userට sign in වී තමන්ගේ account එක පාලනය කරන්න තවමත් පුළුවන්.',
     labels: {
-      'moves.outOfService': 'Send out of service / return to Workshop (Super Admin only)',
-      'settings.manage': 'System settings වෙනස් කරන්න', 'racks.manage': 'Zones සහ racks පාලනය කරන්න', 'racks.view': 'Racks බලන්න',
-      'import.run': 'Data import කරන්න', 'export.run': 'Data export කරන්න', 'audit.view': 'Audit සටහන් බලන්න',
-      'users.manage': 'Users සහ roles පාලනය කරන්න', 'moulds.manage': 'Moulds, dies, items සහ machines වෙනස් කරන්න',
-      'moves.machine': 'Machines වලට moulds සවි කරන්න සහ මාරු කරන්න', 'moves.mouldRoom': 'ගබඩාවට සහ ගබඩාවෙන් moulds මාරු කරන්න',
-      'workshop.work': 'Workshop status සහ වැඩ පාලනය කරන්න', 'machines.override': 'හේතුවක් දී machine compatibility override කරන්න',
-      'worklog.create': 'වැඩ සටහන් කරන්න', 'worklog.view': 'වැඩ ඉතිහාසය බලන්න', 'worklog.report': 'වැඩ වාර්තා බලන්න සහ export කරන්න',
-      'problem.report': 'ගැටලු වාර්තා කරන්න', 'moulds.view': 'Moulds, dies, machines සහ workshop පෝලිම බලන්න', 'access.manage': 'User access පාලනය කරන්න'
-    }
+      'mould.view': 'Moulds, සෙවීම, ඉතිහාසය සහ timeline බලන්න', 'mould.create': 'Moulds සහ dies එකතු කරන්න', 'mould.edit': 'Mould විස්තර, items සහ cavities සංස්කරණය',
+      'mould.machines.edit': 'යොදන්න පුළුවන් machines සංස්කරණය', 'mould.images.manage': 'පින්තූර එකතු කිරීම, මාරු කිරීම, ඉවත් කිරීම', 'mould.delete': 'Moulds ඉවත් කිරීම සහ නැවත ගැනීම',
+      'move.machine': 'Machine එකකට සවි කරන්න', 'move.floor': 'Production Floor එකට / එකෙන් ගෙනයන්න', 'move.mouldroom': 'Mould කාමරයට / කාමරයෙන් ගෙනයන්න',
+      'move.workshop': 'Workshop එකට යවන්න', 'move.isolation': 'Isolation කලාපයට යවන්න', 'move.outOfService': 'Out of service යැවීම / ආපසු ගැනීම (Super Admin පමණයි)',
+      'status.change': 'Workshop එකේදී status වෙනස් කරන්න', 'machines.override': 'හේතුවක් දී machine compatibility override කරන්න',
+      'worklog.create': 'වැඩ සටහන් කරන්න', 'worklog.view': 'වැඩ ඉතිහාසය බලන්න', 'worklog.report': 'වැඩ වාර්තාව සහ cavity downtime',
+      'problem.report': 'ගැටලු වාර්තා කරන්න', 'cavity.manage': 'Cavities වසා run කිරීම / cavities නැවත විවෘත කිරීම',
+      'rack.view': 'Racks බලන්න', 'rack.manage': 'Zones සහ racks පාලනය කරන්න', 'users.manage': 'Users සහ roles පාලනය කරන්න',
+      'access.manage': 'Access පාලනය (System Administrator පමණයි)', 'import.run': 'Data import කරන්න', 'audit.view': 'Audit සටහන් බලන්න',
+      'export.run': 'වාර්තා export කරන්න', 'settings.manage': 'System settings වෙනස් කරන්න'
+    },
+    tabs: { roles: 'Roles', users: 'Users' }, permission: 'අවසරය', resetDefaults: 'මුල් අවසර වෙත යළි සකසන්න',
+    fromRole: 'role එකෙන්', granted: 'අමතර (ලබා දුන්)', denied: 'ඉවත් කළ', notIncluded: 'නැත',
+    expiry: 'කල් ඉකුත් වන දිනය (අත්‍යවශ්‍ය නැත)', reason: 'හේතුව', reasonHint: 'අනිවාර්යයි. Audit සටහනේ save වෙනවා.', reasonRequired: 'හේතුවක් ලියන්න (අකුරු 3+).',
+    effective: 'දැනට ඇති අවසර', effectiveCount: (n) => `අවසර ${n}`, resetUser: 'මේ user role එකේ මුල් අවසර වෙත යළි සකසන්න',
+    overrides: 'වෙනම access', expired: 'කල් ඉකුත්', expires: (d) => `${d} දක්වා`, save: 'Access save කරන්න',
+    confirmMatrix: (role) => `හැම ${role} කෙනෙකුගේම අවසර වෙනස් කරන්නද?`, confirmUser: (name) => `${name}ගේ access වෙනස් කරන්නද?`,
+    confirmReset: (name) => `${name} role එකේ මුල් අවසර වෙත යළි සකසන්නද?`, confirmTitle: 'Access වෙනස් කිරීම',
+    myAccess: 'මගේ access', myAccessHint: 'Access වෙනස් කළ හැක්කේ System Administratorට පමණයි. මේ ඔබට දැන් කළ හැකි දේ.',
+    tapToCycle: 'අවසරයක් tap කර role default, අමතර සහ ඉවත් කළ අතර මාරු කරන්න.'
   },
   machineAdmin: {
     search: 'Machine code, නම හෝ mounted mould සොයන්න', retry: 'නැවත උත්සාහ කරන්න', empty: 'මැෂින් හමු වුණේ නෑ.',
@@ -531,7 +560,7 @@ const si: Dict = {
   name: 'නම', role: 'භූමිකාව', active: 'සක්‍රියයි', disabled: 'අක්‍රියයි', userSaved: 'User save කළා', userAdded: 'User එකතු කළා', userDeleted: 'User මකා දැමුවා',
 
   signIn: 'ඇතුල් වෙන්න', signingIn: 'ඇතුල් වෙමින්…', email: 'Email', password: 'Password', signOut: 'ඉවත් වෙන්න', loginSub: 'ඇතුල් වෙලා හැම mould එකක්ම තියෙන තැන බලන්න.',
-  accountTitle: 'ගිණුම් විස්තර', accountSaved: 'ගිණුම් විස්තර වෙනස් කළා', keepPassword: 'Password වෙනස් නොකරන්නේ නම් අලුත් password හිස්ව තබන්න.',
+  accountTitle: 'ගිණුම් විස්තර', mustChangePassword: 'ඉදිරියට යාමට පෙර අලුත් password එකක් තෝරන්න. පහළ වත්මන් password එක සහ අලුත් එක ඇතුළත් කරන්න.', accountSaved: 'ගිණුම් විස්තර වෙනස් කළා', keepPassword: 'Password වෙනස් නොකරන්නේ නම් අලුත් password හිස්ව තබන්න.',
   currentPassword: 'දැන් තියෙන password එක', newPassword: 'අලුත් password එක (අකුරු 8ක්වත්)', repeatPassword: 'අලුත් password එක නැවත',
   pwMismatch: 'අලුත් password දෙක ගැලපෙන්නේ නෑ', saveBtn: 'වෙනස්කම් save කරන්න', close: 'වහන්න', cancel: 'අවලංගු කරන්න', loading: 'පූරණය වෙමින්…', reload: 'නැවත පූරණය',
   install: {
@@ -579,6 +608,12 @@ const si: Dict = {
     DONE_AT_FUTURE: () => 'වැඩ කළ වේලාව අනාගතයේ වෙන්න බෑ.',
     INVALID_CORRECTION: () => 'නිවැරදි කරන සටහන හමු වුණේ නෑ.',
     INVALID_PHOTO: () => 'පින්තූර JPEG, PNG හෝ WebP විය යුතුයි.',
+    LAST_SYSTEM_ADMIN: () => 'අවම වශයෙන් සක්‍රීය System Administrator කෙනෙක් සැමවිටම සිටිය යුතුයි.',
+    STALE_ACCESS: () => 'මේ අතරේ වෙන කෙනෙක් මේ access වෙනස් කළා. Reload කර නැවත උත්සාහ කරන්න.',
+    PASSWORD_CHANGE_REQUIRED: () => 'මුලින්ම ඔබේ password එක වෙනස් කරන්න.',
+    ROLE_LOCKED: () => 'System Administratorට සැමවිටම සියලු අවසර ඇත.',
+    SUPER_ADMIN_ONLY: () => 'Out of Service access Super Adminට පමණයි.',
+    INVALID_EXPIRY: () => 'කල් ඉකුත් වන දිනය අනාගතයේ විය යුතුයි.',
     TOO_MANY_IMAGES: () => 'මේ item එකට උපරිම පින්තූර ගණන දැනටමත් තියෙනවා.',
     DUPLICATE_IMAGE: () => 'මේ පින්තූරය දැනටමත් item එකේ තියෙනවා.',
     INVALID_ORDER: () => 'මේ අතරේ පින්තූර වෙනස් වුණා. Form එක ආයෙත් open කරලා උත්සාහ කරන්න.',

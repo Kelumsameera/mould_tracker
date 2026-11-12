@@ -8,10 +8,11 @@ export const LOCATIONS: Location[] = ['MACHINE', 'PRODUCTION_FLOOR', 'MOULD_ROOM
 export const STATUSES: MouldStatus[] = ['GOOD', 'NEEDS_SERVICE', 'NEEDS_REPAIR', 'IN_SERVICE', 'IN_REPAIR'];
 export const SERVICE_STATUSES: MouldStatus[] = ['NEEDS_SERVICE', 'NEEDS_REPAIR', 'IN_SERVICE', 'IN_REPAIR'];
 
-export interface User { id: string; name: string; email: string; role: Role; language: 'en' | 'si'; active: boolean; permissions: Permission[] }
+export interface User { id: string; name: string; email: string; role: Role; language: 'en' | 'si'; active: boolean; permissions: Permission[]; mustChangePassword?: boolean; hasAccessOverrides?: boolean }
 
-export interface UserAccess extends User { permissionOverrides: Permission[] | null; rolePermissions: Permission[] }
-export interface RoleAccess { role: Role; permissionOverrides: Permission[] | null; permissions: Permission[] }
+export interface AccessOverrides { grant: Permission[]; deny: Permission[]; expiresAt: string | null; reason: string; active: boolean }
+export interface UserAccess extends User { permissionOverrides: AccessOverrides | null; rolePermissions: Permission[]; effectivePermissions: Permission[] }
+export interface RoleAccess { role: Role; customised: boolean; version: number; defaults: Permission[]; permissions: Permission[] }
 
 export interface MachineRef { id: string; code: string; name: string }
 export interface RackRef { id: string; zone: string; row: string; number: number; pallet?: number | null; code: string; locationId: string }

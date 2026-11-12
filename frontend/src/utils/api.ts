@@ -139,8 +139,8 @@ export const api = {
   audit: (f: { entityType?: string; page?: number; limit?: number }) => request<{ total: number; entries: AuditEntry[] }>(`/audit${qs(f)}`),
 
   userAccess: () => request<{ users: UserAccess[]; roles: RoleAccess[]; permissions: Permission[] }>("/users/access"),
-  updateRoleAccess: (role: Role, permissions: Permission[] | null) => request<{ role: RoleAccess }>(`/users/roles/${role}/access`, "PATCH", { permissions }),
-  updateUserAccess: (id: string, permissions: Permission[] | null) => request<{ user: UserAccess }>(`/users/${id}/access`, "PATCH", { permissions }),
+  updateRoleAccess: (role: Role, body: { permissions: Permission[] | null; version?: number; reason: string }) => request<{ role: RoleAccess }>(`/users/roles/${role}/access`, "PATCH", body),
+  updateUserAccess: (id: string, body: { grant: Permission[]; deny: Permission[]; expiresAt: string | null; reason: string }) => request<{ user: UserAccess }>(`/users/${id}/access`, "PATCH", body),
   users: () => request<{ users: User[] }>("/users"),
   createUser: (u: { name: string; email: string; password: string; role: Role }) => request<{ user: User | null }>("/users", "POST", u),
   updateUser: (id: string, patch: { name?: string; email?: string; role?: Role; active?: boolean; password?: string }) => request<{ user: User | null }>(`/users/${id}`, "PATCH", patch),

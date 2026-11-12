@@ -71,8 +71,10 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
 
   if (can(user, "access.manage")) {
     adminLinks.push({ key: "access", label: translations.accessAdmin.title, icon: "admin" });
+  } else if (can(user, "users.manage")) {
+    adminLinks.push({ key: "access", label: translations.accessAdmin.myAccess, icon: "admin" }); // read-only
   }
-  if (can(user, "moulds.manage")) {
+  if (can(user, "mould.edit")) {
     adminLinks.push({ key: "machines", label: translations.nav.machines, icon: "machine" });
   }
   if (can(user, "users.manage")) {
@@ -85,7 +87,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
       icon: "report",
     });
   }
-  if (can(user, "rack.manage") || can(user, "moulds.manage")) {
+  if (can(user, "rack.manage") || can(user, "mould.edit")) {
     adminLinks.push({
       key: "rackAdmin",
       label: translations.nav.rackAdmin,

@@ -12,7 +12,7 @@ import type { Machine } from "@/utils/types";
 
 export default function MachinesPage() {
   const { user, translations, openMould, refreshKey } = useApp();
-  const allowed = can(user, "moulds.manage");
+  const allowed = can(user, "mould.edit");
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
