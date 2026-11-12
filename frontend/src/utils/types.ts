@@ -36,6 +36,7 @@ export interface LimitedRun { since: string; reason: string; problemType: string
 export interface Mould {
   outOfServiceDetails: DispatchDetails | null;
   isolation?: IsolationStay | null;
+  matchedItem?: { itemId: string; description: string } | null; // search hit through an item
   blockedCavities?: number[];
   totalCavities?: number | null;
   limitedRun?: LimitedRun | null;

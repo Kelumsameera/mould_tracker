@@ -8,6 +8,7 @@ import Icon from "@/components/Icon";
 import { api } from "@/utils/api";
 import { errorText } from "@/utils/format";
 import { can, PERMISSIONS, type Permission } from "@/utils/permissions";
+import { matchesQuery } from "@/utils/search";
 import type { RoleAccess, UserAccess } from "@/utils/types";
 
 // Access Control (System Administrator). Everyone else sees a read-only list of their own effective permissions.
@@ -143,7 +144,7 @@ export default function AccessPage() {
   }
 
   const roleList = roles;
-  const visibleUsers = users.filter((u) => `${u.name} ${u.email}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const visibleUsers = users.filter((u) => matchesQuery([u.name, u.email], query));
   const reasonField = (
     <div className="mb-4">
       <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-reason">{t.reason}</label>

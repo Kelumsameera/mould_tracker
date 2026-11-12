@@ -81,7 +81,14 @@ export const api = {
       limited?: boolean;
       deleted?: boolean;
     } = {},
-  ) => request<{ moulds: Mould[] }>(`/moulds${qs(filter)}`),
+  ) => request<{ moulds: Mould[]; didYouMean?: string[] }>(`/moulds${qs(filter)}`),
+  // Live suggestions; pass an AbortSignal so a newer keystroke cancels the older request.
+  suggest: async (q: string, toolType?: import("./types").ToolType, signal?: AbortSignal) => {
+    const res = await fetch(`${BASE}/moulds/suggest${qs({ q, toolType })}`, { credentials: "include", signal });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(res.status, data.message || "Request failed", data.code, data.details || {});
+    return data as { moulds: Mould[]; items: Mould[]; didYouMean: string[] };
+  },
   stats: (toolType?: import("./types").ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
   mould: (id: string) => request<{ mould: Mould }>(`/moulds/${id}`),
   history: (id: string) => request<{ history: Movement[] }>(`/moulds/${id}/history`),

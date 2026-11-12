@@ -210,6 +210,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           onSearch={setSearchQuery}
           onLanguageChange={changeLang}
           onOpenSidebar={() => setNavOpen(true)}
+          userId={user.id}
+          onOpenMould={openMould}
         />
 
         {children}

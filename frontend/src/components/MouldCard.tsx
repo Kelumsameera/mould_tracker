@@ -1,5 +1,6 @@
 "use client";
 
+import Highlight from "@/components/Highlight";
 import AlertBadges, { hasAlertBadges } from "@/components/AlertBadges";
 import Icon from "./Icon";
 import { assetUrl } from "@/utils/api";
@@ -16,9 +17,10 @@ type Props = {
   translations: Dict;
   lang: Lang;
   onOpen: (id: string) => void;
+  query?: string; // current search, for highlighting
 };
 
-export default function MouldCard({ mould, translations, lang, onOpen }: Props) {
+export default function MouldCard({ mould, translations, lang, onOpen, query }: Props) {
   const what = mould.itemIds?.slice(0, 3).join(", ") ?? "";
   return (
     <div
@@ -39,10 +41,15 @@ export default function MouldCard({ mould, translations, lang, onOpen }: Props) 
       </div>
       <div className="flex-1 min-w-0 flex flex-col gap-0.75">
         <div className="flex items-center gap-2 flex-wrap pr-1">
-          <span className={TOOL_ID_TAG}>{mould.toolId}</span>
+          <span className={TOOL_ID_TAG}><Highlight text={mould.toolId} query={query} /></span>
           <StatusBadge status={mould.status} translations={translations} />
         </div>
         <LocationLine mould={mould} translations={translations} compact />
+        {mould.matchedItem && (
+          <div className="text-xs text-ink overflow-hidden text-ellipsis whitespace-nowrap">
+            {translations.search.matchedItem}: <b><Highlight text={mould.matchedItem.itemId} query={query} /></b> – <Highlight text={mould.matchedItem.description} query={query} />
+          </div>
+        )}
         {what && (
           <div className="text-xs text-ink-soft overflow-hidden text-ellipsis whitespace-nowrap">
             {what}

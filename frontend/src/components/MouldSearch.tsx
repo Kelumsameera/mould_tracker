@@ -1,4 +1,6 @@
 "use client";
+import { SEARCH_EVENT } from "@/components/SearchBox";
+import { queryWords } from "@/utils/search";
 import { useCallback, useEffect, useState } from "react";
 import EmptyState from "@/components/EmptyState";
 import MouldCard from "@/components/MouldCard";
@@ -33,11 +35,13 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
   const [filter, setFilter] = useState<Filter>({});
   const [moulds, setMoulds] = useState<Mould[] | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [didYouMean, setDidYouMean] = useState<string[]>([]);
 
   const loadSearchResults = useCallback(async () => {
     try {
       const [mouldResult, statsResult] = await Promise.all([api.moulds({ q: searchQuery, ...filter, toolType }), api.stats(toolType)]);
       setMoulds(mouldResult.moulds);
+      setDidYouMean(mouldResult.didYouMean ?? []);
       setStats(statsResult.stats);
       onSync(true);
     } catch {
@@ -141,11 +145,12 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
   }
 
   let emptyMessage = translations.search.empty;
-  if (searchQuery) emptyMessage = translations.search.noMatch;
+  if (searchQuery) emptyMessage = queryWords(searchQuery).length ? translations.search.noMatch : translations.search.onlySymbols;
   if (isExtrusion) emptyMessage = translations.extrusionEmpty;
 
-  const orderedMoulds = isExtrusion ? (moulds ?? []) : groupMouldsByMachine(moulds ?? []).flatMap((group) => group.moulds);
-  const renderCard = (mould: Mould) => <MouldCard key={mould.id} mould={mould} translations={translations} lang={lang} onOpen={onOpen} />;
+  // Search results keep the server's best-match order; browsing groups moulds by machine.
+  const orderedMoulds = isExtrusion || searchQuery ? (moulds ?? []) : groupMouldsByMachine(moulds ?? []).flatMap((group) => group.moulds);
+  const renderCard = (mould: Mould) => <MouldCard key={mould.id} mould={mould} translations={translations} lang={lang} onOpen={onOpen} query={searchQuery} />;
 
   // UI and inline Tailwind styles
   return (
@@ -170,7 +175,7 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
             </button>
           ))}
         </div>
-        <div className="text-sm font-bold text-ink-soft mx-1 mt-1 mb-3 flex items-center gap-2 flex-wrap font-sign tracking-[.1px]">
+        <div className="text-sm font-bold text-ink-soft mx-1 mt-1 mb-3 flex items-center gap-2 flex-wrap font-sign tracking-[.1px]" aria-live="polite">
           {resultsHeading}
           {stats && !searchQuery && !hasFilters && <span className="inline-block bg-surface border border-solid border-line p-[1px_8px] rounded-sm text-xs">{stats.total}</span>}
           {hasFilters && (
@@ -184,6 +189,18 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
         </div>
         {moulds === null && <SkeletonCards label={translations.loading} />}
         {moulds !== null && moulds.length === 0 && <EmptyState icon={searchQuery ? "search" : "mould"} text={emptyMessage} />}
+        {moulds !== null && moulds.length === 0 && didYouMean.length > 0 && (
+          <p className="text-center text-sm -mt-2 mb-4">
+            {translations.search.didYouMean}{" "}
+            {didYouMean.map((s, i) => (
+              <span key={s}>
+                {i > 0 && " · "}
+                <button type="button" className="bg-transparent border-0 p-0 text-action font-extrabold cursor-pointer underline" onClick={() => window.dispatchEvent(new CustomEvent(SEARCH_EVENT, { detail: s }))}>{s}</button>
+              </span>
+            ))}
+            ?
+          </p>
+        )}
         {moulds !== null && moulds.length > 0 && <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 min-[1680px]:grid-cols-4">{orderedMoulds.map(renderCard)}</div>}
       </main>
     </>

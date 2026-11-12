@@ -154,6 +154,16 @@ breakdown chips, search, sorting and server-side paging (20 per page). Product f
 stops at 5,000 rows. Extrusion dies come from the `EXTRUSION 01` sheet (`--sheet "EXTRUSION 01"`; Die ID = Tool ID,
 Pin ID kept on the items).
 
+## Search
+
+Every search box uses one helper (`backend/lib/search.js`, mirrored in `frontend/src/utils/search.ts`): case,
+punctuation and spacing never matter (`FLK19066` = `flk 19066` = `FLK-19066`), Sinhala text is kept, and every word
+of a multi-word query must match. Moulds and items store a normalized `searchKey` (kept up to date on save and by the
+importer); after upgrading run `npm run backfill:search` (dry run) then `-- --apply`. An Item ID finds every mould that
+makes it ("Matched item" on the card). Ranking: exact, prefix, substring; when nothing matches, a one-character typo
+or O/0, I/1/l mix-up is offered as "Did you mean …?". The Find box shows up to 8 live suggestions (keyboard ↑ ↓ Enter
+Esc, recent searches per device).
+
 ## Pictures
 
 Up to 5 pictures per item (`MAX_ITEM_IMAGES`, `backend/lib/images.js`), shrunk in the browser, stored as

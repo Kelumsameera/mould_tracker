@@ -78,7 +78,8 @@ const en = {
 
   search: {
     placeholder: 'Tool ID, Item ID, description, machine or rack',
-    clear: 'Clear search',
+    clear: 'Clear search', recent: 'Recent searches', suggestMoulds: 'Moulds', suggestItems: 'Items', matchedItem: 'Matched item',
+    didYouMean: 'Did you mean', onlySymbols: 'Type letters or numbers to search.',
     results: (n: number) => (n === 1 ? '1 mould' : `${n} moulds`),
     allMoulds: 'All moulds',
     noMatch: 'No mould matches your search.',
@@ -426,7 +427,8 @@ const si: Dict = {
 
   search: {
     placeholder: 'Tool ID, Item ID, විස්තරය, මැෂිම හෝ rack එක',
-    clear: 'සෙවුම මකන්න',
+    clear: 'සෙවුම මකන්න', recent: 'මෑත සෙවුම්', suggestMoulds: 'Moulds', suggestItems: 'Items', matchedItem: 'ගැළපුණු item එක',
+    didYouMean: 'ඔබ අදහස් කළේ', onlySymbols: 'සෙවීමට අකුරු හෝ ඉලක්කම් ටයිප් කරන්න.',
     results: (n) => `moulds ${n}`,
     allMoulds: 'සියලුම moulds',
     noMatch: 'සෙවුමට ගැලපෙන mould එකක් නෑ.',
