@@ -171,6 +171,18 @@ export const auditQuery = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50)
 });
 
+// ---- Catalog & Totals ----
+const catalogText = z.string().trim().max(64).optional();
+export const catalogQuery = z.object({
+  tab: z.enum(["moulds", "products"]).default("moulds"),
+  process: z.enum(["INJECTION", "EXTRUSION"]).optional(),
+  status: z.enum(MOULD_STATUSES).optional(),
+  owner: catalogText, machine: catalogText, material: catalogText, family: catalogText, q: catalogText,
+  sort: z.enum(["toolId", "items", "status", "itemId", "moulds"]).optional(),
+  page: z.coerce.number().int().min(1).max(10000).default(1)
+});
+export const catalogExportQuery = catalogQuery.extend({ format: z.enum(["csv", "xlsx"]).default("csv") });
+
 // ---- Work log ----
 const MANUAL_WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];
 const WORK_TYPES = [...MANUAL_WORK_TYPES, "CAVITY_BLOCK", "CAVITY_RESTORE"]; // report filters include cavity entries

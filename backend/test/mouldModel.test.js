@@ -42,6 +42,7 @@ const TABLE = {
   "cavity.manage":       [1, 1, 1, 1, 1, 0],
   "machines.override":   [1, 1, 0, 0, 0, 0],
   "mould.view":          [1, 1, 1, 1, 1, 1],
+  "catalog.view":        [1, 1, 1, 1, 1, 1],
   "worklog.create":      [1, 1, 0, 1, 1, 0],
   "worklog.view":        [1, 1, 1, 1, 1, 1],
   "worklog.report":      [1, 1, 0, 0, 0, 1],

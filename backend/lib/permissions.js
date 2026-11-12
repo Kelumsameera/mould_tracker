@@ -18,6 +18,7 @@ const MAKERS = ["super_admin", "admin", "production_supervisor", "mould_technici
 // Default role -> permission table (= the behaviour before access control became editable).
 export const PERMISSIONS = {
   "mould.view": ALL_BUT_SYS,
+  "catalog.view": ALL_BUT_SYS,      // Catalog & Totals page
   "mould.create": ADMINS,
   "mould.edit": ADMINS,              // details, items, cavities, shots-to-service, notes
   "mould.machines.edit": ADMINS,     // capable machines

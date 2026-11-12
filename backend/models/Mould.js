@@ -59,6 +59,8 @@ const mouldSchema = new mongoose.Schema(
 // One mould per machine at a time (rule 6), enforced by the database.
 mouldSchema.index({ machineId: 1 }, { unique: true, partialFilterExpression: { location: "MACHINE" } });
 mouldSchema.index({ capableMachines: 1 });
+mouldSchema.index({ deletedAt: 1, toolType: 1, toolId: 1 }); // catalog: live moulds per process, sorted
+mouldSchema.index({ owner: 1 });
 mouldSchema.index({ "openProblem.at": -1 }, { sparse: true });
 
 export default mongoose.model("Mould", mouldSchema);

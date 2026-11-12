@@ -34,8 +34,8 @@ before(async () => {
     lean: async () => [],
     then(resolve, reject) { return Promise.resolve([]).then(resolve, reject); }
   }));
-  const [moulds, racks, audit, machines, usersR, worklogs] = await Promise.all(["mould", "rack", "audit", "machine", "user", "workLog"].map((n) => import(`../routes/${n}Routes.js`)));
-  tables = { moulds: moulds.mouldRouteTable, racks: racks.rackRouteTable, audit: audit.auditRouteTable, machines: machines.machineRouteTable, users: usersR.userRouteTable, worklogs: worklogs.workLogRouteTable };
+  const [moulds, racks, audit, machines, usersR, worklogs, catalog] = await Promise.all(["mould", "rack", "audit", "machine", "user", "workLog", "catalog"].map((n) => import(`../routes/${n}Routes.js`)));
+  tables = { moulds: moulds.mouldRouteTable, racks: racks.rackRouteTable, audit: audit.auditRouteTable, machines: machines.machineRouteTable, users: usersR.userRouteTable, worklogs: worklogs.workLogRouteTable, catalog: catalog.catalogRouteTable };
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
@@ -45,6 +45,7 @@ before(async () => {
   app.use("/api/machines", machines.default);
   app.use("/api/users", usersR.default);
   app.use("/api/worklogs", worklogs.default);
+  app.use("/api/catalog", catalog.default);
   app.use(errorHandler);
   await new Promise((resolve) => { server = app.listen(0, resolve); });
   base = `http://127.0.0.1:${server.address().port}/api`;
@@ -75,6 +76,8 @@ const EXPECTED = {
   "moulds POST /:id/worklogs": ["super_admin", "admin", "mould_technician", "mould_maker"],
   "moulds POST /:id/problems": WORKERS, // anyone but the read-only executive may report a problem
   "worklogs GET /workers": ["super_admin", "admin", "mould_technician", "mould_maker"],
+  "catalog GET /summary": ALL, "catalog GET /moulds": ALL, "catalog GET /products": ALL, "catalog GET /products/:itemId": ALL,
+  "catalog GET /export": [...SA, "executive"],
   "worklogs GET /summary": [...ADMINS, "executive"], "worklogs GET /export": [...ADMINS, "executive"], "worklogs GET /": [...ADMINS, "executive"]
 };
 

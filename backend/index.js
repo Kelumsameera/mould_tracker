@@ -12,6 +12,7 @@ import rackRoutes from "./routes/rackRoutes.js";
 import machineRoutes from "./routes/machineRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import auditRoutes from "./routes/auditRoutes.js";
+import catalogRoutes from "./routes/catalogRoutes.js";
 import workLogRoutes from "./routes/workLogRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 import { UPLOAD_DIR } from "./lib/uploads.js";
@@ -45,6 +46,7 @@ app.use("/api/machines", machineRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/worklogs", workLogRoutes);
+app.use("/api/catalog", catalogRoutes);
 // The old tool API was replaced by /api/moulds; say so instead of a bare 404.
 app.use("/api/tools", (req, res) => res.status(410).json({ success: false, code: "GONE", message: "The tool API was replaced by /api/moulds" }));
 

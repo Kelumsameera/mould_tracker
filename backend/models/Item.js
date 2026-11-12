@@ -33,5 +33,6 @@ const itemSchema = new mongoose.Schema(
 
 itemSchema.index({ mouldId: 1, itemId: 1 }, { unique: true });
 itemSchema.index({ itemId: 1 });
+itemSchema.index({ materialId: 1 }); // catalog filters
 
 export default mongoose.model("Item", itemSchema);
