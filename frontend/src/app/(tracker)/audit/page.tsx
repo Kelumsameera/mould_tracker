@@ -24,7 +24,7 @@ export default function AuditPage() {
     async function loadAuditEntries() {
       try {
         const response = await api.audit({
-          entityType: entityType || undefined,
+          ...(entityType.startsWith("cat:") ? { category: entityType.slice(4) } : { entityType: entityType || undefined }),
           page: pageNumber,
           limit: 50,
         });
@@ -58,6 +58,21 @@ export default function AuditPage() {
         >
           {translations.audit.all}
         </button>
+        {(Object.keys(translations.audit.categories) as (keyof Dict["audit"]["categories"])[]).map((category) => (
+          <button
+            key={category}
+            className={
+              "shrink-0 inline-flex items-center gap-1.5 border-[1.5px] border-solid border-line bg-surface text-ink-soft rounded-pill px-4 py-0 text-sm font-extrabold cursor-pointer min-h-tap" +
+              (entityType === "cat:" + category ? " bg-ink! border-ink! text-surface!" : "")
+            }
+            onClick={() => {
+              setEntityType("cat:" + category);
+              setPageNumber(1);
+            }}
+          >
+            {translations.audit.categories[category]}
+          </button>
+        ))}
         {entityTypes.map((mould) => (
           <button
             key={mould}

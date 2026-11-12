@@ -11,7 +11,7 @@ import { can } from "@/utils/permissions";
 import { INTENDED_DESTINATIONS, STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
 import { useEffect, useState } from "react";
 
-export type MouldAction = Location | "STATUS" | "SHOTS";
+export type MouldAction = Location | "STATUS" | "SHOTS" | "CAVITIES";
 
 export default function MouldActions({
   action,
@@ -131,7 +131,7 @@ export default function MouldActions({
         savedMould = response.mould;
       } else {
         const moveDetails: MoveInput = {
-          to: action,
+          to: action as Location,
           version: version,
           remarks: remarks,
         };

@@ -52,8 +52,8 @@ export default function LoginPage() {
 
     async function checkSession() {
       try {
-        await api.me();
-        router.replace(nextPage);
+        const { user } = await api.me();
+        router.replace(landingPage(user, nextPage));
       } catch {
         setCheckingSession(false);
       }
@@ -95,8 +95,8 @@ export default function LoginPage() {
     setBusy(true);
     setError("");
     try {
-      await api.login(email, password);
-      router.replace(destination);
+      const { user } = await api.login(email, password);
+      router.replace(landingPage(user, destination));
     } catch (error) {
       setError(errorText(error, translations));
     } finally {
@@ -111,8 +111,8 @@ export default function LoginPage() {
     try {
       const { options } = await api.passkeyLoginOptions();
       const credential = await startAuthentication({ optionsJSON: options });
-      await api.passkeyLoginVerify(credential);
-      router.replace(destination);
+      const { user } = await api.passkeyLoginVerify(credential);
+      router.replace(landingPage(user, destination));
     } catch (error) {
       setError(passkeyError(error, lang));
     } finally {
@@ -194,4 +194,9 @@ export default function LoginPage() {
       </form>
     </div>
   );
+}
+
+// Executives land on their dashboard unless a specific page was asked for.
+function landingPage(user: { role: string }, requested: string) {
+  return requested === "/find" && user.role === "executive" ? "/dashboard" : requested;
 }

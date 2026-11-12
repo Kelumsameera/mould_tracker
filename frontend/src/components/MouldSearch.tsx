@@ -25,6 +25,7 @@ type Filter = {
   needsService?: boolean;
   awaitingRack?: boolean;
   problem?: boolean;
+  limited?: boolean;
 };
 
 type Props = {
@@ -69,7 +70,8 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
       selectedFilter.location === candidate.location &&
       selectedFilter.needsService === candidate.needsService &&
       selectedFilter.awaitingRack === candidate.awaitingRack &&
-      selectedFilter.problem === candidate.problem
+      selectedFilter.problem === candidate.problem &&
+      selectedFilter.limited === candidate.limited
     );
   }
 
@@ -121,6 +123,14 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
         icon: "rack",
       });
     }
+
+    filterButtons.push({
+      filter: { limited: true },
+      label: translations.cavity.filter,
+      count: stats.runningWithBlockedCavities ?? 0,
+      tone: "limited",
+      icon: "attention",
+    });
 
     filterButtons.push({
       filter: { problem: true },

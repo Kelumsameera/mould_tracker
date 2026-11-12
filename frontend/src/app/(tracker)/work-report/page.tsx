@@ -24,7 +24,7 @@ const REPORT_TABLE = [
 ].join(" ");
 import {
   STATUSES,
-  WORK_TYPES,
+  REPORT_WORK_TYPES,
   type DateRange,
   type Machine,
   type Person,
@@ -369,7 +369,7 @@ export default function WorkReportPage() {
               }
             >
               <option value="">{translations.report.anyType}</option>
-              {WORK_TYPES.map((w) => (
+              {REPORT_WORK_TYPES.map((w) => (
                 <option key={w} value={w}>
                   {translations.work.types[w]}
                 </option>

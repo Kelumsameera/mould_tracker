@@ -63,6 +63,8 @@ export default function Navbar({
     extrusion: translations.toolTypes.EXTRUSION_DIE,
     racks: translations.racks.title,
     workshop: translations.workshop.title,
+    isolation: translations.isolation.title,
+    dashboard: translations.dashboard.title,
     workReport: translations.report.title,
     rackAdmin: translations.rackAdmin.title,
     machines: translations.nav.machines,

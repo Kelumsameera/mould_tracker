@@ -36,6 +36,11 @@ const en = {
     choosePlan: 'Where should it go next? (optional)', setStatus: 'Status (optional)', waiting: (d: string) => `waiting ${d}`, waitingFor: (d: string) => `Waiting ${d}`,
     tooLong: 'Waiting too long', tooLongCount: (n: number) => `${n} waiting too long`, stayed: (d: string) => `stayed ${d} in Isolation`, from: 'Came from'
   },
+  dashboard: {
+    title: 'Dashboard', hint: 'Where every mould is, what needs attention and the work done this month.',
+    byLocation: 'By location', byStatus: 'By status', limited: 'Running with blocked cavities', isolationTooLong: 'Waiting too long in Isolation',
+    serviceDue: 'Service due by shots', workThisMonth: 'Work done this month', entries: (n: number) => `${n} entries`, none: 'None', total: (n: number) => `${n} moulds`
+  },
   cavity: {
     action: 'Run with blocked cavities', change: 'Change blocked cavities', title: 'Run with blocked cavities',
     hint: 'Production keeps running this mould with some cavities closed. Tap the cavities that are blocked.',
@@ -104,7 +109,7 @@ const en = {
   },
 
   hist: {
-    CREATED: 'Added', IMPORTED: 'Imported from tools list', EDITED: 'Edited', DELETED: 'Deleted', RESTORED: 'Restored',
+    CREATED: 'Added', IMPORTED: 'Imported from tools list', EDITED: 'Edited', DELETED: 'Deleted', RESTORED: 'Restored', CAVITIES_CHANGED: 'Blocked cavities changed', MOVED: 'Moved', STATUS_CHANGED: 'Status changed',
     moved: (from: string, to: string) => `${from} → ${to}`, status: (from: string, to: string) => `${from} → ${to}`, override: 'Override', by: 'by'
   },
 
@@ -172,7 +177,8 @@ const en = {
   audit: {
     title: 'Audit log', entity: 'Type', all: 'All', empty: 'No entries.', before: 'Before', after: 'After', reason: 'Reason', more: 'Load more',
     count: (shown: number, total: number) => `${shown} of ${total}`,
-    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'Machines', User: 'Users', Import: 'Imports', Migration: 'Migration' }
+    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'Machines', User: 'Users', Import: 'Imports', Migration: 'Migration' },
+    categories: { access: 'Access changes', edits: 'Edits', images: 'Pictures', cavities: 'Cavities' }
   },
 
   form: {
@@ -191,7 +197,7 @@ const en = {
 
   work: {
     log: 'Log work', title: 'Log work', correcting: 'Correcting an earlier entry',
-    types: { REPAIR: 'Repair', SERVICE: 'Service', MINOR_FIX: 'Minor fix', INSPECTION: 'Inspection', CLEANING: 'Cleaning', OTHER: 'Other' } as Record<WorkType, string>,
+    types: { REPAIR: 'Repair', SERVICE: 'Service', MINOR_FIX: 'Minor fix', INSPECTION: 'Inspection', CLEANING: 'Cleaning', OTHER: 'Other', CAVITY_BLOCK: 'Cavities blocked', CAVITY_RESTORE: 'Cavities restored' } as Record<WorkType, string>,
     type: 'Type of work', what: 'What was done', whatPh: 'e.g. replaced ejector pin, polished cavity 3', who: 'Who did it', whoHint: 'Tap to add or remove a person',
     when: 'When', parts: 'Parts used (optional)', minutes: 'Time spent, minutes (optional)', shots: 'Shot counter (optional)',
     outcome: 'Result', outcomes: { none: 'No change', OK: 'Mould is OK', NEEDS_REPAIR: 'Needs more repair', NEEDS_SERVICE: 'Needs service' },
@@ -366,6 +372,11 @@ const si: Dict = {
     choosePlan: 'ඊළඟට යා යුත්තේ කොහෙටද? (අත්‍යවශ්‍ය නැහැ)', setStatus: 'Status (අත්‍යවශ්‍ය නැහැ)', waiting: (d) => `${d} ක් රැඳී සිටී`, waitingFor: (d) => `${d} ක් රැඳී සිටී`,
     tooLong: 'ඕනෑවට වඩා වෙලා රැඳී සිටී', tooLongCount: (n) => `${n}ක් ඕනෑවට වඩා වෙලා රැඳී සිටී`, stayed: (d) => `Isolation එකේ ${d} ක් සිටියා`, from: 'ආවේ'
   },
+  dashboard: {
+    title: 'Dashboard', hint: 'හැම mould එකක්ම තියෙන තැන, අවධානය ඕනෑ දේ සහ මේ මාසයේ කළ වැඩ.',
+    byLocation: 'තැන අනුව', byStatus: 'Status අනුව', limited: 'Cavities වසා run වෙන', isolationTooLong: 'Isolation එකේ ඕනෑවට වඩා රැඳී සිටින',
+    serviceDue: 'Shots අනුව service කළ යුතු', workThisMonth: 'මේ මාසයේ කළ වැඩ', entries: (n) => `සටහන් ${n}`, none: 'නැත', total: (n) => `moulds ${n}`
+  },
   cavity: {
     action: 'Cavities වසා run කරන්න', change: 'වසා ඇති cavities වෙනස් කරන්න', title: 'Cavities වසා run කරන්න',
     hint: 'Cavities කිහිපයක් වසා මේ mould එක නිෂ්පාදනයේ දිගටම run කරනවා. වසා ඇති cavities tap කරන්න.',
@@ -434,7 +445,7 @@ const si: Dict = {
   },
 
   hist: {
-    CREATED: 'එකතු කළා', IMPORTED: 'Tools list එකෙන් ගත්තා', EDITED: 'සංස්කරණය කළා', DELETED: 'මකා දැමුවා', RESTORED: 'නැවත ගත්තා',
+    CREATED: 'එකතු කළා', IMPORTED: 'Tools list එකෙන් ගත්තා', EDITED: 'සංස්කරණය කළා', DELETED: 'මකා දැමුවා', RESTORED: 'නැවත ගත්තා', CAVITIES_CHANGED: 'වසා ඇති cavities වෙනස් කළා', MOVED: 'ගෙනගියා', STATUS_CHANGED: 'Status වෙනස් කළා',
     moved: (from, to) => `${from} → ${to}`, status: (from, to) => `${from} → ${to}`, override: 'Override', by: ''
   },
 
@@ -502,7 +513,8 @@ const si: Dict = {
   audit: {
     title: 'Audit සටහන්', entity: 'වර්ගය', all: 'සියල්ල', empty: 'සටහන් නෑ.', before: 'කලින්', after: 'පසුව', reason: 'හේතුව', more: 'තවත් පෙන්වන්න',
     count: (shown, total) => `${total} න් ${shown}`,
-    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'මැෂින්', User: 'Users', Import: 'Import', Migration: 'Migration' }
+    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'මැෂින්', User: 'Users', Import: 'Import', Migration: 'Migration' },
+    categories: { access: 'Access වෙනස්කම්', edits: 'සංස්කරණ', images: 'පින්තූර', cavities: 'Cavities' }
   },
 
   form: {
@@ -521,7 +533,7 @@ const si: Dict = {
 
   work: {
     log: 'වැඩ සටහන් කරන්න', title: 'වැඩ සටහන් කරන්න', correcting: 'කලින් සටහනක් නිවැරදි කරනවා',
-    types: { REPAIR: 'අලුත්වැඩියාව', SERVICE: 'Service', MINOR_FIX: 'සුළු සකස් කිරීම', INSPECTION: 'පරීක්ෂාව', CLEANING: 'පිරිසිදු කිරීම', OTHER: 'වෙනත්' },
+    types: { REPAIR: 'අලුත්වැඩියාව', SERVICE: 'Service', MINOR_FIX: 'සුළු සකස් කිරීම', INSPECTION: 'පරීක්ෂාව', CLEANING: 'පිරිසිදු කිරීම', OTHER: 'වෙනත්', CAVITY_BLOCK: 'Cavities වසා දැමුවා', CAVITY_RESTORE: 'Cavities නැවත විවෘත කළා' },
     type: 'වැඩේ වර්ගය', what: 'කළේ මොකක්ද', whatPh: 'උදා: ejector pin එක මාරු කළා, cavity 3 polish කළා', who: 'කළේ කවුද', whoHint: 'කෙනෙක් එකතු කරන්න හෝ ඉවත් කරන්න තට්ටු කරන්න',
     when: 'කවදාද', parts: 'පාවිච්චි කළ කොටස් (විකල්පයි)', minutes: 'ගතවූ කාලය, මිනිත්තු (විකල්පයි)', shots: 'Shot ගණන (විකල්පයි)',
     outcome: 'ප්‍රතිඵලය', outcomes: { none: 'වෙනසක් නෑ', OK: 'Mould එක හොඳයි', NEEDS_REPAIR: 'තවත් අලුත්වැඩියා ඕනේ', NEEDS_SERVICE: 'Service ඕනේ' },

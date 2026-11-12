@@ -7,10 +7,13 @@ import DispatchDetails from "@/components/DispatchDetails";
 import LocationLine from "@/components/LocationLine";
 import Sheet from "@/components/Sheet";
 import StatusBadge from "@/components/StatusBadge";
+import AlertBadges from "@/components/AlertBadges";
+import CavityForm from "@/components/CavityForm";
+import CavityDowntime from "@/components/CavityDowntime";
 import WorkLogForm from "@/components/WorkLogForm";
 import { api, assetUrl } from "@/utils/api";
 import toast from "react-hot-toast";
-import { errorText, formatTime, movementText, relativeTime } from "@/utils/format";
+import { duration, errorText, formatTime, movementText, relativeTime } from "@/utils/format";
 import { TOOL_ID_TAG } from "@/utils/helpers";
 
 const ACTION_BTN = "min-h-14 px-3 py-2 rounded-md border-[1.5px] border-solid border-line bg-surface-2 text-ink text-sm font-extrabold cursor-pointer flex items-center justify-center gap-2 text-left leading-[1.3] [transition:border-color_var(--fast),background_var(--fast)]";
@@ -234,6 +237,7 @@ export default function MouldSheet({
     OUT_OF_SERVICE: "attention",
     STATUS: "busy",
     SHOTS: "shots",
+    CAVITIES: "attention",
   };
   if (mould && !mould.deletedAt) {
     // Running with blocked cavities may still run on a machine or the floor.
@@ -281,6 +285,10 @@ export default function MouldSheet({
       (can(user, "move.machine") || can(user, "status.change"))
     )
       actions.push({ key: "SHOTS", label: translations.act.recordShots });
+    // Running with blocked cavities: where a mould runs or waits; at the Workshop only to change/restore a blocked list.
+    const blockedNow = (mould.blockedCavities?.length ?? 0) > 0;
+    if (can(user, "cavity.manage") && (["MACHINE", "PRODUCTION_FLOOR", "ISOLATION"].includes(mould.location) || (mould.location === "WORKSHOP" && blockedNow)) && mould.status !== "IN_SERVICE")
+      actions.push({ key: "CAVITIES", label: blockedNow ? translations.cavity.change : translations.cavity.action });
   }
 
   // UI and inline Tailwind styles
@@ -307,6 +315,7 @@ export default function MouldSheet({
               {translations.toolTypes[mould.toolType]}
             </span>
             <StatusBadge status={mould.status} translations={translations} />
+            <AlertBadges mould={mould} translations={translations} />
             {mould.owner && (
               <span className="inline-flex items-center font-extrabold text-xs text-ink-soft bg-surface-2 [padding:2px_9px] rounded-pill border border-solid border-line">
                 {mould.owner}
@@ -326,6 +335,13 @@ export default function MouldSheet({
             }
           >
             <LocationLine mould={mould} translations={translations} big />
+            {mould.limitedRun && (
+              <div className="mt-2 text-sm">
+                <b>{translations.cavity.summary((mould.totalCavities ?? 0) - (mould.blockedCavities?.length ?? 0), mould.totalCavities ?? 0)}</b>
+                {" · "}{translations.cavity.which}: {mould.blockedCavities?.join(", ")}
+                <div className="text-ink-soft">{mould.limitedRun.reason}{mould.limitedRun.decidedBy ? ` · ${translations.cavity.decidedBy}: ${mould.limitedRun.decidedBy.name}` : ""}{mould.limitedRun.expectedFixBy ? ` · ${translations.cavity.expectedBy(formatTime(mould.limitedRun.expectedFixBy, lang))}` : ""}</div>
+              </div>
+            )}
             {mould.outOfServiceDetails && <DispatchDetails details={mould.outOfServiceDetails} translations={translations} lang={lang} />}
             {mould.lastMovedAt && (
               <div className="text-sm text-ink-soft mt-2 flex items-center gap-1.5">
@@ -470,7 +486,10 @@ export default function MouldSheet({
                   </button>
                 ))}
               </div>
-              {action && (
+              {action === "CAVITIES" && (
+                <CavityForm mould={mould} translations={translations} onDone={(saved) => { setAction(null); handleMouldUpdated(saved); }} onStale={loadMouldDetails} onCancel={() => setAction(null)} />
+              )}
+              {action && action !== "CAVITIES" && (
                 <MouldActions
                   key={action + (preset.status ?? "")}
                   action={action}
@@ -597,6 +616,7 @@ export default function MouldSheet({
             ))}
           </div>
 
+          <CavityDowntime mould={mould} user={user} translations={translations} lang={lang} />
           <div className="bg-surface-2 rounded-lg px-4 py-3 mb-4 border border-solid border-line [max-height:none]">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <div className="text-sm font-extrabold text-ink-soft m-0 flex items-center gap-1.5">
@@ -657,6 +677,12 @@ export default function MouldSheet({
                       <div className="font-medium text-ink-soft text-sm [margin-top:2px]">
                         {entry.movement.remarks}
                       </div>
+                    )}
+                    {entry.movement.dwellMinutes != null && (
+                      <div className="font-medium text-ink-soft text-sm [margin-top:2px]">{translations.isolation.stayed(duration(entry.movement.dwellMinutes, translations))}</div>
+                    )}
+                    {entry.movement.intendedDestination && (
+                      <div className="font-medium text-ink-soft text-sm [margin-top:2px]">{translations.isolation.plannedFor}: {locationName(entry.movement.intendedDestination, translations)}</div>
                     )}
                     {entry.movement.type === "EDITED" && entry.movement.changes && (
                       <ul className="font-medium text-ink-soft text-xs [margin-top:2px] list-none p-0 m-0">

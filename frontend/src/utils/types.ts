@@ -53,7 +53,7 @@ export interface Mould {
 
 export interface Movement {
   outOfServiceDetails: DispatchDetails | null;
-  id: string; toolId: string; type: 'CREATED' | 'IMPORTED' | 'EDITED' | 'MOVED' | 'STATUS_CHANGED' | 'DELETED' | 'RESTORED';
+  id: string; toolId: string; type: 'CREATED' | 'IMPORTED' | 'EDITED' | 'MOVED' | 'STATUS_CHANGED' | 'DELETED' | 'RESTORED' | 'CAVITIES_CHANGED';
   fromLocation: Location | null; toLocation: Location | null; fromStatus: MouldStatus | null; toStatus: MouldStatus | null;
   fromMachineCode: string | null; toMachineCode: string | null; fromRackLocationId: string | null; toRackLocationId: string | null;
   remarks: string; overrideReason: string; by: { id: string | null; name: string } | null; createdAt: string;
@@ -88,8 +88,11 @@ export interface MoveInput {
   to: Location; machineId?: string; rackId?: string; status?: MouldStatus; remarks?: string; overrideReason?: string; version?: number; intendedDestination?: Location | null;
 }
 
-export type WorkType = 'REPAIR' | 'SERVICE' | 'MINOR_FIX' | 'INSPECTION' | 'CLEANING' | 'OTHER';
+export type WorkType = 'REPAIR' | 'SERVICE' | 'MINOR_FIX' | 'INSPECTION' | 'CLEANING' | 'OTHER' | 'CAVITY_BLOCK' | 'CAVITY_RESTORE';
+// Types a person picks in the work log form; cavity entries come from "Run with blocked cavities".
 export const WORK_TYPES: WorkType[] = ['REPAIR', 'SERVICE', 'MINOR_FIX', 'INSPECTION', 'CLEANING', 'OTHER'];
+export const REPORT_WORK_TYPES: WorkType[] = [...WORK_TYPES, 'CAVITY_BLOCK', 'CAVITY_RESTORE'];
+export interface DowntimePeriod { from: string; to: string | null; cavities: number[]; reason: string; by: string | null }
 export type WorkOutcome = 'OK' | 'NEEDS_REPAIR' | 'NEEDS_SERVICE';
 export interface Person { id: string; name: string; role: Role }
 export interface PrivatePerson { id: null; name: string; role: null }

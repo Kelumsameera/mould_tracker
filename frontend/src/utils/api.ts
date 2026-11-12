@@ -78,6 +78,7 @@ export const api = {
       awaitingRack?: boolean;
       needsService?: boolean;
       problem?: boolean;
+      limited?: boolean;
       deleted?: boolean;
     } = {},
   ) => request<{ moulds: Mould[] }>(`/moulds${qs(filter)}`),
@@ -91,6 +92,10 @@ export const api = {
   move: (id: string, input: MoveInput) => request<{ mould: Mould; warnings: string[] }>(`/moulds/${id}/move`, "POST", input),
   setStatus: (id: string, status: string, remarks: string, version: number) => request<{ mould: Mould }>(`/moulds/${id}/status`, "POST", { status, remarks, version }),
   recordShots: (id: string, shots: number, version: number) => request<{ mould: Mould }>(`/moulds/${id}/shots`, "POST", { shots, version }),
+  setCavities: (id: string, body: { blocked: number[]; reason: string; problemType?: string | null; expectedFixBy?: string | null; photo?: string; version?: number }) =>
+    request<{ mould: Mould }>(`/moulds/${id}/cavities`, "POST", body),
+  cavityDowntime: (id: string) => request<{ toolId: string; periods: import("./types").DowntimePeriod[] }>(`/moulds/${id}/cavity-downtime`),
+  cavityDowntimeCsvUrl: (id: string) => `${BASE}/moulds/${id}/cavity-downtime?format=csv`,
   addItem: (id: string, item: ItemInput, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items`, "POST", { ...item, version }),
   updateItem: (id: string, itemId: string, item: ItemInput, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "PATCH", { ...item, version }),
   deleteItem: (id: string, itemId: string, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "DELETE", { version }),
@@ -136,7 +141,7 @@ export const api = {
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   },
 
-  audit: (f: { entityType?: string; page?: number; limit?: number }) => request<{ total: number; entries: AuditEntry[] }>(`/audit${qs(f)}`),
+  audit: (f: { entityType?: string; category?: string; page?: number; limit?: number }) => request<{ total: number; entries: AuditEntry[] }>(`/audit${qs(f)}`),
 
   userAccess: () => request<{ users: UserAccess[]; roles: RoleAccess[]; permissions: Permission[] }>("/users/access"),
   updateRoleAccess: (role: Role, body: { permissions: Permission[] | null; version?: number; reason: string }) => request<{ role: RoleAccess }>(`/users/roles/${role}/access`, "PATCH", body),

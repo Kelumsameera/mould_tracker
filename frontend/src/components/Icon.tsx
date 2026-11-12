@@ -147,4 +147,6 @@ export const workIcon: Record<WorkType, IconName> = {
   INSPECTION: "search",
   CLEANING: "confirm",
   OTHER: "worklog",
+  CAVITY_BLOCK: "attention",
+  CAVITY_RESTORE: "good",
 };
