@@ -187,7 +187,7 @@ test("config.manage and access.manage stay System Administrator only and are nev
 
 test("config routes: editing needs config.manage; reading is open to signed-in users; a reason is required", () => {
   const perms = Object.fromEntries(configRouteTable.map(([m, p, perm]) => [`${m} ${p}`, perm]));
-  for (const k of ["put /draft", "post /publish", "post /rollback", "post /import", "get /export", "delete /draft", "post /validate"]) assert.deepEqual(perms[k], ["config.manage"], k);
+  for (const k of ["get /versions", "get /versions/:version", "get /diff", "put /draft", "post /publish", "post /rollback", "post /import", "get /export", "delete /draft", "post /validate"]) assert.deepEqual(perms[k], ["config.manage"], k);
   assert.equal(perms["get /"], "signed-in");
   assert.equal(configPublishSchema.safeParse({}).success, false);
 });

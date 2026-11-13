@@ -4,7 +4,7 @@ import { routerFrom, SIGNED_IN } from "./table.js";
 
 // config.manage: System Administrator only, never grantable. Reading the published config: everyone signed in.
 const MANAGE = ["config.manage"];
-const VIEW = ["config.manage", "users.manage", "worklog.report"]; // read-only workflow view: Super Admin, Admin, Executive
+const VIEW = MANAGE; // workflow screens (incl. versions/diff) are System Administrator only
 
 export const configRouteTable = [
   ["get", "/", SIGNED_IN, c.getPublishedConfig],

@@ -61,7 +61,7 @@ export function canVisitPage(user: User, page: PageName) {
   if (page === "racks") return can(user, "rack.view");
   if (page === "catalog") return can(user, "catalog.view");
   if (page === "place") return can(user, "mould.view");
-  if (page === "workflow") return can(user, "config.manage" as Permission) || can(user, "users.manage") || can(user, "worklog.report");
+  if (page === "workflow") return can(user, "config.manage" as Permission); // System Administrator only
   if (page === "settings") return can(user, "settings.manage") || can(user, "config.manage" as Permission);
   if (page === "machines") return can(user, "mould.edit");
   if (page === "audit") return can(user, "audit.view");
