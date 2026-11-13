@@ -11,7 +11,9 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 const { pages, byRel, sections } = loadPublicPages();
 
-const slug = (t) => t.toLowerCase().replace(/<[^>]+>/g, "").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-");
+const slug = (t) => t.toLowerCase().replace(/<[^>]+>/g, "").replace(/[^\p{L}\p{M}\p{N}\s-]/gu, "").trim().replace(/\s+/g, "-");
+const bilingual = (en, si) => `<span data-doc-lang="en">${esc(en)}</span><span data-doc-lang="si" lang="si">${esc(si)}</span>`;
+const sectionLabels = { Start: "ආරම්භය", "Getting started": "මුල් පියවර", "User guide": "භාවිත උපදෙස්", Support: "උදව්" };
 
 function render(page) {
   const depth = page.rel.split("/").length - 1;
@@ -41,28 +43,32 @@ function render(page) {
     const kind = /Screenshot needed/.test(quote) ? "shot" : /⚠️|Risk|Never|Production safety/.test(quote) ? "warn" : "note";
     return `<blockquote class="${kind}">${quote}</blockquote>`;
   };
-  const html = marked.parse(page.body, { renderer, gfm: true });
+  const [english, sinhala] = page.body.split(/^## සිංහල\s*$/m);
+  if (!sinhala) throw new Error(`Missing Sinhala guide: ${page.rel}`);
+  const content = [
+    ["en", english.replace(/^# .*$/m, `# ${page.meta.title}`)],
+    ["si", `# ${page.meta.titleSi}\n\n${sinhala}`],
+  ].map(([lang, body]) => {
+    toc.length = 0;
+    const html = marked.parse(body, { renderer, gfm: true });
+    // Prefix anchors so each language has unique IDs, including shared product names.
+    const article = html.replace(/(id|href)="(#?)([^"]+)"/g, (match, attribute, hash, value) =>
+      attribute === "id" || hash ? `${attribute}="${hash}${lang}-${value}"` : match);
+    const contents = toc.length > 2 ? `<nav class="toc" aria-label="${lang === "si" ? "මෙම පිටුවේ" : "On this page"}"><div class="toc-h">${lang === "si" ? "මෙම පිටුවේ" : "On this page"}</div>${toc.map(t => `<a class="l${t.level}" href="#${lang}-${t.id}">${esc(t.text)}</a>`).join("")}</nav>` : "";
+    return `<main class="main" data-doc-lang="${lang}" lang="${lang}"><article class="doc">${article}<footer class="foot">${lang === "si" ? "Mould Tracker භාවිත මාර්ගෝපදේශය" : "Mould Tracker user guide"}</footer></article>${contents}</main>`;
+  }).join("");
   const title = page.meta.title || page.rel;
-  const nav = sections.map(([name, list]) => `<div class="nav-sec"><div class="nav-h">${esc(name)}</div>${list.map((r) =>
-    `<a class="nav-a${r === page.rel ? " on" : ""}" href="${up}${toHtml(r)}">${esc(byRel.get(r).meta.title || r)}</a>`).join("")}</div>`).join("");
-  const status = page.meta.status || "";
-  const tone = /^Verified/.test(status) ? "ok" : /Partial|partially|proposed|Planned|Open/i.test(status) ? "warn" : "info";
-  const chips = [
-    page.meta.audience && `<span class="chip">👥 ${esc(page.meta.audience)}</span>`,
-    status && `<span class="chip ${tone}">${esc(status)}</span>`,
-    page.meta.last_verified && `<span class="chip">Verified ${esc(page.meta.last_verified)}</span>`,
-    page.meta.app_version && `<span class="chip">${esc(page.meta.app_version)}</span>`
-  ].filter(Boolean).join("");
-  const tocHtml = toc.length > 2 ? `<nav class="toc"><div class="toc-h">On this page</div>${toc.map((t) => `<a class="l${t.level}" href="#${t.id}">${esc(t.text)}</a>`).join("")}</nav>` : "";
+  const nav = sections.map(([name, list]) => `<div class="nav-sec"><div class="nav-h">${bilingual(name, sectionLabels[name])}</div>${list.map((r) =>
+    `<a class="nav-a${r === page.rel ? " on" : ""}" href="${up}${toHtml(r)}">${bilingual(byRel.get(r).meta.title, byRel.get(r).meta.titleSi)}</a>`).join("")}</div>`).join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)} · Mould Tracker Docs</title><meta name="description" content="${esc(page.meta.description || "")}">
+<title data-title-en="${esc(title)}" data-title-si="${esc(page.meta.titleSi)}">${esc(title)} · Mould Tracker Docs</title><meta name="description" content="${esc(page.meta.description || "")}">
+<script>try { if (localStorage.getItem('mt-docs-language') === 'si') document.documentElement.lang = 'si'; } catch {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="${up}assets/docs.css"></head><body>
-<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
-<a class="brand" href="${up}index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
-<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
-<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)">${nav}</aside>
-<main class="main"><article class="doc">${html.replace("</h1>", `</h1>${page.meta.description ? `<p class="lead">${esc(page.meta.description)}</p>` : ""}<div class="chips">${chips}</div>`)}
-<footer class="foot">Mould Tracker user guide</footer></article>${tocHtml}</main>
+<header class="top"><button class="menu" data-label-en="Menu" data-label-si="මෙනුව" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="${up}index.html"><span class="logo">◆</span> Mould Tracker ${bilingual("Docs", "උපදෙස්")}</a>
+<div class="header-actions"><button class="language" type="button" aria-label="සිංහලට මාරු කරන්න" onclick="toggleLanguage()">සිංහල</button><button class="theme" data-label-en="Toggle theme" data-label-si="පෙනුම වෙනස් කරන්න" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></div></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" oninput="filterNav(this.value)">${nav}</aside>
+${content}
 <script src="${up}assets/docs.js"></script></body></html>`;
 }
 
@@ -75,3 +81,8 @@ for (const p of pages) {
 fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
 for (const f of ["docs.css", "docs.js"]) fs.copyFileSync(path.join(DOCS, "site-builder", f), path.join(OUT, "assets", f));
 console.log(`Built ${pages.length} pages into ${path.relative(process.cwd(), OUT) || OUT}`);
+
+// Ship the approved guide with the frontend, including standalone Docker builds.
+const frontendDocs = path.resolve(DOCS, "../frontend/public/docs");
+fs.rmSync(frontendDocs, { recursive: true, force: true });
+fs.cpSync(OUT, frontendDocs, { recursive: true });

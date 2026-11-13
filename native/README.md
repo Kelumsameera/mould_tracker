@@ -28,7 +28,10 @@ From `native/desktop`, run `npm ci` then `npm run dist:win`. The NSIS installer
 is written to `outputs/native/desktop/`. It installs for the current Windows
 user and adds desktop/Start shortcuts. Normal system title/window controls stay;
 browser menus and extension/uninstall toolbars are absent. F11 toggles fullscreen.
-Install/trust the factory CA on Windows first using the existing setup page.
+From 2.3.1, the Windows installer bundles the factory public CA and imports it into
+the current user Trusted Root store. Accept the Windows trust prompt during setup.
+A failed or declined import stops setup. The CA stays trusted after uninstall so
+existing browser access continues to work.
 The current installer is unsigned: there is no publisher code-signing identity
 configured. Do not describe it as Microsoft verified. Obtain a trusted Windows
 signing certificate to distribute a publisher-signed release.

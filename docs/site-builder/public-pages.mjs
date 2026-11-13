@@ -22,9 +22,16 @@ export const PUBLIC_PAGES = [
 ];
 
 export function loadPublicPages() {
-  const pages = PUBLIC_PAGES.map(([, rel, title]) => ({
+  const sinhalaTitles = [
+    "භාවිත මාර්ගෝපදේශය", "පද්ධතියට ඇතුළු වීම", "ඉක්මන් ආරම්භය",
+    "Mould Tracker භාවිතය", "Mould එකක් සෙවීම", "Mould එකක් මාරු කිරීම",
+    "ගබඩා ස්ථානය සෙවීම", "Workshop පෝලිම", "කළ වැඩ සටහන් කිරීම",
+    "ගැටලුවක් වාර්තා කිරීම", "Shots සටහන් කිරීම", "Account සහ passkeys",
+    "App එක install කිරීම සහ සැකසීම", "ගැටලු විසඳීම", "නිතර අසන ප්‍රශ්න",
+  ];
+  const pages = PUBLIC_PAGES.map(([, rel, title], index) => ({
     rel,
-    meta: { title },
+    meta: { title, titleSi: sinhalaTitles[index] },
     body: fs.readFileSync(path.join(DOCS, "public", rel), "utf8"),
   }));
   const sections = [...new Set(PUBLIC_PAGES.map(([section]) => section))].map(section => [
