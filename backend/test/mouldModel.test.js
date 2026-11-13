@@ -21,7 +21,7 @@ const user = (role) => ({ _id: oid(), role });
 // system_admin always has everything.
 const COLS = ["super_admin", "admin", "production_supervisor", "mould_technician", "mould_maker", "executive"];
 const TABLE = {
-  "settings.manage":     [1, 0, 0, 0, 0, 0],
+  "settings.manage":     [0, 0, 0, 0, 0, 0],
   "rack.manage":         [1, 0, 0, 0, 0, 0],
   "import.run":          [1, 0, 0, 0, 0, 0],
   "audit.view":          [1, 0, 0, 0, 0, 0],

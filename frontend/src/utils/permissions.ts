@@ -47,8 +47,9 @@ export const PERMISSIONS = [
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
+export const SYSTEM_ADMIN_ONLY = new Set<string>(["access.manage", "config.manage", "settings.manage"]);
 export const can = (user: User | null | undefined, permission: Permission) =>
-  Boolean(user?.permissions?.includes(permission));
+  Boolean(user?.permissions?.includes(permission) && (!SYSTEM_ADMIN_ONLY.has(permission) || user.role === "system_admin"));
 export const canAny = (user: User | null | undefined, ...permissions: Permission[]) => permissions.some((p) => can(user, p));
 
 // Anything in the mould edit form (details, machines, pictures).

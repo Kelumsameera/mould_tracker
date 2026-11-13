@@ -15,6 +15,39 @@ import { mouldDTO } from "../utils/serializers.js";
 import { settingsRouteTable } from "../routes/settingsRoutes.js";
 import * as api from "../controllers/settingsController.js";
 import * as config from "../controllers/configController.js";
+import { can, effectivePermissions, grantablePermissions } from "../lib/permissions.js";
+import { getConfig, useConfigForTests } from "../lib/configStore.js";
+import { configContent, validateConfig } from "../lib/workflowValidation.js";
+import { userAccessSchema, roleAccessSchema } from "../validators/schemas.js";
+
+test("settings are System Administrator only, including legacy grants and custom roles", () => {
+  const previous = getConfig();
+  const legacy = structuredClone(previous);
+  legacy.roles.find(role => role.key === "super_admin").permissions.push("settings.manage");
+  legacy.roles.push({ key: "custom_manager", permissions: ["settings.manage"], active: true });
+  useConfigForTests(legacy);
+  try {
+    for (const role of ["super_admin", "admin", "executive", "custom_manager"]) {
+      for (const overrides of [
+        {}, { rolePermissionOverrides: ["settings.manage"] },
+        { permissionOverrides: ["settings.manage"] },
+        { permissionOverrides: { grant: ["settings.manage"], deny: [] } }
+      ]) {
+        const user = { role, ...overrides };
+        assert.equal(can(user, "settings.manage"), false, role);
+        assert.equal(effectivePermissions(user).includes("settings.manage"), false, role);
+      }
+    }
+    assert.equal(can({ role: "system_admin", permissionOverrides: { deny: ["settings.manage"] } }, "settings.manage"), true);
+    assert.equal(grantablePermissions().includes("settings.manage"), false);
+    assert.equal(userAccessSchema.safeParse({ grant: ["settings.manage"], reason: "test" }).success, false);
+    assert.equal(roleAccessSchema.safeParse({ permissions: ["settings.manage"], reason: "test" }).success, false);
+    const editable = configContent(legacy);
+    assert.equal(editable.roles.find(role => role.key === "super_admin").permissions.includes("settings.manage"), false);
+    assert.equal(validateConfig(editable).some(problem => problem.code === "LOCKED_PERMISSION"), false);
+    assert.equal(legacy.roles.find(role => role.key === "super_admin").permissions.includes("settings.manage"), true);
+  } finally { useConfigForTests(previous); }
+});
 
 const oid = () => new mongoose.Types.ObjectId();
 let store, audits;

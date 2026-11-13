@@ -6,7 +6,7 @@ import { useConfirm } from "@/components/ConfirmHost";
 import Icon from "@/components/Icon";
 import { api, type ConfigProblem, type ConfigVersionMeta } from "@/utils/api";
 import { errorText } from "@/utils/format";
-import { can, type Permission } from "@/utils/permissions";
+import { can, SYSTEM_ADMIN_ONLY, type Permission } from "@/utils/permissions";
 import { runtime, type ConfigLocation, type ConfigRole, type ConfigStatus, type ConfigTransition, type WorkflowConfig } from "@/utils/runtimeConfig";
 
 // Workflow Settings: locations, statuses, roles and move rules as data. Edits go into ONE draft; nothing changes
@@ -276,7 +276,7 @@ function RolesTab({ view, ro, edit, w, permissionLabel }: { view: WorkflowConfig
   const [newKey, setNewKey] = useState("");
   const [copyFrom, setCopyFrom] = useState("");
   const [open, setOpen] = useState<string | null>(null);
-  const perms = runtime().permissions.filter((p) => p !== "access.manage" && p !== "config.manage");
+  const perms = runtime().permissions.filter((p) => !SYSTEM_ADMIN_ONLY.has(p));
   const allPerms = [...new Set([...perms, ...view.locations.map((l) => l.permission).filter(Boolean) as string[]])];
   const upd = (key: string, patch: Partial<ConfigRole>) => edit((c) => Object.assign(c.roles.find((r) => r.key === key)!, patch));
   return (

@@ -45,13 +45,13 @@ export const PERMISSIONS = {
   "import.run": SA,
   "audit.view": SA,
   "export.run": [...SA, "executive"],
-  "settings.manage": SA
+  "settings.manage": []             // system_admin only; never grantable
 };
 
 export const PERMISSION_KEYS = Object.keys(PERMISSIONS);
 // System-Administrator-only capabilities kept outside the editable table: never grantable, never in a role.
-export const LOCKED_PERMISSIONS = ["access.manage", "config.manage"];
-const SYSADMIN_ONLY = new Set(["config.manage"]);
+export const LOCKED_PERMISSIONS = ["access.manage", "config.manage", "settings.manage"];
+const SYSADMIN_ONLY = new Set(LOCKED_PERMISSIONS);
 
 // Static keys + keys created by the workflow config (move.<locationKey> of each location).
 export function allPermissionKeys(config = getConfig()) {
@@ -61,7 +61,7 @@ export function allPermissionKeys(config = getConfig()) {
 export const grantablePermissions = (config = getConfig()) => allPermissionKeys(config).filter((p) => !LOCKED_PERMISSIONS.includes(p));
 const isKnownPermission = (p) => Boolean(PERMISSIONS[p]) || SYSADMIN_ONLY.has(p) || allPermissionKeys().includes(p);
 // Keys that can appear in the matrix or in a user override.
-export const CUSTOM_PERMISSIONS = PERMISSION_KEYS.filter((p) => p !== "access.manage");
+export const CUSTOM_PERMISSIONS = PERMISSION_KEYS.filter((p) => !LOCKED_PERMISSIONS.includes(p));
 // Only Super Admins may ever hold this one (dispatch to external repair); not grantable to others.
 const SUPER_ADMIN_ONLY = new Set(["move.outOfService"]);
 
