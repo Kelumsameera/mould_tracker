@@ -1,10 +1,10 @@
-// Shared by build.mjs (website) and build-docx.mjs (Word): finds the docs pages and their reading order.
+// Internal documentation discovery for local owner/developer exports. The public website uses public-pages.mjs.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const DOCS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SKIP = new Set(["site", "site-builder", "node_modules", "export"]);
+const SKIP = new Set(["site", "site-builder", "node_modules", "export", "public"]);
 
 // Sidebar / chapter order; files not listed here go into "Other".
 const NAV = [

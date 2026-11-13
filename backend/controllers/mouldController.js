@@ -14,11 +14,17 @@ import { planInitialLocation, planMove, planShots, planStatus, serviceDueChange 
 import { can } from "../lib/permissions.js";
 import { resolveProblem } from "./workLogController.js";
 import { photosFromDataUrls, saveRendered } from "../lib/images.js";
-import { mouldStateError, toolTypeFilter } from "../lib/mouldState.js";
+import { addImage, keysOf, removeImage, reorderImages, replaceImage } from "../lib/itemImages.js";
+import { displayStatus, mouldStateError, statusQuery, toolTypeFilter } from "../lib/mouldState.js";
 
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
-const MOULD_FIELDS = ["toolId", "toolType", "toolSetCount", "size", "owner", "capableMachines", "shotsToService", "notes"];
+import { MOULD_FIELDS, planMouldEdit } from "../lib/mouldEdit.js";
+import { isolationMaxWaitHours } from "../lib/flowConfig.js";
+import { buildDowntime, planCavities, totalCavities } from "../lib/cavities.js";
+import { searchMoulds } from "../lib/mouldSearch.js";
+import WorkLog from "../models/WorkLog.js";
+import { lastWorkSummary } from "../lib/workLog.js";
 const ITEM_FIELDS = ["itemId", "description", "cavities", "qas", "materialId", "materialDescription", "masterbatchId", "masterbatchDescription", "notes", "sortOrder"];
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const toolKey = (s) => String(s).toUpperCase().replace(/\s+/g, "");
@@ -40,7 +46,7 @@ async function refsFor(moulds) {
 async function respondWithMould(res, id, status = 200, extra = {}) {
   const mould = await Mould.findById(id).lean();
   const [refs, items] = await Promise.all([refsFor([mould]), Item.find({ mouldId: id, deletedAt: null }).sort({ sortOrder: 1, itemId: 1 }).lean()]);
-  res.status(status).json({ success: true, mould: { ...mouldDTO(mould, refs), items: items.map(itemDTO) }, ...extra });
+  res.status(status).json({ success: true, mould: { ...mouldDTO(mould, refs, { totalCavities: totalCavities(items) }), items: items.map(itemDTO) }, ...extra });
 }
 
 async function loadForUpdate(id, session, version) {
@@ -62,6 +68,8 @@ async function withPlace(mould, session) {
 async function rackForMove(rackId, mouldId, session) {
   if (!rackId) return { rack: null, rackOccupancy: 0 };
   const rack = await Rack.findById(rackId).session(session).lean();
+  // Serialize placements on a physical position; concurrent moves cannot both claim it.
+  if (rack) await Rack.updateOne({ _id: rack._id }, { $inc: { occupancyVersion: 1 } }, { session });
   if (!rack) fail(404, "NOT_FOUND", "Rack not found");
   const zone = await Zone.findOne({ code: rack.zone }).session(session).lean();
   const rackOccupancy = await Mould.countDocuments({ rackId: rack._id, deletedAt: null, _id: { $ne: mouldId } }).session(session);
@@ -71,36 +79,24 @@ async function rackForMove(rackId, mouldId, session) {
 // GET /api/moulds - search by Tool ID, Item ID, item description, machine or rack, plus filters.
 export async function listMoulds(req, res) {
   const q = req.validQuery;
-  const filter = { ...toolTypeFilter(q.toolType), deletedAt: q.deleted === "true" && can(req.user, "moulds.manage") ? { $ne: null } : null };
+  const filter = { ...toolTypeFilter(q.toolType), deletedAt: q.deleted === "true" && can(req.user, "mould.delete") ? { $ne: null } : null };
   if (q.location) filter.location = q.location;
-  if (q.status) filter.status = q.status;
+  if (q.status) filter.status = statusQuery(q.status);
   if (q.owner) filter.owner = q.owner.toUpperCase();
   if (q.machineId) filter.machineId = q.machineId;
   if (q.rackId) filter.rackId = q.rackId;
   if (q.awaitingRack) filter.awaitingRack = q.awaitingRack === "true";
   if (q.needsService === "true") filter.status = { $in: SERVICE_STATUSES };
   if (q.problem === "true") filter.openProblem = { $ne: null };
+  if (q.limited === "true") filter["blockedCavities.0"] = { $exists: true };
   if (q.zone) filter.rackId = { $in: (await Rack.find({ zone: q.zone.toUpperCase() }, { _id: 1 }).lean()).map((r) => r._id) };
 
+  // Forgiving search (lib/search.js): one row per mould, best match first, item matches reported.
+  let search = null;
   if (q.q) {
-    const rx = new RegExp(escapeRegex(q.q), "i");
-    const compact = new RegExp(spacedPattern(q.q), "i"); // "FLK 19066" finds "FLK19066" and back
-    const rackText = q.q.toUpperCase().replace(/MOULD\s*ROOM/g, "").replace(/[\s·,]+/g, "-").replace(/^-|-$/g, ""); // "FLK A3" -> FLK-A3
-    const [itemMoulds, machines, racks] = await Promise.all([
-      Item.distinct("mouldId", { deletedAt: null, $or: [{ itemId: compact }, { description: rx }] }),
-      Machine.find({ $or: [{ code: rx }, { code: normalizeMachineCode(q.q) }, { name: rx }] }, { _id: 1 }).lean(),
-      Rack.find({ deletedAt: null, $or: [{ locationId: new RegExp(escapeRegex(rackText), "i") }, { code: rackText }] }, { _id: 1 }).lean()
-    ]);
-    filter.$or = [
-      { toolId: compact },
-      { notes: rx },
-      { _id: { $in: itemMoulds } },
-      { machineId: { $in: machines.map((m) => m._id) } },
-      { rackId: { $in: racks.map((r) => r._id) } },
-      { capableMachines: normalizeMachineCode(q.q) }
-    ];
+    search = await searchMoulds(q.q, filter);
+    filter._id = { $in: search.ranked.map((r) => r.id) };
   }
-
   const moulds = await Mould.find(filter).sort({ toolId: 1 }).collation(NUMERIC_SORT).lean();
   const ids = moulds.map((m) => m._id);
   const [refs, itemStats] = await Promise.all([
@@ -108,16 +104,19 @@ export async function listMoulds(req, res) {
     Item.aggregate([
       { $match: { mouldId: { $in: ids }, deletedAt: null } },
       { $sort: { sortOrder: 1 } },
-      { $group: { _id: "$mouldId", itemCount: { $sum: 1 }, itemIds: { $push: "$itemId" }, firstImage: { $first: { $arrayElemAt: ["$images.thumbPath", 0] } }, anyImage: { $push: { $arrayElemAt: ["$images.thumbPath", 0] } } } }
+      { $group: { _id: "$mouldId", itemCount: { $sum: 1 }, totalCavities: { $sum: { $cond: [{ $gt: ["$cavities", 0] }, "$cavities", 0] } }, itemIds: { $push: "$itemId" }, firstImage: { $first: { $arrayElemAt: ["$images.thumbPath", 0] } }, anyImage: { $push: { $arrayElemAt: ["$images.thumbPath", 0] } } } }
     ])
   ]);
   const stats = new Map(itemStats.map((s) => [String(s._id), s]));
+  const order = new Map((search?.ranked || []).map((r, i) => [r.id, { ...r, pos: i }]));
+  if (search) moulds.sort((x, y) => order.get(String(x._id)).pos - order.get(String(y._id)).pos); // best match first
   res.json({
     success: true,
+    ...(search ? { didYouMean: search.didYouMean, queryWords: search.words } : {}),
     moulds: moulds.map((m) => {
       const s = stats.get(String(m._id));
       const thumb = s?.firstImage || s?.anyImage?.find(Boolean);
-      return mouldDTO(m, refs, { itemCount: s?.itemCount ?? 0, itemIds: s?.itemIds ?? [], thumbUrl: thumb ? `/uploads/${thumb}` : null });
+      return mouldDTO(m, refs, { matchedItem: order.get(String(m._id))?.matchedItem ?? null, totalCavities: s?.totalCavities ?? 0, itemCount: s?.itemCount ?? 0, itemIds: s?.itemIds ?? [], thumbUrl: thumb ? `/uploads/${thumb}` : null });
     })
   });
 }
@@ -125,14 +124,18 @@ export async function listMoulds(req, res) {
 // GET /api/moulds/stats - dashboard counts.
 export async function mouldStats(req, res) {
   const live = { deletedAt: null, ...toolTypeFilter(req.validQuery?.toolType) };
-  const [byLocation, byStatus, awaitingRack, serviceDue, problems] = await Promise.all([
+  const tooLongSince = new Date(Date.now() - isolationMaxWaitHours() * 3_600_000);
+  const [byLocation, byStatus, awaitingRack, serviceDue, problems, isolationTooLong, limitedRun] = await Promise.all([
     Mould.aggregate([{ $match: live }, { $group: { _id: "$location", n: { $sum: 1 } } }]),
     Mould.aggregate([{ $match: live }, { $group: { _id: "$status", n: { $sum: 1 } } }]),
     Mould.countDocuments({ ...live, awaitingRack: true }),
     Mould.countDocuments({ ...live, status: "GOOD", shotsToService: { $gt: 0 }, $expr: { $gte: ["$totalShots", "$shotsToService"] } }),
-    Mould.countDocuments({ ...live, openProblem: { $ne: null } })
+    Mould.countDocuments({ ...live, openProblem: { $ne: null } }),
+    Mould.countDocuments({ ...live, location: "ISOLATION", "isolation.since": { $lte: tooLongSince } }),
+    Mould.countDocuments({ ...live, "blockedCavities.0": { $exists: true } })
   ]);
-  const toObj = (rows) => Object.fromEntries(rows.map((r) => [r._id, r.n]));
+  // Legacy stored statuses (e.g. RUNNING_LIMITED) are counted under their current key.
+  const toObj = (rows) => rows.reduce((o, r) => { const k = displayStatus(r._id); o[k] = (o[k] || 0) + r.n; return o; }, {});
   const status = toObj(byStatus);
   res.json({
     success: true,
@@ -143,14 +146,18 @@ export async function mouldStats(req, res) {
       needsAttention: SERVICE_STATUSES.reduce((n, s) => n + (status[s] || 0), 0),
       serviceDueNotFlagged: serviceDue,
       awaitingRack,
-      problemsReported: problems
+      problemsReported: problems,
+      isolation: toObj(byLocation).ISOLATION || 0,
+      isolationTooLong,
+      isolationMaxWaitHours: isolationMaxWaitHours(),
+      runningWithBlockedCavities: limitedRun
     }
   });
 }
 
 export async function getMould(req, res) {
   const mould = await Mould.findById(req.params.id).lean();
-  if (!mould || (mould.deletedAt && !can(req.user, "moulds.manage"))) fail(404, "NOT_FOUND", "Mould not found");
+  if (!mould || (mould.deletedAt && !can(req.user, "mould.delete"))) fail(404, "NOT_FOUND", "Mould not found");
   await respondWithMould(res, mould._id);
 }
 
@@ -186,28 +193,30 @@ export async function createMould(req, res) {
   await respondWithMould(res, id, 201);
 }
 
+// Each part of a mould edit has its own permission (checked separately).
+export function assertEditPermissions(user, fields) {
+  const keys = Object.keys(fields).filter((k) => fields[k] !== undefined);
+  if (keys.includes("capableMachines") && !can(user, "mould.machines.edit")) fail(403, "FORBIDDEN", "You do not have permission to change capable machines");
+  if (keys.some((k) => k !== "capableMachines") && !can(user, "mould.edit")) fail(403, "FORBIDDEN", "You do not have permission to edit mould details");
+}
+
 // PATCH /api/moulds/:id - details only; location and status change through move/status.
 export async function updateMould(req, res) {
   const { version, remarks, ...fields } = req.body;
+  assertEditPermissions(req.user, fields);
   if (fields.capableMachines !== undefined) fields.capableMachines = cleanMachines(fields.capableMachines);
   const id = await withTransaction(async (session) => {
     const mould = await loadForUpdate(req.params.id, session, version);
     if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
     if (fields.toolId && toolKey(fields.toolId) !== toolKey(mould.toolId)) await assertToolIdFree(fields.toolId, mould._id, session);
     const before = mould.toObject();
-    Object.assign(mould, Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)));
-    const stateError = mouldStateError(mould);
-    if (stateError) fail(400, "INVALID_LOCATION", stateError);
-    const diff = changes(before, mould.toObject(), MOULD_FIELDS);
-    if (!diff.fields.length) fail(400, "NO_CHANGE", "Nothing changed");
-
-    const due = serviceDueChange(mould.toObject(), req.user, "Shot limit changed"); // rule 8
-    if (due.statusSet) Object.assign(mould, due.statusSet);
+    const { set, diff } = planMouldEdit(before, fields); // never touches status or location
+    Object.assign(mould, set);
     mould.version += 1;
     await mould.save({ session });
     await Movement.create([{ mouldId: mould._id, toolId: mould.toolId, type: "EDITED", fromLocation: mould.location, toLocation: mould.location,
-      fromStatus: before.status, toStatus: before.status, remarks: [`Changed: ${diff.fields.join(", ")}`, remarks].filter(Boolean).join(". "), performedBy: req.user._id }], { session });
-    if (due.movement) await Movement.create([due.movement], { session });
+      fromStatus: before.status, toStatus: before.status, remarks: [`Changed: ${diff.fields.join(", ")}`, remarks].filter(Boolean).join(". "), performedBy: req.user._id,
+      changes: { before: diff.before, after: diff.after } }], { session });
     await audit(req, { action: "mould.updated", entityType: "Mould", entityId: mould._id, entityLabel: mould.toolId, before: diff.before, after: diff.after, reason: remarks }, session);
     return mould._id;
   });
@@ -216,7 +225,7 @@ export async function updateMould(req, res) {
 
 // POST /api/moulds/:id/move
 export async function moveMould(req, res) {
-  const { to, machineId, machineCode, rackId, status, remarks, overrideReason, version, outOfServiceDetails } = req.body;
+  const { to, machineId, machineCode, rackId, status, remarks, overrideReason, version, outOfServiceDetails, intendedDestination } = req.body;
   let warnings = [];
   const id = await withTransaction(async (session) => {
     const doc = await loadForUpdate(req.params.id, session, version);
@@ -231,7 +240,7 @@ export async function moveMould(req, res) {
     }
     const { rack, rackOccupancy } = to === "MOULD_ROOM" ? await rackForMove(rackId, doc._id, session) : { rack: null, rackOccupancy: 0 };
 
-    const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status, outOfServiceDetails });
+    const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status, outOfServiceDetails, intendedDestination });
     warnings = plan.warnings;
     Object.assign(doc, plan.set);
     if (to === "WORKSHOP") {
@@ -244,7 +253,8 @@ export async function moveMould(req, res) {
     await audit(req, {
       action: "mould.moved", entityType: "Mould", entityId: doc._id, entityLabel: doc.toolId,
       before: { location: mould.location, status: mould.status, machine: mould.machine?.code ?? null, rack: mould.rack?.locationId ?? null },
-      after: { location: doc.location, status: doc.status, machine: machine?.code ?? null, rack: rack?.locationId ?? null, outOfServiceDetails: doc.outOfServiceDetails ?? null },
+      after: { location: doc.location, status: doc.status, machine: machine?.code ?? null, rack: rack?.locationId ?? null, outOfServiceDetails: doc.outOfServiceDetails ?? null,
+        ...(plan.movement.intendedDestination ? { intendedDestination: plan.movement.intendedDestination } : {}), ...(plan.movement.dwellMinutes != null ? { dwellMinutes: plan.movement.dwellMinutes } : {}) },
       reason: [remarks, overrideReason && `Override: ${overrideReason}`].filter(Boolean).join(" | ")
     }, session);
     return doc._id;
@@ -310,6 +320,11 @@ export async function restoreMould(req, res) {
     const doc = await loadForUpdate(req.params.id, session);
     if (!doc.deletedAt) fail(400, "NO_CHANGE", `${doc.toolId} is not deleted`);
     await assertToolIdFree(doc.toolId, doc._id, session);
+    if (doc.location === "MOULD_ROOM" && doc.rackId) {
+      const { rack, rackOccupancy } = await rackForMove(doc.rackId, doc._id, session);
+      if (!rack || !rack.active || rack.deletedAt || !rack.zoneActive) fail(409, "RACK_INACTIVE", "The original storage position is not in use");
+      if (rack.capacity != null && rackOccupancy >= rack.capacity) fail(409, "RACK_FULL", `Position ${rack.locationId} is full; move the occupying mould before restoring`);
+    }
     doc.deletedAt = null;
     doc.deletedBy = null;
     doc.version += 1;
@@ -324,7 +339,7 @@ export async function restoreMould(req, res) {
 // ---- Items ----
 async function itemChange(req, mouldId, label, work) {
   return withTransaction(async (session) => {
-    const mould = await loadForUpdate(mouldId, session);
+    const mould = await loadForUpdate(mouldId, session, req.body?.version);
     if (mould.deletedAt) fail(409, "MOULD_DELETED", `${mould.toolId} is deleted`);
     const result = await work(mould, session);
     mould.version += 1;
@@ -338,16 +353,18 @@ async function itemChange(req, mouldId, label, work) {
 export async function addItem(req, res) {
   const id = await itemChange(req, req.params.id, (it) => `Item ${it.itemId} added`, async (mould, session) => {
     const count = await Item.countDocuments({ mouldId: mould._id }).session(session);
-    const [item] = await Item.create([{ sortOrder: count, ...req.body, mouldId: mould._id }], { session });
-    await audit(req, { action: "item.created", entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`, after: req.body }, session);
+    const { version: _v, ...fields } = req.body;
+    const [item] = await Item.create([{ sortOrder: count, ...fields, mouldId: mould._id }], { session });
+    await audit(req, { action: "item.created", entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`, after: fields }, session);
     return item;
   });
   await respondWithMould(res, id, 201);
 }
 
 export async function updateItem(req, res) {
-  const { photo, ...fields } = req.body;
+  const { photo, version: _version, ...fields } = req.body;
   let rendered;
+  if (photo !== undefined && !can(req.user, "mould.images.manage")) fail(403, "FORBIDDEN", "You do not have permission to change pictures");
   if (photo !== undefined) {
     try { [rendered] = await photosFromDataUrls([photo], "items"); }
     catch (e) { fail(400, "INVALID_PHOTO", e.message); }
@@ -377,4 +394,113 @@ export async function deleteItem(req, res) {
     return item;
   });
   await respondWithMould(res, id);
+}
+
+// ---- Item pictures: add / replace / remove / reorder (rules in lib/itemImages.js). Each is an "EDITED" entry + audit. ----
+async function renderOne(photo) {
+  try { return (await photosFromDataUrls([photo], "items"))[0]; }
+  catch (e) { fail(400, "INVALID_PHOTO", e.message); }
+}
+
+async function imageChange(req, res, action, what, next) {
+  const id = await itemChange(req, req.params.id, (r) => r.label, async (mould, session) => {
+    const item = await Item.findOne({ _id: req.params.itemId, mouldId: mould._id, deletedAt: null }).session(session);
+    if (!item) fail(404, "NOT_FOUND", "Item not found");
+    const current = item.images.map((i) => i.toObject());
+    item.images = next(current);
+    await item.save({ session });
+    await audit(req, { action, entityType: "Item", entityId: item._id, entityLabel: `${mould.toolId} / ${item.itemId}`,
+      before: { images: keysOf(current) }, after: { images: keysOf(item.images) }, reason: req.body?.reason || "" }, session);
+    return { label: `Item ${item.itemId}: ${what}` };
+  });
+  await respondWithMould(res, id);
+}
+
+export async function addItemImage(req, res) {
+  const rendered = await renderOne(req.body.photo);
+  await imageChange(req, res, "item.image.added", "picture added", (images) => {
+    const next = addImage(images, { path: rendered.path, thumbPath: rendered.thumbPath, width: rendered.width, height: rendered.height });
+    saveRendered(rendered); // write files only once the change is allowed
+    return next;
+  });
+}
+
+export async function replaceItemImage(req, res) {
+  const rendered = await renderOne(req.body.photo);
+  await imageChange(req, res, "item.image.replaced", "picture replaced", (images) => {
+    const next = replaceImage(images, req.params.key, { path: rendered.path, thumbPath: rendered.thumbPath, width: rendered.width, height: rendered.height });
+    saveRendered(rendered);
+    return next;
+  });
+}
+
+export async function removeItemImage(req, res) {
+  // Files stay on disk: names are content hashes and may be shared by other items.
+  await imageChange(req, res, "item.image.removed", "picture removed", (images) => removeImage(images, req.params.key));
+}
+
+export async function reorderItemImages(req, res) {
+  await imageChange(req, res, "item.image.reordered", "pictures reordered", (images) => reorderImages(images, req.body.order));
+}
+
+// ---- Running with blocked cavities (step 5) ----
+// POST /api/moulds/:id/cavities  { blocked: [..], reason, problemType?, expectedFixBy?, photo?, version }
+export async function setCavities(req, res) {
+  const { blocked, reason, problemType, expectedFixBy, photo, version } = req.body;
+  let rendered = [];
+  if (photo) {
+    try { rendered = await photosFromDataUrls([photo], "worklogs"); }
+    catch (e) { fail(400, "INVALID_PHOTO", e.message); }
+  }
+  const id = await withTransaction(async (session) => {
+    const doc = await loadForUpdate(req.params.id, session, version);
+    const mould = await withPlace(doc, session);
+    const items = await Item.find({ mouldId: doc._id, deletedAt: null }, { cavities: 1 }).session(session).lean();
+    const plan = planCavities({ mould, user: req.user, blocked, total: totalCavities(items), reason, problemType, expectedFixBy });
+    Object.assign(doc, plan.set);
+    doc.markModified("limitedRun");
+    doc.version += 1;
+    await doc.save({ session });
+    await Movement.create([plan.movement], { session });
+    const [log] = await WorkLog.create([{ ...plan.log, photos: rendered.map(saveRendered) }], { session });
+    doc.lastWork = lastWorkSummary(log, log._id);
+    await doc.save({ session });
+    await audit(req, { action: plan.action, entityType: "Mould", entityId: doc._id, entityLabel: doc.toolId, before: plan.before, after: plan.after, reason: plan.log.description }, session);
+    return doc._id;
+  });
+  await respondWithMould(res, id);
+}
+
+// GET /api/moulds/:id/cavity-downtime[?format=csv] - periods with blocked cavities, newest first.
+export async function getCavityDowntime(req, res) {
+  const mould = await Mould.findById(req.params.id, { toolId: 1, deletedAt: 1 }).lean();
+  if (!mould || (mould.deletedAt && !can(req.user, "mould.delete"))) fail(404, "NOT_FOUND", "Mould not found");
+  const movements = await Movement.find({ mouldId: mould._id, type: "CAVITIES_CHANGED" }).sort({ createdAt: 1 }).lean();
+  const hidden = new Set((req.accountPrivacy?.ids || []).map(String));
+  const users = byId(await User.find({ _id: { $in: movements.map((m) => m.performedBy) } }, { name: 1 }).lean());
+  for (const id of hidden) users.set(id, { name: "Private user" });
+  const periods = buildDowntime(movements, users);
+  if (req.query.format === "csv") {
+    if (!can(req.user, "export.run") && !can(req.user, "worklog.report")) fail(403, "FORBIDDEN", "You do not have permission to export");
+    const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [["Tool ID", "From", "To", "Blocked cavities", "Reason", "Decided by"], ...periods.map((p) => [mould.toolId, new Date(p.from).toISOString(), p.to ? new Date(p.to).toISOString() : "", p.cavities.join(" "), p.reason, p.by])];
+    res.set("Content-Type", "text/csv; charset=utf-8").set("Content-Disposition", `attachment; filename="cavity-downtime-${mould.toolId}.csv"`);
+    return res.send("\uFEFF" + rows.map((r) => r.map(cell).join(",")).join("\r\n"));
+  }
+  res.json({ success: true, toolId: mould.toolId, periods });
+}
+
+// GET /api/moulds/suggest?q= - live suggestions while typing: up to 8, grouped as moulds and items.
+export async function suggestMoulds(req, res) {
+  const { ranked, didYouMean } = await searchMoulds(req.validQuery.q, toolTypeFilter(req.validQuery.toolType), { limit: 8 });
+  const moulds = await Mould.find({ _id: { $in: ranked.map((r) => r.id) }, deletedAt: null }).lean();
+  const refs = await refsFor(moulds);
+  const byId = new Map(moulds.map((m) => [String(m._id), m]));
+  const rows = ranked.filter((r) => byId.has(r.id)).map((r) => ({ ...mouldDTO(byId.get(r.id), refs), matchedItem: r.matchedItem }));
+  res.json({
+    success: true,
+    didYouMean,
+    moulds: rows.filter((r) => !r.matchedItem),
+    items: rows.filter((r) => r.matchedItem)
+  });
 }

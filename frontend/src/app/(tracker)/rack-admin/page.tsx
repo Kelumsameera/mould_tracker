@@ -2,8 +2,8 @@
 import { useApp } from "@/components/AppLayout";
 import { can } from "@/utils/permissions";
 import { useCallback, useEffect, useState } from "react";
-import { RACK_OFF, RACK_SELECTED, RACK_TILE, RACK_TONE, rackTone } from "@/utils/helpers";
 import Icon from "@/components/Icon";
+import RackStructure from "@/components/RackStructure";
 import { useConfirm, type ConfirmOptions } from "@/components/ConfirmHost";
 import toast from "react-hot-toast";
 import { api } from "@/utils/api";
@@ -13,7 +13,7 @@ import { type Rack, type Zone } from "@/utils/types";
 
 export default function RackAdminPage() {
   const { translations, user } = useApp();
-  const canEdit = can(user, "racks.manage");
+  const canEdit = can(user, "rack.manage");
 
   const { confirm, ask } = useConfirm();
   // Screen state
@@ -24,8 +24,10 @@ export default function RackAdminPage() {
     rowFrom: "A",
     rowTo: "C",
     from: "1",
-    to: "10",
-    capacity: "",
+    to: "4",
+    palletFrom: "1",
+    palletTo: "3",
+    capacity: "1",
   });
   const [bulkPreview, setBulkPreview] = useState<{
     create: string[];
@@ -37,7 +39,8 @@ export default function RackAdminPage() {
     zone: "",
     row: "A",
     number: "1",
-    capacity: "",
+    pallet: "1",
+    capacity: "1",
     note: "",
   });
   const [isBusy, setIsBusy] = useState(false);
@@ -155,6 +158,8 @@ export default function RackAdminPage() {
     rowTo: bulkForm.rowTo,
     from: Number(bulkForm.from),
     to: Number(bulkForm.to),
+    palletFrom: Number(bulkForm.palletFrom),
+    palletTo: Number(bulkForm.palletTo),
     capacity: parseCapacity(bulkForm.capacity),
     preview: previewOnly,
   });
@@ -241,57 +246,8 @@ export default function RackAdminPage() {
                 </span>
               )}
             </div>
-            {[...new Set(z.racks.map((rack) => rack.row))].map((row) => (
-              <div className="flex gap-2 items-start mb-2" key={row}>
-                <div className="w-7 shrink-0 font-black text-ink-faint min-h-14 flex items-center justify-center text-lg">
-                  {row}
-                </div>
-                <div className="flex-1 min-w-0 grid grid-cols-5 xl:grid-cols-10 gap-1.5">
-                  {z.racks
-                    .filter((rack) => rack.row === row)
-                    .map((r) => (
-                      <button
-                        key={r.id}
-                        className={
-                          RACK_TILE + " " +
-                          RACK_TONE[rackTone(r)] +
-                          (r.active ? "" : " " + RACK_OFF) +
-                          (editingRack?.id === r.id ? " " + RACK_SELECTED : "")
-                        }
-                        aria-label={r.locationId}
-                        onClick={() => canEdit && setEditingRack(r)}
-                      >
-                        <b>{r.code}</b>
-                        <small>
-                          {r.active
-                            ? r.capacity
-                              ? `${r.occupancy}/${r.capacity}`
-                              : r.occupancy
-                            : translations.racks.inactive}
-                        </small>
-                      </button>
-                    ))}
-                  {canEdit && (
-                    <button
-                      className="bg-transparent border-0 font-extrabold text-xs min-h-tap px-2 py-0 cursor-pointer inline-flex items-center gap-1.5 disabled:text-ink-faint disabled:cursor-default text-danger"
-                      onClick={() =>
-                        runRackAction(
-                          () => api.removeRow(z.code, row),
-                          translations.feedback.deleted,
-                          getDeleteConfirmation(
-                            translations.confirm.rowDeleteTitle,
-                            translations.confirm.rowDelete(z.code, row),
-                            `${z.code}-${row}`,
-                          ),
-                        )
-                      }
-                    >
-                      {translations.rackAdmin.removeRow(row)}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+            <RackStructure racks={z.racks} translations={translations} selected={editingRack?.id} onPick={rack => { if (canEdit) setEditingRack(rack); }} />
+            {canEdit && <div className="flex flex-wrap gap-2">{[...new Set(z.racks.map(rack => rack.row))].map(row => <button key={row} className="text-danger text-sm min-h-11 px-2 font-bold" onClick={() => runRackAction(() => api.removeRow(z.code, row), translations.feedback.deleted, getDeleteConfirmation(translations.confirm.rowDeleteTitle, translations.confirm.rowDelete(z.code, row), `${z.code}-${row}`))}>{translations.rackAdmin.removeRow(row)}</button>)}</div>}
           </div>
         ))}
 
@@ -302,7 +258,7 @@ export default function RackAdminPage() {
             </div>
             <div className="grid grid-cols-2 [gap:0_var(--s3)]">
               <div>
-                <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackAdmin.row}</label>
+                <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackLayout.rack}</label>
                 <input
                   className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
                   value={editingRack.row}
@@ -315,8 +271,9 @@ export default function RackAdminPage() {
                   }
                 />
               </div>
+              {editingRack.pallet != null && <label className="block mt-4 text-sm font-semibold">{translations.rackLayout.pallet}<input type="number" min={1} max={99} value={editingRack.pallet} onChange={event => setEditingRack({ ...editingRack, pallet: Number(event.target.value) })} className="block w-full min-h-12 border border-line rounded-sm bg-surface-2 p-3 text-ink" /></label>}
               <div>
-                <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackAdmin.number}</label>
+                <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackLayout.position}</label>
                 <input
                   className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
                   type="number"
@@ -337,7 +294,7 @@ export default function RackAdminPage() {
               type="number"
               min={1}
               placeholder={translations.rackAdmin.capacityHint}
-              value={editingRack.capacity ?? ""}
+              value={editingRack.capacity ?? ""} disabled={editingRack.pallet != null}
               onChange={(event) =>
                 setEditingRack({
                   ...editingRack,
@@ -373,6 +330,7 @@ export default function RackAdminPage() {
                     () =>
                       api.updateRack(editingRack.id, {
                         row: editingRack.row,
+                        pallet: editingRack.pallet ?? undefined,
                         number: editingRack.number,
                         capacity: editingRack.capacity,
                         note: editingRack.note,
@@ -491,13 +449,14 @@ export default function RackAdminPage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">{(["palletFrom", "palletTo"] as const).map(field => <label key={field} className="block mt-4 text-sm font-semibold">{translations.rackLayout[field]}<input type="number" min={1} max={99} value={bulkForm[field]} onChange={event => { setBulkForm({ ...bulkForm, [field]: event.target.value }); setBulkPreview(null); }} className="block w-full min-h-12 border border-line rounded-sm bg-surface-2 p-3 text-ink" /></label>)}</div>
               <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackAdmin.capacity}</label>
               <input
                 className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
                 type="number"
                 min={1}
                 placeholder={translations.rackAdmin.capacityHint}
-                value={bulkForm.capacity}
+                value={bulkForm.capacity} disabled
                 onChange={(event) =>
                   setBulkForm({ ...bulkForm, capacity: event.target.value })
                 }
@@ -574,7 +533,7 @@ export default function RackAdminPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackAdmin.row}</label>
+                  <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackLayout.rack}</label>
                   <input
                     className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
                     maxLength={3}
@@ -587,8 +546,9 @@ export default function RackAdminPage() {
                     }
                   />
                 </div>
+                <label className="block mt-4 text-sm font-semibold">{translations.rackLayout.pallet}<input type="number" min={1} max={99} value={newRack.pallet} onChange={event => setNewRack({ ...newRack, pallet: event.target.value })} className="block w-full min-h-12 border border-line rounded-sm bg-surface-2 p-3 text-ink" /></label>
                 <div>
-                  <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackAdmin.number}</label>
+                  <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.rackLayout.position}</label>
                   <input
                     className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
                     type="number"
@@ -606,7 +566,7 @@ export default function RackAdminPage() {
                     type="number"
                     min={1}
                     placeholder={translations.rackAdmin.unlimited}
-                    value={newRack.capacity}
+                    value={newRack.capacity} disabled
                     onChange={(event) =>
                       setNewRack({ ...newRack, capacity: event.target.value })
                     }
@@ -621,6 +581,7 @@ export default function RackAdminPage() {
                       api.createRack({
                         zone: newRack.zone,
                         row: newRack.row,
+                        pallet: Number(newRack.pallet),
                         number: Number(newRack.number),
                         capacity: parseCapacity(newRack.capacity),
                         note: newRack.note,

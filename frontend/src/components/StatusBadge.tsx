@@ -2,7 +2,7 @@
 
 import Icon, { statusIcon } from "./Icon";
 
-import { type Dict } from "@/utils/i18n";
+import { type Dict, statusHint, statusName } from "@/utils/i18n";
 import { statusTone } from "@/utils/format";
 import type { MouldStatus } from "@/utils/types";
 
@@ -16,9 +16,10 @@ export default function StatusBadge({ status, translations }: Props) {
         "inline-flex items-center gap-1 text-xs font-semibold tracking-[.1px] px-2 py-0.5 rounded-[4px] whitespace-nowrap leading-[1.6] " +
         statusTone(status)
       }
+      title={statusHint(status, translations)}
     >
       <Icon name={statusIcon(status)} size={13} />
-      {translations.status[status]}
+      {statusName(status, translations)}
     </span>
   );
 }

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { can } from "../lib/permissions.js";
+import { loadRoleAccess } from "../lib/roleAccess.js";
 
 export async function requireAuth(req, res, next) {
   try {
@@ -12,11 +13,15 @@ export async function requireAuth(req, res, next) {
     if (!user || !user.active || user.deletedAt) {
       return res.status(401).json({ success: false, message: "Invalid user session" });
     }
-    req.user = user;
-    next();
+    req.user = await loadRoleAccess(user);
   } catch {
     return res.status(401).json({ success: false, message: "Invalid or expired session" });
   }
+  // Seeded accounts must pick their own password before using anything but their own account.
+  if (req.user.mustChangePassword && !String(req.originalUrl || "").startsWith("/api/auth/")) {
+    return res.status(403).json({ success: false, code: "PASSWORD_CHANGE_REQUIRED", message: "Change your password first" });
+  }
+  next();
 }
 
 export function requireRole(...roles) {

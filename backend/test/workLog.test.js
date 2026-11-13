@@ -88,7 +88,8 @@ describe("outcome and rule 2", () => {
   });
   test("needs repair + send to Workshop: moved through the normal move rules", () => {
     const plan = planWorkLog({ mould: mould(), user: U.mould_technician, input: input({ outcome: "NEEDS_REPAIR", sendToWorkshop: true }), now: NOW });
-    assert.deepEqual([plan.move.set.location, plan.move.set.status, plan.move.set.machineId], ["WORKSHOP", "NEEDS_REPAIR", null]);
+    // Leaving a machine goes through the Isolation Area, planned for the Workshop (step 4).
+    assert.deepEqual([plan.move.set.location, plan.move.set.status, plan.move.set.machineId, plan.move.set.isolation.intendedDestination], ["ISOLATION", "NEEDS_REPAIR", null, "WORKSHOP"]);
     assert.equal(plan.log.sentToWorkshop, true);
     assert.equal(plan.statusSet, null);
     assert.equal(plan.movement, null); // the move's own movement records the status
@@ -97,7 +98,7 @@ describe("outcome and rule 2", () => {
     const plan = planWorkLog({ mould: inRoom(), user: U.mould_maker, input: input({ outcome: "NEEDS_SERVICE" }), now: NOW });
     assert.deepEqual([plan.statusSet, plan.log.statusAfter, plan.warnings], [null, "GOOD", ["WORKSHOP_MOVE_REQUIRED"]]);
     const moved = planWorkLog({ mould: inRoom(), user: U.mould_maker, input: input({ outcome: "NEEDS_SERVICE", sendToWorkshop: true }), now: NOW });
-    assert.equal(moved.move.set.location, "WORKSHOP");
+    assert.equal(moved.move.set.location, "ISOLATION");
   });
   test("a technician cannot take a mould out of the Mould Room: entry saved, move left to others", () => {
     const plan = planWorkLog({ mould: inRoom(), user: U.mould_technician, input: input({ outcome: "NEEDS_REPAIR", sendToWorkshop: true }), now: NOW });

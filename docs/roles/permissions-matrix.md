@@ -39,11 +39,11 @@ Legend: ✅ allowed by role default · — not allowed. **SysA** (System Adminis
 
 ## Move matrix
 
-A move needs one permission from **every** group that applies (`movePermissionGroups`). The result by role:
+A move needs one permission from **every** group that applies (`movePermissionGroups`). Mounting from storage requires `moves.machine`; other moves into or out of storage require `moves.mouldRoom`. The result by role:
 
 | From → To | Super Admin | Admin | Prod. Supervisor | Mould Technician | Mould Maker |
 |---|---|---|---|---|---|
-| Storage → Machine | ✅ | ✅ | — | — | — |
+| Storage → Machine | ✅ | ✅ | ✅ | ✅ | — |
 | Storage → Production Floor | ✅ | ✅ | — | — | ✅ |
 | Storage → Workshop | ✅ | ✅ | — | — | ✅ |
 | Storage → other rack | ✅ | ✅ | — | — | ✅ |

@@ -15,7 +15,7 @@ export const personSnapshot = (u) => ({ userId: u._id, name: u.name, role: u.rol
 export const canDoWork = (u) => Boolean(u && u.active && !u.deletedAt && can(u, "worklog.create"));
 
 // Where the mould is and how it is, at the moment of the entry.
-const placeSnapshot = (mould) => ({
+export const placeSnapshot = (mould) => ({
   mouldId: mould._id,
   toolId: mould.toolId,
   location: mould.location,
@@ -92,8 +92,10 @@ export function planWorkLog({ mould, user, input, workers = [], corrected = null
   } else if (input.outcome === "NEEDS_REPAIR" || input.outcome === "NEEDS_SERVICE") {
     const target = input.outcome;
     if (input.sendToWorkshop && mould.location !== "WORKSHOP") {
-      if (canMove(user, mould.location, "WORKSHOP")) {
-        move = planMove({ mould, user, to: "WORKSHOP", status: target, remarks: `${input.type}: ${description}`, now });
+      // From Isolation straight to the Workshop; from anywhere else to Isolation first, planned for the Workshop.
+      const to = mould.location === "ISOLATION" ? "WORKSHOP" : "ISOLATION";
+      if (canMove(user, mould.location, to)) {
+        move = planMove({ mould, user, to, status: target, remarks: `${input.type}: ${description}`, now, ...(to === "ISOLATION" ? { intendedDestination: "WORKSHOP" } : {}) });
         statusAfter = target;
       } else warnings.push("WORKSHOP_MOVE_NOT_ALLOWED");
     }

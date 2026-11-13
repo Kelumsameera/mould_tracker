@@ -1,9 +1,10 @@
 "use client";
+import { statusKeys } from "@/utils/runtimeConfig";
 import { useApp } from "@/components/AppLayout";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/utils/api";
-import { locationName } from "@/utils/i18n";
+import { locationName, statusName, roleName, workTypeName, outcomeName } from "@/utils/i18n";
 import { errorText, formatTime } from "@/utils/format";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/components/ConfirmHost";
@@ -24,7 +25,7 @@ const REPORT_TABLE = [
 ].join(" ");
 import {
   STATUSES,
-  WORK_TYPES,
+  REPORT_WORK_TYPES,
   type DateRange,
   type Machine,
   type Person,
@@ -220,17 +221,17 @@ export default function WorkReportPage() {
       );
     if (filters.userId)
       add("userId", `${translations.report.person}: ${person(filters.userId)}`);
-    if (filters.type) add("type", translations.work.types[filters.type]);
+    if (filters.type) add("type", workTypeName(filters.type, translations));
     if (filters.machine) add("machine", filters.machine);
     if (filters.outcome)
       add(
         "outcome",
         filters.outcome === "NONE"
           ? translations.report.noOutcome
-          : translations.work.outcomes[filters.outcome],
+          : outcomeName(filters.outcome, translations),
       );
     if (filters.status)
-      add("status", `${translations.report.status}: ${translations.status[filters.status]}`);
+      add("status", `${translations.report.status}: ${statusName(filters.status, translations)}`);
     if (filters.problem) add("problem", translations.report.problemOnly);
     return chips;
   }, [filters, workers, translations]);
@@ -369,9 +370,9 @@ export default function WorkReportPage() {
               }
             >
               <option value="">{translations.report.anyType}</option>
-              {WORK_TYPES.map((w) => (
+              {REPORT_WORK_TYPES.map((w) => (
                 <option key={w} value={w}>
-                  {translations.work.types[w]}
+                  {workTypeName(w, translations)}
                 </option>
               ))}
             </select>
@@ -413,7 +414,7 @@ export default function WorkReportPage() {
               <option value="">{translations.report.anyOutcome}</option>
               {(["OK", "NEEDS_REPAIR", "NEEDS_SERVICE"] as const).map((o) => (
                 <option key={o} value={o}>
-                  {translations.work.outcomes[o]}
+                  {outcomeName(o, translations)}
                 </option>
               ))}
               <option value="NONE">{translations.report.noOutcome}</option>
@@ -434,9 +435,9 @@ export default function WorkReportPage() {
               }
             >
               <option value="">{translations.report.anyStatus}</option>
-              {STATUSES.map((s) => (
+              {statusKeys(STATUSES).map((s) => (
                 <option key={s} value={s}>
-                  {translations.status[s]}
+                  {statusName(s, translations)}
                 </option>
               ))}
             </select>
@@ -527,7 +528,7 @@ export default function WorkReportPage() {
                 <tr>
                   <th>{translations.report.person_}</th>
                   {shownTypes.map((w) => (
-                    <th key={w}>{translations.work.types[w]}</th>
+                    <th key={w}>{workTypeName(w, translations)}</th>
                   ))}
                   <th>{translations.report.total}</th>
                   <th>{translations.report.minutes}</th>
@@ -548,11 +549,11 @@ export default function WorkReportPage() {
                     <td className="max-md:block!">
                       <b>{person.name}</b>
                       <small className="block text-ink-soft">
-                        {translations.roles[person.role] ?? person.role}
+                        {roleName(person.role, translations)}
                       </small>
                     </td>
                     {shownTypes.map((w) => (
-                      <td key={w} data-label={translations.work.types[w]}>
+                      <td key={w} data-label={workTypeName(w, translations)}>
                         {person.byType[w] ?? 0}
                       </td>
                     ))}
@@ -632,7 +633,7 @@ export default function WorkReportPage() {
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-[4px] whitespace-nowrap leading-[1.6] bg-workshop-bg text-workshop-ink tracking-[.1px]">
                           <Icon name={workIcon[workLog.type]} size={12} />
-                          {translations.work.types[workLog.type]}
+                          {workTypeName(workLog.type, translations)}
                         </span>
                       )}
                       {workLog.resolvesProblemId && (

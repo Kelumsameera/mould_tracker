@@ -14,16 +14,18 @@ const INJ3 = { _id: oid(), code: "INJ-03", active: true };
 const INJ9 = { _id: oid(), code: "INJ-09", active: true };
 const rack = (patch = {}) => ({ _id: oid(), zone: "FLK", code: "A3", locationId: "FLK-A3", active: true, capacity: null, zoneActive: true, ...patch });
 const mould = (patch = {}) => ({
-  _id: oid(), toolId: "FLK100", owner: "FLK", status: "GOOD", location: "PRODUCTION_FLOOR", machineId: null, rackId: null,
+  _id: oid(), toolId: "FLK100", owner: "FLK", status: "GOOD", location: "ISOLATION", machineId: null, rackId: null,
   capableMachines: ["INJ-03"], shotsToService: 1000, totalShots: 0, ...patch
 });
 const onMachine = (patch = {}) => mould({ location: "MACHINE", machineId: INJ3._id, machine: INJ3, ...patch });
+// Fixtures default to the Isolation Area: every non-machine move starts there (step 4).
+const onFloor = (patch = {}) => mould({ location: "PRODUCTION_FLOOR", ...patch });
 const code = (c) => (e) => e.details?.code === c;
 
 describe("rule 1: a GOOD mould may be on a machine, the production floor or a Mould Room rack", () => {
   test("all three are allowed and leave a consistent mould", () => {
     for (const [to, extra] of [["MACHINE", { machine: INJ3 }], ["PRODUCTION_FLOOR", {}], ["MOULD_ROOM", { rack: rack() }]]) {
-      const start = to === "PRODUCTION_FLOOR" ? onMachine() : mould();
+      const start = mould();
       const { set } = planMove({ mould: start, user: SA, to, ...extra });
       assert.equal(set.location, to);
       assert.equal(new Mould({ ...start, ...set }).validateSync(), undefined, to);
@@ -34,10 +36,11 @@ describe("rule 1: a GOOD mould may be on a machine, the production floor or a Mo
 describe("rule 2: service or repair means Workshop; never into the Mould Room", () => {
   for (const status of ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"]) {
     test(`${status} mould`, () => {
-      const m = status.startsWith("IN_") ? mould({ status, location: "WORKSHOP" }) : onMachine({ status });
-      assert.throws(() => planMove({ mould: m, user: SA, to: "MOULD_ROOM", rack: rack() }), code("NOT_GOOD"));
-      assert.throws(() => planMove({ mould: m, user: SA, to: "PRODUCTION_FLOOR" }), code("NOT_GOOD"));
-      assert.throws(() => planMove({ mould: m, user: SA, to: "MACHINE", machine: INJ9 }), code("NOT_GOOD"));
+      const m = status.startsWith("IN_") ? mould({ status, location: "WORKSHOP" }) : mould({ status });
+      const from = m.location === "WORKSHOP" ? mould({ status }) : m; // leaving the Workshop goes through Isolation
+      assert.throws(() => planMove({ mould: from, user: SA, to: "MOULD_ROOM", rack: rack() }), code("NOT_GOOD"));
+      assert.throws(() => planMove({ mould: from, user: SA, to: "PRODUCTION_FLOOR" }), code("NOT_GOOD"));
+      assert.throws(() => planMove({ mould: from, user: SA, to: "MACHINE", machine: INJ9 }), code("NOT_GOOD"));
       if (m.location !== "WORKSHOP") assert.equal(planMove({ mould: m, user: SA, to: "WORKSHOP", remarks: "worn" }).set.location, "WORKSHOP");
     });
   }
@@ -49,13 +52,18 @@ describe("rule 2: service or repair means Workshop; never into the Mould Room", 
 });
 
 describe("rule 3: from a machine to the floor / Mould Room if GOOD, to the Workshop if it needs work", () => {
-  test("machine -> production floor, Mould Room, Workshop with a status", () => {
-    assert.equal(planMove({ mould: onMachine(), user: PS, to: "PRODUCTION_FLOOR" }).set.machineId, null);
-    const toRoom = planMove({ mould: onMachine(), user: MM, to: "MOULD_ROOM", rack: rack() });
-    assert.equal(toRoom.movement.fromMachineCode, "INJ-03");
+  test("machine -> Isolation -> production floor, Mould Room, Workshop with a status", () => {
+    const off = planMove({ mould: onMachine(), user: PS, to: "ISOLATION", intendedDestination: "MOULD_ROOM" });
+    assert.deepEqual([off.set.location, off.set.machineId, off.movement.fromMachineCode, off.set.isolation.intendedDestination], ["ISOLATION", null, "INJ-03", "MOULD_ROOM"]);
+    const waiting = { ...onMachine(), ...off.set };
+    assert.equal(planMove({ mould: waiting, user: PS, to: "PRODUCTION_FLOOR" }).set.location, "PRODUCTION_FLOOR");
+    const toRoom = planMove({ mould: waiting, user: MM, to: "MOULD_ROOM", rack: rack() });
     assert.equal(toRoom.movement.toRackLocationId, "FLK-A3");
-    const toShop = planMove({ mould: onMachine(), user: MT, to: "WORKSHOP", status: "NEEDS_REPAIR", remarks: "cracked insert" });
+    const toShop = planMove({ mould: waiting, user: MT, to: "WORKSHOP", status: "NEEDS_REPAIR", remarks: "cracked insert" });
     assert.deepEqual([toShop.set.location, toShop.set.status, toShop.movement.toStatus], ["WORKSHOP", "NEEDS_REPAIR", "NEEDS_REPAIR"]);
+    for (const to of ["PRODUCTION_FLOOR", "MOULD_ROOM", "WORKSHOP"]) {
+      assert.throws(() => planMove({ mould: onMachine(), user: SA, to, rack: rack(), remarks: "x" }), code("ISOLATION_FIRST"), to);
+    }
   });
 });
 
@@ -67,8 +75,11 @@ describe("rule 4: after service/repair, GOOD at the Workshop, then out again", (
     const repaired = planStatus({ mould: mould({ location: "WORKSHOP", status: "IN_REPAIR", totalShots: 10 }), user: MT, status: "GOOD", remarks: "fixed" });
     assert.deepEqual(repaired.set, { status: "GOOD" });
   });
-  test("a GOOD mould at the Workshop can go to a rack, the floor or a machine", () => {
-    const m = mould({ location: "WORKSHOP" });
+  test("a GOOD mould at the Workshop goes through Isolation to a rack, the floor or a machine", () => {
+    for (const to of ["MOULD_ROOM", "PRODUCTION_FLOOR", "MACHINE"]) {
+      assert.throws(() => planMove({ mould: mould({ location: "WORKSHOP" }), user: SA, to, rack: rack(), machine: INJ3 }), code("ISOLATION_FIRST"), to);
+    }
+    const m = mould();
     assert.equal(planMove({ mould: m, user: MM, to: "MOULD_ROOM", rack: rack() }).set.location, "MOULD_ROOM");
     assert.equal(planMove({ mould: m, user: MT, to: "PRODUCTION_FLOOR" }).set.location, "PRODUCTION_FLOOR");
     assert.equal(planMove({ mould: m, user: MT, to: "MACHINE", machine: INJ3 }).set.location, "MACHINE");
@@ -114,18 +125,20 @@ describe("rule 6: one mould per machine", () => {
 
 describe("rule 7: every change is recorded; remarks are mandatory for service and repair", () => {
   test("Workshop moves and status changes need remarks", () => {
-    assert.throws(() => planMove({ mould: onMachine(), user: MT, to: "WORKSHOP" }), code("REMARKS_REQUIRED"));
-    assert.throws(() => planMove({ mould: onMachine(), user: MT, to: "WORKSHOP", remarks: "   " }), code("REMARKS_REQUIRED"));
+    assert.throws(() => planMove({ mould: mould(), user: MT, to: "WORKSHOP" }), code("REMARKS_REQUIRED"));
+    assert.throws(() => planMove({ mould: mould(), user: MT, to: "WORKSHOP", remarks: "   " }), code("REMARKS_REQUIRED"));
     assert.throws(() => planStatus({ mould: mould({ location: "WORKSHOP" }), user: MT, status: "NEEDS_REPAIR" }), code("REMARKS_REQUIRED"));
   });
   test("each plan carries a complete Movement record", () => {
-    const m = onMachine();
+    const m = mould();
     const { movement } = planMove({ mould: m, user: MT, to: "WORKSHOP", status: "NEEDS_REPAIR", remarks: "flash" });
     assert.deepEqual(
-      { ...movement, mouldId: String(movement.mouldId), performedBy: String(movement.performedBy), fromMachineId: String(movement.fromMachineId) },
-      { mouldId: String(m._id), toolId: "FLK100", type: "MOVED", fromLocation: "MACHINE", toLocation: "WORKSHOP", fromStatus: "GOOD", toStatus: "NEEDS_REPAIR",
-        fromMachineId: String(INJ3._id), fromMachineCode: "INJ-03", fromRackId: null, fromRackLocationId: null, remarks: "flash", overrideReason: "", performedBy: String(MT._id) }
+      { ...movement, mouldId: String(movement.mouldId), performedBy: String(movement.performedBy) },
+      { mouldId: String(m._id), toolId: "FLK100", type: "MOVED", fromLocation: "ISOLATION", toLocation: "WORKSHOP", fromStatus: "GOOD", toStatus: "NEEDS_REPAIR",
+        fromMachineId: null, fromMachineCode: null, fromRackId: null, fromRackLocationId: null, remarks: "flash", overrideReason: "", performedBy: String(MT._id) }
     );
+    const off = planMove({ mould: onMachine(), user: MT, to: "ISOLATION", remarks: "" });
+    assert.deepEqual([off.movement.fromMachineCode, String(off.movement.fromMachineId)], ["INJ-03", String(INJ3._id)]);
     assert.equal(planStatus({ mould: mould({ location: "WORKSHOP" }), user: MT, status: "IN_REPAIR", remarks: "x" }).movement.type, "STATUS_CHANGED");
   });
   test("moving to the same place is refused instead of writing an empty record", () => {
@@ -203,7 +216,8 @@ describe("who may move what (one user per role)", () => {
     "MACHINE>WORKSHOP": [1, 1, 0, 1, 1],
     "MACHINE>MOULD_ROOM": [1, 1, 0, 0, 1],
     "MOULD_ROOM>PRODUCTION_FLOOR": [1, 1, 0, 0, 1],
-    "MOULD_ROOM>MACHINE": [1, 1, 0, 0, 0],
+    "MOULD_ROOM>MACHINE": [1, 1, 1, 1, 0],
+    "TOOL_ROOM>MACHINE": [1, 1, 1, 1, 0],
     "MOULD_ROOM>WORKSHOP": [1, 1, 0, 0, 1],
     "MOULD_ROOM>MOULD_ROOM": [1, 1, 0, 0, 1],
     "WORKSHOP>MOULD_ROOM": [1, 1, 0, 0, 1],
@@ -211,6 +225,19 @@ describe("who may move what (one user per role)", () => {
     "WORKSHOP>MACHINE": [1, 1, 1, 1, 0]
   };
   const users = [SA, A, PS, MT, MM];
+  test("supervisors can mount from storage without gaining other storage access", () => {
+    for (const location of ["MOULD_ROOM", "TOOL_ROOM"]) {
+      const current = mould({ location, rackId: oid() });
+      const result = planMove({ mould: current, user: PS, to: "MACHINE", machine: INJ3 });
+      assert.equal(result.set.machineId, INJ3._id);
+      assert.equal(result.set.rackId, null);
+      assert.equal(result.movement.fromLocation, location);
+      assert.equal(canMove(PS, location, "PRODUCTION_FLOOR"), false);
+      assert.equal(canMove(PS, "MACHINE", location), false);
+      assert.throws(() => planMove({ mould: current, user: PS, to: "MACHINE", machine: INJ9 }), code("NOT_CAPABLE"));
+    }
+    assert.equal(canMove({ ...PS, permissionOverrides: ["mould.view"] }, "MOULD_ROOM", "MACHINE"), false);
+  });
   for (const [key, row] of Object.entries(MATRIX)) {
     test(key.replace(">", " -> "), () => {
       const [from, to] = key.split(">");

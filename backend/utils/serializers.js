@@ -1,5 +1,8 @@
-import { permissionsFor } from "../lib/permissions.js";
+import { normalizeOverrides, overridesActive, permissionsFor, rolePermissionsFor } from "../lib/permissions.js";
 import { isServiceDue } from "../lib/workflow.js";
+import { isolationLevel, limitedRunLevel } from "../lib/flowConfig.js";
+import { displayStatus } from "../lib/mouldState.js";
+import { setting } from "../lib/settings.js";
 
 // Turns Mongoose documents into the flat JSON shape the frontend uses.
 const plain = (d) => (d && typeof d.toObject === "function" ? d.toObject() : d);
@@ -7,7 +10,7 @@ const idOf = (v) => (v == null ? null : String(v._id ?? v));
 const uploadUrl = (p) => (p ? `/uploads/${p}` : null); // relative to the API base
 
 export const machineRef = (m) => (m && m.code ? { id: String(m._id), code: m.code, name: m.name } : null);
-export const rackRef = (r) => (r && r.locationId ? { id: String(r._id), zone: r.zone, row: r.row, number: r.number, code: r.code, locationId: r.locationId } : null);
+export const rackRef = (r) => (r && r.locationId ? { id: String(r._id), zone: r.zone, row: r.row, number: r.number, pallet: r.pallet ?? null, code: r.code, locationId: r.locationId } : null);
 const userRef = (u) => (u && u.name ? { id: String(u._id), name: u.name } : null);
 
 export const userDTO = (u) => ({
@@ -17,10 +20,12 @@ export const userDTO = (u) => ({
   role: u.role,
   language: u.language || "en",
   active: u.active,
+  mustChangePassword: Boolean(u.mustChangePassword),
+  hasAccessOverrides: overridesActive(normalizeOverrides(u.permissionOverrides, rolePermissionsFor(u))),
   permissions: permissionsFor(u)
 });
 
-export const imageDTO = (i) => ({ url: uploadUrl(i.path), thumbUrl: uploadUrl(i.thumbPath), width: i.width ?? null, height: i.height ?? null });
+export const imageDTO = (i) => ({ key: String(i.path || "").split("/").pop().replace(/\.webp$/, ""), manual: !i.source, url: uploadUrl(i.path), thumbUrl: uploadUrl(i.thumbPath), width: i.width ?? null, height: i.height ?? null });
 
 export function itemDTO(i) {
   const o = plain(i);
@@ -52,7 +57,7 @@ export function mouldDTO(m, refs = {}, summary = {}) {
     size: o.size || "",
     owner: o.owner ?? null,
     capableMachines: o.capableMachines || [],
-    status: o.status,
+    status: displayStatus(o.status),
     location: o.location,
     machine: machineRef(refs.machines?.get(idOf(o.machineId))),
     rack: rackRef(refs.racks?.get(idOf(o.rackId))),
@@ -60,10 +65,16 @@ export function mouldDTO(m, refs = {}, summary = {}) {
     shotsToService: o.shotsToService ?? null,
     totalShots: o.totalShots ?? 0,
     serviceDue: isServiceDue(o),
+    // "Service soon": shots reached the warning level of Settings (limits.shotsWarnPercent) but not the limit yet.
+    serviceSoon: !isServiceDue(o) && Number(o.shotsToService) > 0 && Number(o.totalShots || 0) >= (Number(o.shotsToService) * (setting("limits.shotsWarnPercent") ?? 90)) / 100,
     lastServicedAt: o.lastServicedAt ?? null,
     notes: o.notes || "",
     remarks: o.remarks || "",
     outOfServiceDetails: o.outOfServiceDetails ?? null,
+    isolation: o.isolation?.since ? { since: o.isolation.since, fromLocation: o.isolation.fromLocation ?? null, intendedDestination: o.isolation.intendedDestination ?? null, remarks: o.isolation.remarks || "", level: isolationLevel(o.isolation.since) } : null,
+    blockedCavities: o.blockedCavities || [],
+    totalCavities: summary.totalCavities ?? null,
+    limitedRun: o.limitedRun?.since ? { since: o.limitedRun.since, reason: o.limitedRun.reason || "", problemType: o.limitedRun.problemType ?? null, decidedBy: o.limitedRun.decidedBy ?? null, decidedAt: o.limitedRun.decidedAt ?? null, expectedFixBy: o.limitedRun.expectedFixBy ?? null, level: limitedRunLevel(o.limitedRun) } : null,
     lastMovedAt: o.lastMovedAt ?? null,
     lastMovedBy: userRef(refs.users?.get(idOf(o.lastMovedBy))),
     lastWork: o.lastWork ? { type: o.lastWork.type, names: o.lastWork.names || [], doneAt: o.lastWork.doneAt } : null,
@@ -82,13 +93,17 @@ export const movementDTO = (m, users = new Map()) => ({
   type: m.type,
   fromLocation: m.fromLocation,
   toLocation: m.toLocation,
-  fromStatus: m.fromStatus,
-  toStatus: m.toStatus,
+  fromStatus: displayStatus(m.fromStatus),
+  toStatus: displayStatus(m.toStatus),
   fromMachineCode: m.fromMachineCode,
   toMachineCode: m.toMachineCode,
   fromRackLocationId: m.fromRackLocationId,
   toRackLocationId: m.toRackLocationId,
   remarks: m.remarks || "",
+  changes: m.changes ?? null,
+  intendedDestination: m.intendedDestination ?? null,
+  dwellMinutes: m.dwellMinutes ?? null,
+  blockedCavities: m.blockedCavities ?? null,
   outOfServiceDetails: m.outOfServiceDetails ?? null,
   overrideReason: m.overrideReason || "",
   by: userRef(users.get(idOf(m.performedBy))),
@@ -125,8 +140,8 @@ export const workLogDTO = (l, corrected = false) => ({
   location: l.location,
   machineCode: l.machineCode ?? null,
   rackLocationId: l.rackLocationId ?? null,
-  statusBefore: l.statusBefore,
-  statusAfter: l.statusAfter,
+  statusBefore: displayStatus(l.statusBefore),
+  statusAfter: displayStatus(l.statusAfter),
   shots: l.shots ?? null,
   outcome: l.outcome ?? null,
   sentToWorkshop: Boolean(l.sentToWorkshop),

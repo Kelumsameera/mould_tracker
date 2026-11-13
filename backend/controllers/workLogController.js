@@ -10,12 +10,13 @@ import { withTransaction } from "../config/db.js";
 import { visibleUsersFilter } from "../lib/permissions.js";
 import { fail } from "../utils/ApiError.js";
 import { workLogDTO } from "../utils/serializers.js";
+import { displayStatus } from "../lib/mouldState.js";
+import { itemMouldIdsFor } from "../lib/mouldSearch.js";
+import { setting } from "../lib/settings.js";
 import { audit } from "../lib/audit.js";
 import { canDoWork, lastWorkSummary, planProblemReport, planWorkLog } from "../lib/workLog.js";
 import { EXPORT_CAP, buildWorkLogFilter, describeFilters } from "../lib/workLogFilter.js";
 import { photosFromDataUrls, saveRendered } from "../lib/images.js";
-
-const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const problemOpenedFrom = (doc) => doc.openProblem?.workLogId;
 
 // Ids of entries that a later entry corrects.
@@ -95,7 +96,7 @@ export async function createWorkLog(req, res) {
 
 // Shared filters for the report, the summary and the export (search also looks at the mould's Item IDs).
 export async function reportFilter(q, privacy) {
-  const itemMouldIds = q.q ? await Item.distinct("mouldId", { deletedAt: null, itemId: new RegExp(escapeRegex(q.q.trim()), "i") }) : [];
+  const itemMouldIds = q.q ? await itemMouldIdsFor(q.q) : [];
   return buildWorkLogFilter(q, { itemMouldIds, hiddenUserIds: privacy?.ids ?? [] });
 }
 
@@ -186,8 +187,8 @@ const EXPORT_COLUMNS = [
   ["Parts used", (l) => l.partsUsed],
   ["Minutes", (l) => l.timeSpentMinutes ?? ""],
   ["Location", (l) => [l.location, l.machineCode, l.rackLocationId].filter(Boolean).join(" ")],
-  ["Status before", (l) => l.statusBefore],
-  ["Status after", (l) => l.statusAfter],
+  ["Status before", (l) => displayStatus(l.statusBefore)],
+  ["Status after", (l) => displayStatus(l.statusAfter)],
   ["Outcome", (l) => l.outcome ?? ""],
   ["Sent to Workshop", (l) => (l.sentToWorkshop ? "yes" : "")],
   ["Shots", (l) => l.shots ?? ""],
@@ -208,8 +209,9 @@ export async function exportWorkLogs(req, res) {
   const q = req.validQuery;
   const filter = await reportFilter(q, req.accountPrivacy);
   const total = await WorkLog.countDocuments(filter);
-  if (total > EXPORT_CAP) fail(400, "EXPORT_TOO_LARGE", `${total} entries match; narrow the filters to ${EXPORT_CAP} or fewer`, { total, cap: EXPORT_CAP });
-  const found = await WorkLog.find(filter).sort({ doneAt: -1 }).limit(EXPORT_CAP).lean();
+  const cap = setting("limits.exportRowCap") ?? EXPORT_CAP;
+  if (total > cap) fail(400, "EXPORT_TOO_LARGE", `${total} entries match; narrow the filters to ${cap} or fewer`, { total, cap });
+  const found = await WorkLog.find(filter).sort({ doneAt: -1 }).limit(cap).lean();
   const corrected = await correctedIds(found);
   const logs = found.map((l) => req.accountPrivacy.project({ ...l, corrected: corrected.has(String(l._id)) }));
   const stamp = new Date().toISOString().slice(0, 10);

@@ -3,9 +3,9 @@ import { createMachineSchema, updateMachineSchema } from "../validators/schemas.
 import { routerFrom } from "./table.js";
 
 export const machineRouteTable = [
-  ["get", "/", ["moulds.view"], c.listMachines],
-  ["post", "/", ["moulds.manage"], c.createMachine, createMachineSchema],
-  ["patch", "/:id", ["moulds.manage"], c.updateMachine, updateMachineSchema]
+  ["get", "/", ["mould.view"], c.listMachines],
+  ["post", "/", ["mould.edit"], c.createMachine, createMachineSchema],
+  ["patch", "/:id", ["mould.edit"], c.updateMachine, updateMachineSchema]
 ];
 
 export default routerFrom(machineRouteTable);

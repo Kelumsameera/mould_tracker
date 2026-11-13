@@ -1,20 +1,70 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rack view · Mould Tracker Docs</title><meta name="description" content="Visual map of the Mould Room by zone, row and rack">
+<title data-title-en="Find a storage position" data-title-si="ගබඩා ස්ථානය සෙවීම">Find a storage position · Mould Tracker Docs</title><meta name="description" content="">
+<script>try { if (localStorage.getItem('mt-docs-language') === 'si') document.documentElement.lang = 'si'; } catch {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
-<header class="top"><button class="menu" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
-<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span>Docs</span></a>
-<button class="theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></header>
-<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h">Start</div><a class="nav-a" href="../index.html">Mould Tracker documentation</a><a class="nav-a" href="../MOULD-TRACKER-COMPLETE-GUIDE.html">Mould Tracker — complete guide</a><a class="nav-a" href="../introduction.html">Introduction</a><a class="nav-a" href="../product-overview.html">Product overview</a><a class="nav-a" href="../glossary.html">Glossary</a></div><div class="nav-sec"><div class="nav-h">Getting started</div><a class="nav-a" href="../getting-started/prerequisites.html">Prerequisites</a><a class="nav-a" href="../getting-started/first-login.html">First login</a><a class="nav-a" href="../getting-started/quick-start.html">5-minute quick start</a><a class="nav-a" href="../getting-started/navigation-tour.html">Navigation tour</a></div><div class="nav-sec"><div class="nav-h">User guide</div><a class="nav-a" href="../user-guide/index.html">User guide</a><a class="nav-a" href="../user-guide/account-and-passkeys.html">Account details and passkeys</a><a class="nav-a" href="../user-guide/app-settings-and-install.html">Install, language, theme and offline</a><a class="nav-a" href="../user-guide/audit-log.html">Audit log</a><a class="nav-a" href="../user-guide/extrusion-dies.html">Extrusion dies</a><a class="nav-a" href="../user-guide/find-a-mould.html">Find a mould</a><a class="nav-a" href="../user-guide/machines.html">Machines</a><a class="nav-a" href="../user-guide/manage-moulds.html">Manage moulds and items</a><a class="nav-a" href="../user-guide/move-a-mould.html">Move a mould</a><a class="nav-a" href="../user-guide/rack-management.html">Rack management</a><a class="nav-a on" href="../user-guide/rack-view.html">Rack view</a><a class="nav-a" href="../user-guide/record-shots.html">Record shots</a><a class="nav-a" href="../user-guide/report-a-problem.html">Report a problem</a><a class="nav-a" href="../user-guide/user-access.html">User access (custom permissions)</a><a class="nav-a" href="../user-guide/users.html">Users</a><a class="nav-a" href="../user-guide/work-log-report.html">Work log report and export</a><a class="nav-a" href="../user-guide/work-log.html">Work log</a><a class="nav-a" href="../user-guide/workshop-queue.html">Workshop queue and status changes</a></div><div class="nav-sec"><div class="nav-h">Roles</div><a class="nav-a" href="../roles/overview.html">Roles overview</a><a class="nav-a" href="../roles/permissions-matrix.html">Permissions matrix</a><a class="nav-a" href="../roles/super-admin.html">Super Admin</a><a class="nav-a" href="../roles/admin.html">Admin</a><a class="nav-a" href="../roles/production-supervisor.html">Production Supervisor</a><a class="nav-a" href="../roles/mould-technician.html">Mould Technician</a><a class="nav-a" href="../roles/mould-maker.html">Mould Maker</a><a class="nav-a" href="../roles/system-administrator.html">System Administrator</a></div><div class="nav-sec"><div class="nav-h">Workflows</div><a class="nav-a" href="../workflows/overview.html">Workflows overview</a><a class="nav-a" href="../workflows/mould-lifecycle.html">Mould registration and retirement</a><a class="nav-a" href="../workflows/mount-and-unmount.html">Mount and unmount</a><a class="nav-a" href="../workflows/shot-count-and-service.html">Shot count and service</a><a class="nav-a" href="../workflows/problem-to-repair.html">Problem to repair</a><a class="nav-a" href="../workflows/workshop-repair-cycle.html">Workshop repair cycle</a><a class="nav-a" href="../workflows/out-of-service.html">Out of Service (external repair)</a><a class="nav-a" href="../workflows/data-import.html">Data import and migration</a></div><div class="nav-sec"><div class="nav-h">Demonstrations</div><a class="nav-a" href="../demonstrations/five-minute-tour.html">5-minute tour</a><a class="nav-a" href="../demonstrations/fifteen-minute-demo.html">15-minute operational demo</a><a class="nav-a" href="../demonstrations/admin-technical-demo.html">30-minute administrator / technical demo</a><a class="nav-a" href="../demonstrations/demo-data-and-reset.html">Demo data and reset</a></div><div class="nav-sec"><div class="nav-h">Administration</div><a class="nav-a" href="../administration/configuration.html">Configuration</a><a class="nav-a" href="../administration/operations-and-recovery.html">Operations and recovery</a><a class="nav-a" href="../administration/security-and-access.html">Security and access</a></div><div class="nav-sec"><div class="nav-h">Technical</div><a class="nav-a" href="../technical/architecture.html">Architecture</a><a class="nav-a" href="../technical/repository-structure.html">Repository structure</a><a class="nav-a" href="../technical/local-development.html">Local development</a><a class="nav-a" href="../technical/database-reference.html">Database reference</a><a class="nav-a" href="../technical/api-reference.html">API reference</a><a class="nav-a" href="../technical/integrations.html">Integrations</a><a class="nav-a" href="../technical/deployment.html">Deployment</a></div><div class="nav-sec"><div class="nav-h">Support</div><a class="nav-a" href="../support/troubleshooting.html">Troubleshooting</a><a class="nav-a" href="../support/faq.html">FAQ</a><a class="nav-a" href="../support/known-limitations.html">Known limitations</a></div><div class="nav-sec"><div class="nav-h">Evidence</div><a class="nav-a" href="../analysis/EVIDENCE-MATRIX.html">Evidence matrix</a><a class="nav-a" href="../analysis/GAPS-AND-QUESTIONS.html">Gaps and open questions</a><a class="nav-a" href="../DOCUMENTATION-CHANGELOG.html">Documentation changelog</a></div></aside>
-<main class="main"><article class="doc"><h1 id="rack-view"><a class="anchor" href="#rack-view">#</a>Rack view</h1><p class="lead">Visual map of the Mould Room by zone, row and rack</p><div class="chips"><span class="chip">👥 All users</span><span class="chip ok">Verified (static code review)</span><span class="chip">Verified 2026-10-29</span><span class="chip">web/API 2.0.0</span></div><h2 id="availability"><a class="anchor" href="#availability">#</a>Availability</h2><p>Route <code>/racks</code>, requires <code>racks.view</code> (every role).</p>
-<h2 id="what-you-see"><a class="anchor" href="#what-you-see">#</a>What you see</h2><ul>
-<li>Zone filter: <strong>All zones</strong> or one zone (&quot;FLK side&quot;).</li>
-<li>Rows (&quot;Row A&quot;) of racks, coloured: <strong>empty rack</strong>, <strong>in use</strong>, <strong>full</strong> (at capacity). Inactive racks show &quot;Not in use&quot;.</li>
-<li><strong>Waiting for a rack:</strong> moulds in the Mould Room with no rack yet (from import). Open one and choose a rack.</li>
-<li>Select a rack to see &quot;Moulds on FLK-A3&quot;.</li>
-</ul>
-<h2 id="evidence"><a class="anchor" href="#evidence">#</a>Evidence</h2><p><code>frontend/src/app/(tracker)/racks/page.tsx</code>; <code>frontend/src/utils/helpers.ts</code> <code>rackTone</code>; <code>backend/controllers/rackController.js</code> <code>listRacks</code>.</p>
-<blockquote class="shot"><p>Screenshot needed: <code>/racks</code> with one zone, mixed empty / in use / full racks.</p>
-</blockquote>
-<footer class="foot">Source: <code>docs/user-guide/rack-view.md</code></footer></article><nav class="toc"><div class="toc-h">On this page</div><a class="l2" href="#availability">Availability</a><a class="l2" href="#what-you-see">What you see</a><a class="l2" href="#evidence">Evidence</a></nav></main>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<header class="top"><button class="menu" data-label-en="Menu" data-label-si="මෙනුව" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span data-doc-lang="en">Docs</span><span data-doc-lang="si" lang="si">උපදෙස්</span></a>
+<div class="header-actions"><button class="language" type="button" aria-label="සිංහලට මාරු කරන්න" onclick="toggleLanguage()">සිංහල</button><button class="theme" data-label-en="Toggle theme" data-label-si="පෙනුම වෙනස් කරන්න" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></div></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Start</span><span data-doc-lang="si" lang="si">ආරම්භය</span></div><a class="nav-a" href="../index.html"><span data-doc-lang="en">Mould Tracker user guide</span><span data-doc-lang="si" lang="si">භාවිත මාර්ගෝපදේශය</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Getting started</span><span data-doc-lang="si" lang="si">මුල් පියවර</span></div><a class="nav-a" href="../getting-started/first-login.html"><span data-doc-lang="en">Sign in</span><span data-doc-lang="si" lang="si">පද්ධතියට ඇතුළු වීම</span></a><a class="nav-a" href="../getting-started/quick-start.html"><span data-doc-lang="en">Quick start</span><span data-doc-lang="si" lang="si">ඉක්මන් ආරම්භය</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">User guide</span><span data-doc-lang="si" lang="si">භාවිත උපදෙස්</span></div><a class="nav-a" href="../user-guide/index.html"><span data-doc-lang="en">Using Mould Tracker</span><span data-doc-lang="si" lang="si">Mould Tracker භාවිතය</span></a><a class="nav-a" href="../user-guide/find-a-mould.html"><span data-doc-lang="en">Find a mould</span><span data-doc-lang="si" lang="si">Mould එකක් සෙවීම</span></a><a class="nav-a" href="../user-guide/move-a-mould.html"><span data-doc-lang="en">Move a mould</span><span data-doc-lang="si" lang="si">Mould එකක් මාරු කිරීම</span></a><a class="nav-a on" href="../user-guide/rack-view.html"><span data-doc-lang="en">Find a storage position</span><span data-doc-lang="si" lang="si">ගබඩා ස්ථානය සෙවීම</span></a><a class="nav-a" href="../user-guide/workshop-queue.html"><span data-doc-lang="en">Workshop queue</span><span data-doc-lang="si" lang="si">Workshop පෝලිම</span></a><a class="nav-a" href="../user-guide/work-log.html"><span data-doc-lang="en">Record work</span><span data-doc-lang="si" lang="si">කළ වැඩ සටහන් කිරීම</span></a><a class="nav-a" href="../user-guide/report-a-problem.html"><span data-doc-lang="en">Report a problem</span><span data-doc-lang="si" lang="si">ගැටලුවක් වාර්තා කිරීම</span></a><a class="nav-a" href="../user-guide/record-shots.html"><span data-doc-lang="en">Record shots</span><span data-doc-lang="si" lang="si">Shots සටහන් කිරීම</span></a><a class="nav-a" href="../user-guide/account-and-passkeys.html"><span data-doc-lang="en">Your account and passkeys</span><span data-doc-lang="si" lang="si">Account සහ passkeys</span></a><a class="nav-a" href="../user-guide/app-settings-and-install.html"><span data-doc-lang="en">Install and personalise the app</span><span data-doc-lang="si" lang="si">App එක install කිරීම සහ සැකසීම</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Support</span><span data-doc-lang="si" lang="si">උදව්</span></div><a class="nav-a" href="../support/troubleshooting.html"><span data-doc-lang="en">Troubleshooting</span><span data-doc-lang="si" lang="si">ගැටලු විසඳීම</span></a><a class="nav-a" href="../support/faq.html"><span data-doc-lang="en">Frequently asked questions</span><span data-doc-lang="si" lang="si">නිතර අසන ප්‍රශ්න</span></a></div></aside>
+<main class="main" data-doc-lang="en" lang="en"><article class="doc"><h1 id="en-find-a-storage-position"><a class="anchor" href="#en-find-a-storage-position">#</a>Find a storage position</h1><p>Open <strong>Rack view</strong> from the sidebar. Choose a zone or view all zones.</p>
+<h2 id="en-read-the-label"><a class="anchor" href="#en-read-the-label">#</a>Read the label</h2><p><strong>FLK-A-P1-1</strong> means:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FLK</td>
+<td>Storage zone</td>
+</tr>
+<tr>
+<td>A</td>
+<td>Rack</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Pallet or level</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Mould position</td>
+</tr>
+</tbody></table>
+<p>The rack layout shows blue frames, orange shelves and numbered positions. Occupied positions show the mould ID together with an available item photo and item ID. A small count indicates additional item photos; open the mould details to see its items. Positions without a photo still show their mould ID. Empty positions show an empty label. Dimmed positions are not in use.</p>
+<h2 id="en-find-a-mould"><a class="anchor" href="#en-find-a-mould">#</a>Find a mould</h2><p>Search by mould ID, product ID, description or location. Matching positions stay highlighted. Select a position to filter the mould location table below the layout; select <strong>Show all</strong> to clear that selection.</p>
+<p>The table shows the recorded mould and product details. Select a mould ID to open its details when you have viewing access.</p>
+<p>Moulds listed under <strong>Waiting for a rack</strong> do not yet have a recorded storage position. Ask the person responsible for storage to assign the correct position.</p>
+<footer class="foot">Mould Tracker user guide</footer></article></main><main class="main" data-doc-lang="si" lang="si"><article class="doc"><h1 id="si-ගබඩා-ස්ථානය-සෙවීම"><a class="anchor" href="#si-ගබඩා-ස්ථානය-සෙවීම">#</a>ගබඩා ස්ථානය සෙවීම</h1><p>Sidebar එකෙන් <strong>Rack view</strong> විවෘත කරන්න. එක් කලාපයක් තෝරන්න හෝ සියලු කලාප බලන්න.</p>
+<h3 id="si-ස්ථාන-ලේබලය-කියවන්න"><a class="anchor" href="#si-ස්ථාන-ලේබලය-කියවන්න">#</a>ස්ථාන ලේබලය කියවන්න</h3><p><strong>FLK-A-P1-1</strong> ලේබලයේ කොටස් පහත පරිදි වේ.</p>
+<table>
+<thead>
+<tr>
+<th>කොටස</th>
+<th>අර්ථය</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FLK</td>
+<td>ගබඩා කලාපය</td>
+</tr>
+<tr>
+<td>A</td>
+<td>Rack එක</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Pallet එක හෝ තට්ටුව</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Mould එක තබන ස්ථානය</td>
+</tr>
+</tbody></table>
+<p>Rack සැලැස්මේ නිල් රාමු, තැඹිලි තට්ටු සහ අංකිත ස්ථාන පෙන්වයි. පිරී ඇති ස්ථානවල mould ID එකත්, තිබේ නම් item photo එක සහ item ID එකත් පෙන්වයි. කුඩා ගණනකින් තවත් item photos ඇති බව දක්වයි. ඒවා බැලීමට mould විස්තර විවෘත කරන්න. Photo එකක් නොමැති ස්ථානවලත් mould ID එක පෙන්වයි. හිස් ස්ථානවල හිස් බව දක්වන ලේබලයක් ඇත. අඳුරු කර ඇති ස්ථාන භාවිතයේ නැත.</p>
+<h3 id="si-mould-එකක්-සොයන්න"><a class="anchor" href="#si-mould-එකක්-සොයන්න">#</a>Mould එකක් සොයන්න</h3><p>Mould ID, product ID, විස්තරය හෝ පිහිටීම අනුව සොයන්න. ගැළපෙන ස්ථාන highlight වේ. ස්ථානයක් තේරූ විට පහළ mould location table එක එම ස්ථානයට සීමා වේ. තේරීම ඉවත් කිරීමට <strong>Show all</strong> තෝරන්න.</p>
+<p>Table එකේ සටහන් කළ mould සහ product විස්තර පෙන්වයි. බැලීමට අවසර තිබේ නම් mould ID එක තෝරා විස්තර විවෘත කරන්න.</p>
+<p><strong>Waiting for a rack</strong> යටතේ ඇති moulds සඳහා තවම ගබඩා ස්ථානයක් සටහන් කර නැත. නිවැරදි ස්ථානය ලබාදීමට ගබඩාව භාර පුද්ගලයාට දැනුම් දෙන්න.</p>
+<footer class="foot">Mould Tracker භාවිත මාර්ගෝපදේශය</footer></article></main>
 <script src="../assets/docs.js"></script></body></html>

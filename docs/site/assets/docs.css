@@ -22,6 +22,10 @@
 }
 * { box-sizing: border-box; }
 html { scroll-padding-top: calc(var(--top-h) + 16px); }
+html:lang(en) [data-doc-lang="si"], html:lang(si) [data-doc-lang="en"] { display: none !important; }
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.language { background: none; border: 1px solid rgba(255,255,255,.15); color: #fff; border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
+.header-actions .theme { margin-left: 0; }
 body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6; font-size: 15.5px; }
 
 .top { position: fixed; inset: 0 0 auto 0; height: var(--top-h); z-index: 20; display: flex; align-items: center; gap: 12px;
@@ -138,3 +142,9 @@ th { background: var(--steel); color: #fff; border-color: var(--steel); }
 table { border-radius: 8px; }
 code { color: var(--ink); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 480px) {
+  .top { padding: 0 10px; gap: 6px; }
+  .brand { gap: 4px; font-size: 15px; }
+  .brand .logo, .brand [data-doc-lang] { display: none; }
+  .language { padding: 6px; }
+}

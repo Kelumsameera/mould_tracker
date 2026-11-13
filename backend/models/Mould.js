@@ -1,6 +1,7 @@
+import { mouldSearchKey } from "../lib/search.js";
 import mongoose from "mongoose";
 import { dispatchDetailsSchema } from "./DispatchDetails.js";
-import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
+import { LOCATIONS, STORED_STATUSES, TOOL_TYPES, mouldStateError } from "../lib/mouldState.js";
 
 // One Tool ID from the tools list. The products it makes are Item documents.
 const mouldSchema = new mongoose.Schema(
@@ -11,7 +12,7 @@ const mouldSchema = new mongoose.Schema(
     size: { type: String, default: "", trim: true, maxlength: 50 },
     owner: { type: String, default: null, trim: true, uppercase: true, maxlength: 10 }, // zone code, e.g. FLK
     capableMachines: { type: [{ type: String, trim: true, uppercase: true, maxlength: 50 }], default: [] },
-    status: { type: String, enum: MOULD_STATUSES, default: "GOOD", index: true },
+    status: { type: String, enum: STORED_STATUSES, default: "GOOD", index: true }, // legacy values load until migrated
     location: {
       type: String,
       enum: LOCATIONS,
@@ -36,6 +37,12 @@ const mouldSchema = new mongoose.Schema(
     lastServicedAt: { type: Date, default: null },
     notes: { type: String, default: "", maxlength: 2000 },
     outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
+    // Current Isolation Area stay: { since, fromLocation, intendedDestination, remarks, by }. Null outside Isolation.
+    isolation: { type: mongoose.Schema.Types.Mixed, default: null },
+    // Running with blocked cavities: cavity numbers 1..N (N = total cavities of the items) that are closed.
+    blockedCavities: { type: [{ type: Number, min: 1 }], default: [] },
+    // { since, reason, problemType, decidedBy: { userId, name }, decidedAt, expectedFixBy } while cavities are blocked.
+    limitedRun: { type: mongoose.Schema.Types.Mixed, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
     lastMovedAt: { type: Date, default: null },
     lastMovedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
@@ -45,7 +52,8 @@ const mouldSchema = new mongoose.Schema(
     openProblem: { type: mongoose.Schema.Types.Mixed, default: null },
     deletedAt: { type: Date, default: null, index: true },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-    version: { type: Number, default: 1 } // optimistic locking
+    version: { type: Number, default: 1 }, // optimistic locking
+    searchKey: { type: String, default: null } // normalized Tool ID, machines, owner (lib/search.js)
   },
   { timestamps: true, versionKey: false }
 );
@@ -53,6 +61,10 @@ const mouldSchema = new mongoose.Schema(
 // One mould per machine at a time (rule 6), enforced by the database.
 mouldSchema.index({ machineId: 1 }, { unique: true, partialFilterExpression: { location: "MACHINE" } });
 mouldSchema.index({ capableMachines: 1 });
+mouldSchema.index({ deletedAt: 1, toolType: 1, toolId: 1 }); // catalog: live moulds per process, sorted
+mouldSchema.index({ owner: 1 });
+mouldSchema.index({ searchKey: 1 });
+mouldSchema.pre("save", function () { this.searchKey = mouldSearchKey(this); });
 mouldSchema.index({ "openProblem.at": -1 }, { sparse: true });
 
 export default mongoose.model("Mould", mouldSchema);

@@ -15,6 +15,19 @@ output/image-review/
 output/image-review/.next/
 outputs
 test
+!backend/test/
+backend/test/*
+!backend/test/accessControl.test.js
+!backend/test/itemImages.test.js
+!backend/test/isolation.test.js
+!backend/test/limitedRun.test.js
+!backend/test/editAnywhere.test.js
+!backend/test/catalog.test.js
+!backend/test/search.test.js
+!backend/test/workflowConfig.test.js
+!backend/test/configApi.test.js
+!backend/test/settings.test.js
+!backend/test/rackPositions.test.js
 Flexicare Lanka Tools list PR 013 & 14 - Last Updated - 04 JAN 2024.xlsx
 # Docs site builder
 docs/site-builder/node_modules/

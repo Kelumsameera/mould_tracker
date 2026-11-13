@@ -93,6 +93,9 @@ export default function AccountPage() {
       <h2 className="text-xl font-extrabold [margin:var(--s2)_0_var(--s4)] leading-[1.3]">
         {translations.accountTitle}
       </h2>
+      {user?.mustChangePassword && (
+        <div className="mb-4 p-3 rounded-md bg-warn-bg text-warn-ink text-sm font-bold" role="alert">{translations.mustChangePassword}</div>
+      )}
       <form onSubmit={handleSubmit}>
         <fieldset disabled={isSaving} className="border-0 p-0 m-0 min-w-0">
           <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="account-name">

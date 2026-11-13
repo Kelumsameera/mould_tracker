@@ -1,11 +1,21 @@
 // All UI text, English and Sinhala. `si` is typed as `Dict`, so a missing Sinhala string fails the build.
 // "Mould Room" lives in exactly one key (`mouldRoom`); everything else refers to it.
 import type { Location, MouldStatus, Role, WorkType } from "@/utils/types";
+import type { Permission } from "@/utils/permissions";
+import { listLabel, locationLabel, roleLabel, statusHintText, statusLabel } from "./runtimeConfig.ts"; // explicit path: also loaded by node --test
 
 export type Lang = 'en' | 'si';
 type D = Record<string, unknown>; // error detail values sent by the server
 
 const en = {
+  rackLayout: {
+    title: 'Mould storage & identification', format: 'Location format', formatHint: 'Rack – Pallet / Level – Position',
+    layout: 'Storage rack layout', rack: 'Rack', pallet: 'Pallet / level', position: 'Position', legacy: 'Existing locations',
+    search: 'Find a mould or location', searchHint: 'Mould ID, product ID, description or A-P1-1',
+    positions: 'positions', noPositions: 'No storage positions yet.', table: 'Mould location table', showAll: 'Show all',
+    mould: 'Mould ID', product: 'Product ID', description: 'Description', location: 'Location', cavities: 'Cavities', machine: 'Machine / size',
+    noResults: 'No stored moulds match this selection.', palletFrom: 'Pallet / level from', palletTo: 'Pallet / level to',
+  },
   themeLight: 'Switch to light theme',
   themeDark: 'Switch to dark theme',
   toolType: 'Tool category',
@@ -19,12 +29,88 @@ const en = {
   mouldRoom: 'Mould Room',
   brandTitle: 'Mould Tracker',
   brandSub: 'Find any mould in seconds',
-  loc: { MACHINE: 'Machine', PRODUCTION_FLOOR: 'Production Floor', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' } as Record<Exclude<Location, 'MOULD_ROOM'>, string>,
-  status: { GOOD: 'Good', NEEDS_SERVICE: 'Needs service', NEEDS_REPAIR: 'Needs repair', IN_SERVICE: 'In service', IN_REPAIR: 'In repair' } as Record<MouldStatus, string>,
-  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'Production Supervisor', mould_technician: 'Mould Technician', mould_maker: 'Mould Maker' } as Record<Role, string>,
+  loc: { MACHINE: 'Machine', PRODUCTION_FLOOR: 'Production Floor', ISOLATION: 'Isolation Area', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' } as Record<Exclude<Location, 'MOULD_ROOM'>, string>,
+  status: { GOOD: 'Good', NEEDS_SERVICE: 'Needs service', NEEDS_REPAIR: 'Needs repair', IN_SERVICE: 'In service', IN_REPAIR: 'In repair', CONDITIONAL: 'Conditional' } as Record<MouldStatus, string>,
+  statusHint: { CONDITIONAL: 'Running with blocked cavities / temporary fix' } as Partial<Record<MouldStatus, string>>,
+  isolation: {
+    title: 'Isolation Area', hint: 'Moulds waiting between the Production Floor, the Mould Room and the Workshop. Every move that does not end on a machine passes here.',
+    empty: 'Nothing is waiting in the Isolation Area.', send: 'Send to Isolation Area', moveOn: 'Move on', plannedFor: 'Waiting to go to', notDecided: 'Not decided yet',
+    choosePlan: 'Where should it go next? (optional)', setStatus: 'Status (optional)', waiting: (d: string) => `waiting ${d}`, waitingFor: (d: string) => `Waiting ${d}`,
+    tooLong: 'Waiting too long', tooLongCount: (n: number) => `${n} waiting too long`, stayed: (d: string) => `stayed ${d} in Isolation`, from: 'Came from'
+  },
+  place: { title: 'Location', empty: 'No moulds here.', maxWait: (h: number) => `Max wait ${h} h` },
+  workflowAdmin: {
+    title: 'Workflow settings', readOnly: 'Read-only view. Only a System Administrator can change the workflow.',
+    tabs: { locations: 'Locations', statuses: 'Statuses', roles: 'Roles', rules: 'Workflow rules', simulator: 'Simulator', versions: 'Versions' } as Record<string, string>,
+    published: (v: number) => `Published version ${v}`, builtIn: 'Built-in defaults (nothing published yet)', draft: (v: number) => `Draft v${v}`,
+    noDraft: 'No draft. Editing starts a draft from the published version; nothing changes until you publish.', editing: 'Editing the draft',
+    saveDraft: 'Save draft', discardDraft: 'Discard draft', publish: 'Publish', reason: 'Reason', reasonHint: 'Required. Saved in the audit log.',
+    problems: 'Fix these before publishing', noProblems: 'No problems found.', unsaved: 'Unsaved changes',
+    add: 'Add', remove: 'Remove', key: 'Key', keyHint: 'Capital letters, numbers and _ (cannot change later)', labelEn: 'English label', labelSi: 'Sinhala label',
+    kind: 'Kind', kinds: { machine: 'Machine (one mould per machine)', rack: 'Rack (zone + rack)', simple: 'Simple place', transit: 'Holding area (max wait)' } as Record<string, string>,
+    active: 'Active', order: 'Order', icon: 'Icon', color: 'Colour', maxWait: 'Max wait (hours)', capacity: 'Capacity',
+    statusChange: 'Allow status changes here', allowNewMoulds: 'Allow new moulds to start here', acceptsStatus: 'A status can be set on arrival',
+    storage: 'Storage room (tool types)', external: 'Outside repair (dispatch details)', permission: 'Permission',
+    allowedAt: 'Allowed at (at rest)', moveTo: 'May move to', anywhere: 'Anywhere',
+    statusFlags: { isGood: 'Good (available)', needsAttention: 'Needs attention', countsAsAvailable: 'Counts as available', limitedRun: 'Running with blocked cavities', resetsShotsWhenGood: 'Resets the shot count when it becomes Good' } as Record<string, string>,
+    hintEn: 'Explanation (English)', hintSi: 'Explanation (Sinhala)',
+    copyFrom: 'Copy permissions from', builtInRole: 'Built-in', customRole: 'Custom', assignable: 'May assign roles', permissions: 'Permissions', lockedRole: 'Locked: always everything',
+    rulesHint: 'Rows: from · Columns: to. Click a cell to edit the rule.', newMould: 'New mould',
+    cell: { off: 'not allowed', direct: 'direct', via: (x: string) => `via ${x}` },
+    allowed: 'Allowed', via: 'Must go through', none: '— none —', requires: 'Requires', groups: 'Permissions (one from each line)', addGroup: 'Add line',
+    requirement: { remarks: 'Remarks', remarksWhenStatus: 'Remarks when a status is set', dispatchDetails: 'Dispatch details', intendedDestination: 'Planned destination' } as Record<string, string>,
+    summary: (from: string, to: string, how: string) => `${from} → ${to}: ${how}`,
+    sim: { mould: 'Mould', toolId: 'Tool ID (optional)', orFake: 'or try a location and status', location: 'Location', status: 'Status', to: 'Destination', draft: 'Use the draft', role: 'As role', run: 'Check',
+      allowed: 'Allowed', blocked: 'Blocked', path: 'Route', required: 'Required fields', permissions: 'Needs one permission from each line' },
+    versions: { version: 'Version', state: 'State', reason: 'Reason', when: 'When', changes: 'Changes', rollback: 'Roll back to this version', exportJson: 'Export JSON', importJson: 'Import JSON',
+      states: { draft: 'Draft', published: 'Published', archived: 'Archived' } as Record<string, string>, noChanges: 'No differences.', added: 'added', removed: 'removed', changed: 'changed' },
+    confirmPublish: (v: number) => `Publish draft v${v}? Everyone gets the new rules on their next refresh.`, confirmRollback: (v: number) => `Roll back to version ${v}? It is published as a new version.`,
+    confirmDiscard: 'Discard the draft? Its changes are lost.', confirmImport: 'Import this file as the draft?', publishedOk: 'Published', savedOk: 'Draft saved'
+  },
+  settingsAdmin: {
+    title: 'Settings', readOnly: 'You can view the settings. Changing them needs the "Manage system settings" permission.',
+    tabs: { texts: 'Texts / Labels', limits: 'Thresholds & limits', lists: 'Lists', dashboards: 'Dashboards' } as Record<string, string>,
+    search: 'Search by key or text', missingSi: 'Only texts without a Sinhala override', modified: 'Modified', reset: 'Reset to default', resetAll: 'Reset all texts',
+    codeDefault: 'Default', english: 'English', sinhala: 'Sinhala', save: 'Save', saved: 'Saved', affects: 'Affects',
+    exportJson: 'Export JSON', importJson: 'Import JSON', confirmSave: (k: string) => `Change "${k}"?`, confirmReset: (k: string) => `Reset "${k}" to its default?`,
+    invalid: 'This value is not valid.', listAdd: 'Add item', listKey: 'Key', moveUp: 'Move up', moveDown: 'Move down', disable: 'Disable', enable: 'Enable',
+    lists: { workTypes: 'Work log types', problemTypes: 'Problem types', outcomes: 'Work outcomes', remarkTemplates: 'Standard remarks', owners: 'Owners', processes: 'Processes', families: 'Product families' } as Record<string, string>,
+    dashboardRole: 'Role', dashboardCards: 'Cards shown, in order', dashboardHint: 'Untick a card to hide it for that role.',
+    cards: { total: 'All moulds', limited: 'Running with blocked cavities', isolationTooLong: 'Waiting too long in Isolation', serviceDue: 'Service due by shots', workThisMonth: 'Work done this month', byLocation: 'By location', byStatus: 'By status' } as Record<string, string>
+  },
+  catalog: {
+    title: 'Catalog', hint: 'Complete totals of moulds and of products for every process. To find where a mould is, use Find.',
+    all: 'All', processes: { INJECTION: 'Injection', EXTRUSION: 'Extrusion' } as Record<string, string>, tabs: { moulds: 'Moulds', products: 'Products' },
+    cards: { moulds: 'Total moulds', uniqueItems: 'Total unique items', perMould: 'Items per mould', perMouldValue: (avg: number, max: number) => `avg ${avg} · max ${max}`, multiItem: 'Moulds with more than 1 item', multiMould: 'Items made by more than 1 mould' },
+    breakdown: { process: 'Process', status: 'Status', owner: 'Owner', machine: 'Capable machine', material: 'Material', family: 'Type / family' } as Record<string, string>,
+    noOwner: 'No owner', search: 'Search Tool ID, Die ID, Pin ID', searchItems: 'Search Item ID or description', clearAll: 'Clear all', remove: 'Remove filter',
+    showLocation: 'Show location', loadMore: 'Load more', shown: (n: number, total: number) => `${n} of ${total}`, empty: 'Nothing matches these filters.',
+    col: { toolId: 'Tool ID', process: 'Process', owner: 'Owner', machines: 'Capable machines', cavities: 'Cavities', items: 'Items', status: 'Status', location: 'Location', itemId: 'Item ID', description: 'Description', material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS', moulds: 'Moulds' },
+    sort: 'Sort', sorts: { toolId: 'Tool ID', items: 'Most items', status: 'Status', itemId: 'Item ID', moulds: 'Most moulds' } as Record<string, string>,
+    madeBy: (n: number) => `Made by ${n} mould${n === 1 ? '' : 's'}`, exportCsv: 'Export CSV', exportXlsx: 'Export Excel', exported: 'Export ready', truncated: (n: number) => `Only the first ${n} rows were exported. Narrow the filters to export the rest.`
+  },
+  dashboard: {
+    title: 'Dashboard', hint: 'Where every mould is, what needs attention and the work done this month.',
+    byLocation: 'By location', byStatus: 'By status', limited: 'Running with blocked cavities', isolationTooLong: 'Waiting too long in Isolation',
+    serviceDue: 'Service due by shots', workThisMonth: 'Work done this month', entries: (n: number) => `${n} entries`, none: 'None', total: (n: number) => `${n} moulds`
+  },
+  cavity: {
+    action: 'Run with blocked cavities', change: 'Change blocked cavities', title: 'Run with blocked cavities',
+    hint: 'Production keeps running this mould with some cavities closed. Tap the cavities that are blocked.',
+    noCavities: 'Enter the number of cavities on the items first.', reason: 'Reason', reasonRequired: 'A reason is required.',
+    problemType: 'Problem type (optional)', photo: 'Photo (optional)', expectedFix: 'Expected fix date (optional)',
+    summary: (active: number, total: number) => `${active} of ${total} cavities active`, badge: (active: number, total: number, d: string) => `${active}/${total} cavities${d ? ` · since ${d}` : ''}`,
+    restoreAll: 'Restore all cavities', confirmTitle: 'Blocked cavities', confirm: (tool: string, active: number, total: number) => `${tool}: ${active} of ${total} cavities active. Save?`,
+    confirmRestore: (tool: string) => `Restore all cavities of ${tool}? It becomes Good again.`, saved: 'Cavities saved', restored: 'All cavities restored',
+    filter: 'Running with blocked cavities', queue: 'Needs repair but running', tooLong: 'Running limited too long',
+    downtime: 'Cavity downtime', downtimeEmpty: 'No cavities have been blocked.', period: 'Period', which: 'Blocked cavities', open: 'still blocked', decidedBy: 'Decided by', expectedBy: (d: string) => `fix expected by ${d}`
+  },
+  duration: (days: number, hours: number, minutes: number) => (days ? `${days}d ${hours}h` : hours ? `${hours}h ${minutes}m` : `${minutes}m`),
+  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'Production Supervisor', mould_technician: 'Mould Technician', mould_maker: 'Mould Maker', executive: 'Executive' } as Record<Role, string>,
   rolesHelp: 'Super Admin: everything • Admin: moulds and users • Production Supervisor: machine changes • Mould Technician: machine changes, service and repair • Mould Maker: Mould Room, service and repair',
 
   nav: {
+    documentation: 'Documentation',
     find: 'Find a mould', racks: 'Rack view', workshop: 'Workshop queue', admin: 'Admin', superAdmin: 'Super Admin',
     machines: 'Machines', users: 'Users', rackAdmin: 'Rack management', audit: 'Audit log', workReport: 'Work log report', account: 'Account details', menu: 'Menu', closeMenu: 'Close menu',
     language: 'Language', findShort: 'Find', racksShort: 'Racks', workshopShort: 'Workshop', more: 'More', expand: 'Expand menu', collapse: 'Collapse menu', accountMenu: 'Account and menu'
@@ -33,7 +119,8 @@ const en = {
 
   search: {
     placeholder: 'Tool ID, Item ID, description, machine or rack',
-    clear: 'Clear search',
+    clear: 'Clear search', recent: 'Recent searches', suggestMoulds: 'Moulds', suggestItems: 'Items', matchedItem: 'Matched item',
+    didYouMean: 'Did you mean', onlySymbols: 'Type letters or numbers to search.',
     results: (n: number) => (n === 1 ? '1 mould' : `${n} moulds`),
     allMoulds: 'All moulds',
     noMatch: 'No mould matches your search.',
@@ -45,7 +132,7 @@ const en = {
     moved: (when: string, who: string) => (who ? `Moved ${when} · ${who}` : `Moved ${when}`),
     items: (n: number) => (n === 1 ? '1 item' : `${n} items`),
     noRack: 'no rack yet',
-    shotsDue: 'Service due'
+    shotsDue: 'Service due', shotsSoon: 'Service soon'
   },
 
   detail: {
@@ -56,13 +143,13 @@ const en = {
     edit: 'Edit mould', remove: 'Delete mould', restore: 'Restore mould', deletedBanner: 'This mould is deleted.',
     deleted: (id: string) => `${id} deleted`, restored: (id: string) => `${id} restored`,
     cavities: (n: number | null) => (n == null ? '' : `${n} cav.`), material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS',
-    openImage: 'Open picture', lastMoved: 'Last moved'
+    openImage: 'Open picture', noImage: 'No picture yet', addImage: 'Add image', morePictures: (n: number) => `+${n}`, lastMoved: 'Last moved'
   },
 
   act: {
     outOfService: 'Send out of service', returnToWorkshop: 'Return to Workshop',
     title: 'Move or update',
-    mount: 'Mount on a machine', changeMachine: 'Move to another machine', toFloor: 'To Production Floor',
+    moveTo: (place: string) => `Move to ${place}`, mount: 'Mount on a machine', changeMachine: 'Move to another machine', toFloor: 'To Production Floor',
     toMouldRoom: (mr: string) => `Put in ${mr}`, changeRack: 'Change rack', toWorkshop: 'Send to Workshop',
     changeStatus: 'Change status', recordShots: 'Record shots',
     machine: 'Machine', capable: 'Listed for this mould', other: 'Other machines', occupiedBy: (id: string) => `has ${id}`, free: 'free',
@@ -76,7 +163,7 @@ const en = {
   },
 
   hist: {
-    CREATED: 'Added', IMPORTED: 'Imported from tools list', EDITED: 'Details changed', DELETED: 'Deleted', RESTORED: 'Restored',
+    CREATED: 'Added', IMPORTED: 'Imported from tools list', EDITED: 'Edited', DELETED: 'Deleted', RESTORED: 'Restored', CAVITIES_CHANGED: 'Blocked cavities changed', MOVED: 'Moved', STATUS_CHANGED: 'Status changed',
     moved: (from: string, to: string) => `${from} → ${to}`, status: (from: string, to: string) => `${from} → ${to}`, override: 'Override', by: 'by'
   },
 
@@ -93,6 +180,9 @@ const en = {
 
   dispatch: { title: 'Out of Service dispatch', recipientName: 'Recipient / Company name', address: 'Address', repairDetails: 'Repair details', sentAt: 'Sent at', returnedAt: 'Returned at' },
   accessAdmin: {
+    roleAccess: 'Role access', userAccess: 'User access', chooseRole: 'Select a role', searchRole: 'Find a role', noRoles: 'No roles found.', builtIn: 'Built-in defaults', resetRole: 'Reset to built-in defaults',
+    roleHint: 'Choose access for everyone in this role. Individual custom access takes priority. Reset individual access to role defaults to inherit these settings.',
+    noRoleAccess: 'No permissions selected. Users inheriting this role can still sign in and manage their own account.',
     title: 'User access', search: 'Find a user by name or email', choose: 'Select a user',
     hint: 'Choose what this user can view and do. Enable viewing permissions when the user needs to open the related screens.',
     defaults: 'Role defaults', custom: 'Custom access', reset: 'Reset to role defaults',
@@ -100,15 +190,26 @@ const en = {
     protected: 'System Administrator accounts always have full access and cannot be restricted here.',
     noAccess: 'No permissions selected. This user can still sign in and manage their own account.',
     labels: {
-      'moves.outOfService': 'Send out of service / return to Workshop (Super Admin only)',
-      'settings.manage': 'Manage system settings', 'racks.manage': 'Manage zones and racks', 'racks.view': 'View racks',
-      'import.run': 'Import data', 'export.run': 'Export data', 'audit.view': 'View audit log',
-      'users.manage': 'Manage users and roles', 'moulds.manage': 'Manage moulds, dies, items and machines',
-      'moves.machine': 'Mount and move moulds on machines', 'moves.mouldRoom': 'Move moulds to and from storage',
-      'workshop.work': 'Update workshop status and perform workshop actions', 'machines.override': 'Override machine compatibility with a reason',
-      'worklog.create': 'Record work', 'worklog.view': 'View work history', 'worklog.report': 'View and export work reports',
-      'problem.report': 'Report problems', 'moulds.view': 'View moulds, dies, machines and workshop queue', 'access.manage': 'Manage user access'
-    }
+      'mould.view': 'View moulds, search, history and timeline', 'catalog.view': 'Catalog & Totals (all moulds and products)', 'mould.create': 'Add moulds and dies', 'mould.edit': 'Edit mould details, items and cavities',
+      'mould.machines.edit': 'Edit capable machines', 'mould.images.manage': 'Add, replace and remove pictures', 'mould.delete': 'Remove and restore moulds',
+      'move.machine': 'Mount on a machine', 'move.floor': 'Move to / from the Production Floor', 'move.mouldroom': 'Move into / out of the Mould Room',
+      'move.workshop': 'Send to the Workshop', 'move.isolation': 'Send to the Isolation Area', 'move.outOfService': 'Send out of service / return (Super Admin only)',
+      'status.change': 'Change status at the Workshop', 'machines.override': 'Override machine compatibility with a reason',
+      'worklog.create': 'Record work', 'worklog.view': 'View work history', 'worklog.report': 'Work log report and cavity downtime',
+      'problem.report': 'Report problems', 'cavity.manage': 'Run with blocked cavities / restore cavities',
+      'rack.view': 'View racks', 'rack.manage': 'Manage zones and racks', 'users.manage': 'Manage users and roles',
+      'access.manage': 'Manage access (System Administrator only)', 'import.run': 'Import data', 'audit.view': 'View audit log',
+      'export.run': 'Export reports', 'settings.manage': 'Manage system settings'
+    } as Record<Permission, string>,
+    tabs: { roles: 'Roles', users: 'Users' }, permission: 'Permission', resetDefaults: 'Reset to defaults',
+    fromRole: 'from role', granted: 'extra (granted)', denied: 'removed (denied)', notIncluded: 'not included',
+    expiry: 'Expires (optional)', reason: 'Reason', reasonHint: 'Required. Saved in the audit log.', reasonRequired: 'Enter a reason (3+ characters).',
+    effective: 'Effective permissions', effectiveCount: (n: number) => `${n} permissions`, resetUser: 'Reset this user to role defaults',
+    overrides: 'Custom access', expired: 'expired', expires: (d: string) => `until ${d}`, save: 'Save access',
+    confirmMatrix: (role: string) => `Change the permissions of every ${role}?`, confirmUser: (name: string) => `Change the access of ${name}?`,
+    confirmReset: (name: string) => `Reset ${name} to the role defaults?`, confirmTitle: 'Change access',
+    myAccess: 'My access', myAccessHint: 'Only a System Administrator can change access. This is what you can do now.',
+    tapToCycle: 'Tap a permission to switch it between role default, extra and removed.'
   },
   machineAdmin: {
     search: 'Search machine code, name or mounted mould', retry: 'Try again', empty: 'No machines found.',
@@ -130,7 +231,8 @@ const en = {
   audit: {
     title: 'Audit log', entity: 'Type', all: 'All', empty: 'No entries.', before: 'Before', after: 'After', reason: 'Reason', more: 'Load more',
     count: (shown: number, total: number) => `${shown} of ${total}`,
-    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'Machines', User: 'Users', Import: 'Imports', Migration: 'Migration' }
+    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'Machines', User: 'Users', Import: 'Imports', Migration: 'Migration' },
+    categories: { access: 'Access changes', edits: 'Edits', images: 'Pictures', cavities: 'Cavities' }
   },
 
   form: {
@@ -139,12 +241,17 @@ const en = {
     startAt: 'Starts at', items: 'Items', itemId: 'Item ID', description: 'Description', cavities: 'Cavities', qas: 'QAS',
     materialId: 'Material ID', materialDescription: 'Material description', masterbatchId: 'Masterbatch ID', masterbatchDescription: 'Masterbatch description',
     addItem: 'Add item', removeItem: 'Remove item', saveItem: 'Save item',
-    create: 'Add mould', save: 'Save changes', required: 'Required', added: (id: string) => `${id} added`, saved: (id: string) => `${id} saved`, itemIdRequired: 'Every item needs an Item ID'
+    create: 'Add mould', save: 'Save changes', required: 'Required', added: (id: string) => `${id} added`, saved: (id: string) => `${id} saved`, itemIdRequired: 'Every item needs an Item ID',
+    pictures: 'Pictures', picturesHint: (max: number) => `Up to ${max} per item`, addPicture: 'Add picture', takePhoto: 'Camera',
+    replacePicture: 'Replace picture', removePicture: 'Remove picture', moveEarlier: 'Move earlier', moveLater: 'Move later',
+    picturesPending: (n: number) => `${n} picture(s) will upload after saving`,
+    uploadingPictures: (done: number, total: number) => `Uploading pictures ${done}/${total}…`, picturesUploaded: 'Pictures uploaded',
+    picturesFailed: (items: string) => `The mould was saved, but some pictures did not upload (${items}). Add them again below.`
   },
 
   work: {
     log: 'Log work', title: 'Log work', correcting: 'Correcting an earlier entry',
-    types: { REPAIR: 'Repair', SERVICE: 'Service', MINOR_FIX: 'Minor fix', INSPECTION: 'Inspection', CLEANING: 'Cleaning', OTHER: 'Other' } as Record<WorkType, string>,
+    types: { REPAIR: 'Repair', SERVICE: 'Service', MINOR_FIX: 'Minor fix', INSPECTION: 'Inspection', CLEANING: 'Cleaning', OTHER: 'Other', CAVITY_BLOCK: 'Cavities blocked', CAVITY_RESTORE: 'Cavities restored' } as Record<WorkType, string>,
     type: 'Type of work', what: 'What was done', whatPh: 'e.g. replaced ejector pin, polished cavity 3', who: 'Who did it', whoHint: 'Tap to add or remove a person',
     when: 'When', parts: 'Parts used (optional)', minutes: 'Time spent, minutes (optional)', shots: 'Shot counter (optional)',
     outcome: 'Result', outcomes: { none: 'No change', OK: 'Mould is OK', NEEDS_REPAIR: 'Needs more repair', NEEDS_SERVICE: 'Needs service' },
@@ -183,6 +290,7 @@ const en = {
     deleteMouldTitle: 'Delete mould', deleteMould: (id: string) => `Delete ${id}? It can be restored later and its history is kept.`, reason: 'Reason (optional)', deleteBtn: 'Delete',
     restoreMouldTitle: 'Restore mould', restoreMould: (id: string) => `Restore ${id}? It will appear in searches again.`, restoreBtn: 'Restore',
     removeItemTitle: 'Remove item', removeItem: (item: string, id: string) => `Remove item ${item} from ${id}?`, removeBtn: 'Remove',
+    removePictureTitle: 'Remove picture', removePicture: (item: string) => `Remove this picture from item ${item}?`,
     deleteUserTitle: 'Delete user', deleteUser: (n: string) => `Delete ${n}? They will no longer be able to sign in.`,
     roleTitle: 'Change role', role: (n: string, a: string, b: string) => `Change ${n} from ${a} to ${b}?`, roleBtn: 'Change role',
     disableUserTitle: 'Disable user', disableUser: (n: string) => `Disable ${n}? They cannot sign in until enabled again.`, disableBtn: 'Disable',
@@ -221,7 +329,7 @@ const en = {
   name: 'Name', role: 'Role', active: 'Active', disabled: 'Disabled', userSaved: 'User saved', userAdded: 'User added', userDeleted: 'User deleted',
 
   signIn: 'Sign in', signingIn: 'Signing in…', email: 'Email', password: 'Password', signOut: 'Sign out', loginSub: 'Sign in to see where every mould is.',
-  accountTitle: 'Account details', accountSaved: 'Account details updated', keepPassword: 'Leave new password blank to keep your current password.',
+  accountTitle: 'Account details', mustChangePassword: 'Choose a new password before you continue. Enter your current password and a new one below.', accountSaved: 'Account details updated', keepPassword: 'Leave new password blank to keep your current password.',
   currentPassword: 'Current password', newPassword: 'New password (min 8 characters)', repeatPassword: 'Repeat new password',
   pwMismatch: 'The two new passwords do not match', saveBtn: 'Save changes', close: 'Close', cancel: 'Cancel', loading: 'Loading…', reload: 'Reload',
   install: {
@@ -269,6 +377,18 @@ const en = {
     DONE_AT_FUTURE: () => 'The work time cannot be in the future.',
     INVALID_CORRECTION: () => 'The entry being corrected was not found.',
     INVALID_PHOTO: () => 'Photos must be JPEG, PNG or WebP pictures.',
+    ISOLATION_FIRST: () => 'Send to Isolation Area first.',
+    INVALID_DESTINATION: () => 'A planned destination can only be given when sending to the Isolation Area.',
+    USE_CAVITY_ACTION: () => 'Use "Run with blocked cavities" for that.',
+    LAST_SYSTEM_ADMIN: () => 'There must always be at least one active System Administrator.',
+    STALE_ACCESS: () => 'Someone else changed this access meanwhile. Reload and try again.',
+    PASSWORD_CHANGE_REQUIRED: () => 'Change your password first.',
+    ROLE_LOCKED: () => 'System Administrator access is always everything.',
+    SUPER_ADMIN_ONLY: () => 'Out of Service access is reserved for Super Admins.',
+    INVALID_EXPIRY: () => 'The expiry must be in the future.',
+    TOO_MANY_IMAGES: () => 'This item already has the maximum number of pictures.',
+    DUPLICATE_IMAGE: () => 'This picture is already on the item.',
+    INVALID_ORDER: () => 'The pictures changed meanwhile. Reopen the form and try again.',
     TOO_LARGE: () => 'The photos are too large. Use fewer or smaller photos.',
     EXPORT_TOO_LARGE: (d: D) => `${d.total} entries match. Exports are limited to ${d.cap}; narrow the filters or the dates.`
   } satisfies Record<string, (d: D) => string>
@@ -277,6 +397,14 @@ const en = {
 export type Dict = typeof en;
 
 const si: Dict = {
+  rackLayout: {
+    title: 'Mould ගබඩා කිරීම සහ හඳුනාගැනීම', format: 'Location ආකෘතිය', formatHint: 'Rack – Pallet / තට්ටුව – ස්ථානය',
+    layout: 'ගබඩා rack සැලැස්ම', rack: 'Rack', pallet: 'Pallet / තට්ටුව', position: 'ස්ථානය', legacy: 'පැරණි locations',
+    search: 'Mould එකක් හෝ location එකක් සොයන්න', searchHint: 'Mould ID, Product ID, විස්තරය හෝ A-P1-1',
+    positions: 'ස්ථාන', noPositions: 'තවම ගබඩා ස්ථාන නැහැ.', table: 'Mould location වගුව', showAll: 'සියල්ල පෙන්වන්න',
+    mould: 'Mould ID', product: 'Product ID', description: 'විස්තරය', location: 'Location', cavities: 'Cavities', machine: 'Machine / ප්‍රමාණය',
+    noResults: 'මෙම තේරීමට ගැළපෙන moulds නැහැ.', palletFrom: 'Pallet / තට්ටුව සිට', palletTo: 'Pallet / තට්ටුව දක්වා',
+  },
   themeLight: 'Light theme එකට මාරු කරන්න',
   themeDark: 'Dark theme එකට මාරු කරන්න',
   toolType: 'Tool වර්ගය',
@@ -290,12 +418,88 @@ const si: Dict = {
   mouldRoom: 'Mould කාමරය',
   brandTitle: 'Mould සෙවුම',
   brandSub: 'ඕනෑම mould එකක් තත්පර කිහිපයකින් සොයන්න',
-  loc: { MACHINE: 'මැෂිම', PRODUCTION_FLOOR: 'Production Floor', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' },
-  status: { GOOD: 'හොඳ තත්ත්වයේ', NEEDS_SERVICE: 'Service කළ යුතුයි', NEEDS_REPAIR: 'අලුත්වැඩියා කළ යුතුයි', IN_SERVICE: 'Service වෙමින්', IN_REPAIR: 'අලුත්වැඩියා වෙමින්' },
-  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'නිෂ්පාදන අධීක්ෂක', mould_technician: 'Mould තාක්ෂණ ශිල්පී', mould_maker: 'Mould සාදන්නා' },
+  loc: { MACHINE: 'මැෂිම', PRODUCTION_FLOOR: 'Production Floor', ISOLATION: 'Isolation කලාපය', WORKSHOP: 'Workshop', TOOL_ROOM: 'Tool Room', OUT_OF_SERVICE: 'Out of Service' },
+  status: { GOOD: 'හොඳ තත්ත්වයේ', NEEDS_SERVICE: 'Service කළ යුතුයි', NEEDS_REPAIR: 'අලුත්වැඩියා කළ යුතුයි', IN_SERVICE: 'Service වෙමින්', IN_REPAIR: 'අලුත්වැඩියා වෙමින්', CONDITIONAL: 'කොන්දේසි සහිත' },
+  statusHint: { CONDITIONAL: 'Cavities වසා run වෙනවා / තාවකාලික විසඳුම' },
+  isolation: {
+    title: 'Isolation කලාපය', hint: 'Production Floor, Mould කාමරය සහ Workshop අතර රැඳී සිටින moulds. Machine එකකින් අවසන් නොවන හැම ගෙනයාමක්ම මෙතනින් යනවා.',
+    empty: 'Isolation කලාපයේ කිසිවක් රැඳී නැහැ.', send: 'Isolation කලාපයට යවන්න', moveOn: 'ඉදිරියට ගෙනයන්න', plannedFor: 'යන්න බලාපොරොත්තු තැන', notDecided: 'තවම තීරණය කර නැහැ',
+    choosePlan: 'ඊළඟට යා යුත්තේ කොහෙටද? (අත්‍යවශ්‍ය නැහැ)', setStatus: 'Status (අත්‍යවශ්‍ය නැහැ)', waiting: (d) => `${d} ක් රැඳී සිටී`, waitingFor: (d) => `${d} ක් රැඳී සිටී`,
+    tooLong: 'ඕනෑවට වඩා වෙලා රැඳී සිටී', tooLongCount: (n) => `${n}ක් ඕනෑවට වඩා වෙලා රැඳී සිටී`, stayed: (d) => `Isolation එකේ ${d} ක් සිටියා`, from: 'ආවේ'
+  },
+  place: { title: 'ස්ථානය', empty: 'මෙහි moulds නැහැ.', maxWait: (h) => `උපරිම රැඳී සිටීම පැය ${h}` },
+  workflowAdmin: {
+    title: 'Workflow සැකසුම්', readOnly: 'බැලීමට පමණයි. Workflow වෙනස් කළ හැක්කේ System Administratorට පමණයි.',
+    tabs: { locations: 'ස්ථාන', statuses: 'Status', roles: 'Roles', rules: 'Workflow නීති', simulator: 'Simulator', versions: 'Versions' },
+    published: (v) => `ප්‍රකාශිත version ${v}`, builtIn: 'මුල් සැකසුම් (තවම ප්‍රකාශ කර නැහැ)', draft: (v) => `කෙටුම්පත v${v}`,
+    noDraft: 'කෙටුම්පතක් නැහැ. වෙනස් කිරීම ප්‍රකාශිත version එකෙන් කෙටුම්පතක් අරඹයි; ප්‍රකාශ කරන තුරු කිසිවක් වෙනස් නොවේ.', editing: 'කෙටුම්පත සංස්කරණය',
+    saveDraft: 'කෙටුම්පත save කරන්න', discardDraft: 'කෙටුම්පත ඉවත් කරන්න', publish: 'ප්‍රකාශ කරන්න', reason: 'හේතුව', reasonHint: 'අනිවාර්යයි. Audit සටහනේ save වෙනවා.',
+    problems: 'ප්‍රකාශ කිරීමට පෙර මේවා නිවැරදි කරන්න', noProblems: 'ගැටලු නැහැ.', unsaved: 'Save නොකළ වෙනස්කම්',
+    add: 'එකතු කරන්න', remove: 'ඉවත් කරන්න', key: 'Key', keyHint: 'ලොකු අකුරු, ඉලක්කම් සහ _ (පසුව වෙනස් කළ නොහැක)', labelEn: 'ඉංග්‍රීසි නම', labelSi: 'සිංහල නම',
+    kind: 'වර්ගය', kinds: { machine: 'Machine (machine එකකට mould එකයි)', rack: 'Rack (zone + rack)', simple: 'සාමාන්‍ය ස්ථානය', transit: 'රැඳවුම් ස්ථානය (උපරිම කාලය)' },
+    active: 'සක්‍රීයයි', order: 'පිළිවෙල', icon: 'Icon', color: 'වර්ණය', maxWait: 'උපරිම රැඳී සිටීම (පැය)', capacity: 'ධාරිතාව',
+    statusChange: 'මෙහිදී status වෙනස් කිරීමට ඉඩ දෙන්න', allowNewMoulds: 'අලුත් moulds මෙතැනින් ආරම්භ කිරීමට ඉඩ දෙන්න', acceptsStatus: 'පැමිණෙන විට status දිය හැක',
+    storage: 'ගබඩා කාමරය (tool වර්ග)', external: 'පිටත repair (යැවූ විස්තර)', permission: 'අවසරය',
+    allowedAt: 'රැඳී සිටිය හැකි තැන්', moveTo: 'යා හැකි තැන්', anywhere: 'ඕනෑම තැනක',
+    statusFlags: { isGood: 'හොඳයි (භාවිතයට ඇත)', needsAttention: 'අවධානය අවශ්‍යයි', countsAsAvailable: 'භාවිතයට ඇති ලෙස ගණන් කරන්න', limitedRun: 'Cavities වසා run වෙනවා', resetsShotsWhenGood: 'හොඳ වූ විට shot ගණන මුල සිට' },
+    hintEn: 'පැහැදිලි කිරීම (ඉංග්‍රීසි)', hintSi: 'පැහැදිලි කිරීම (සිංහල)',
+    copyFrom: 'අවසර පිටපත් කරන්න', builtInRole: 'මුල්', customRole: 'වෙනම', assignable: 'දිය හැකි roles', permissions: 'අවසර', lockedRole: 'අගුළු දමා ඇත: සැමවිටම සියල්ල',
+    rulesHint: 'පේළි: සිට · තීරු: දක්වා. නීතිය වෙනස් කිරීමට cell එක click කරන්න.', newMould: 'අලුත් mould',
+    cell: { off: 'ඉඩ නැත', direct: 'කෙළින්ම', via: (x) => `${x} හරහා` },
+    allowed: 'ඉඩ ඇත', via: 'මුලින් යා යුතු තැන', none: '— නැත —', requires: 'අවශ්‍යයි', groups: 'අවසර (හැම පේළියකින්ම එකක්)', addGroup: 'පේළියක් එකතු කරන්න',
+    requirement: { remarks: 'සටහන්', remarksWhenStatus: 'Status දෙන විට සටහන්', dispatchDetails: 'යැවූ විස්තර', intendedDestination: 'ඊළඟ තැන' },
+    summary: (from, to, how) => `${from} → ${to}: ${how}`,
+    sim: { mould: 'Mould', toolId: 'Tool ID (අත්‍යවශ්‍ය නැහැ)', orFake: 'නැත්නම් ස්ථානයක් සහ status එකක් උත්සාහ කරන්න', location: 'ස්ථානය', status: 'Status', to: 'ගමනාන්තය', draft: 'කෙටුම්පත භාවිත කරන්න', role: 'Role ලෙස', run: 'පරීක්ෂා කරන්න',
+      allowed: 'ඉඩ ඇත', blocked: 'අවහිරයි', path: 'මාර්ගය', required: 'අවශ්‍ය තොරතුරු', permissions: 'හැම පේළියකින්ම එක අවසරයක් අවශ්‍යයි' },
+    versions: { version: 'Version', state: 'තත්ත්වය', reason: 'හේතුව', when: 'කවදාද', changes: 'වෙනස්කම්', rollback: 'මෙම version එකට ආපසු යන්න', exportJson: 'JSON export', importJson: 'JSON import',
+      states: { draft: 'කෙටුම්පත', published: 'ප්‍රකාශිත', archived: 'පැරණි' }, noChanges: 'වෙනස්කම් නැහැ.', added: 'එකතු කළා', removed: 'ඉවත් කළා', changed: 'වෙනස් කළා' },
+    confirmPublish: (v) => `කෙටුම්පත v${v} ප්‍රකාශ කරන්නද? ඊළඟ refresh එකේදී හැමෝටම අලුත් නීති ලැබෙනවා.`, confirmRollback: (v) => `Version ${v} වෙත ආපසු යන්නද? එය අලුත් version එකක් ලෙස ප්‍රකාශ වෙනවා.`,
+    confirmDiscard: 'කෙටුම්පත ඉවත් කරන්නද? එහි වෙනස්කම් නැති වෙනවා.', confirmImport: 'මෙම file එක කෙටුම්පත ලෙස import කරන්නද?', publishedOk: 'ප්‍රකාශ කළා', savedOk: 'කෙටුම්පත save කළා'
+  },
+  settingsAdmin: {
+    title: 'සැකසුම්', readOnly: 'සැකසුම් බැලිය හැක. වෙනස් කිරීමට "System settings වෙනස් කරන්න" අවසරය අවශ්‍යයි.',
+    tabs: { texts: 'පෙළ / නම්', limits: 'සීමා', lists: 'ලැයිස්තු', dashboards: 'Dashboards' },
+    search: 'Key හෝ පෙළ අනුව සොයන්න', missingSi: 'සිංහල override නැති ඒවා පමණක්', modified: 'වෙනස් කළා', reset: 'මුල් අගයට', resetAll: 'සියලු පෙළ මුල් අගයට',
+    codeDefault: 'මුල් අගය', english: 'ඉංග්‍රීසි', sinhala: 'සිංහල', save: 'Save කරන්න', saved: 'Save කළා', affects: 'බලපාන තැන්',
+    exportJson: 'JSON export', importJson: 'JSON import', confirmSave: (k) => `"${k}" වෙනස් කරන්නද?`, confirmReset: (k) => `"${k}" මුල් අගයට ගන්නද?`,
+    invalid: 'මෙම අගය වලංගු නැහැ.', listAdd: 'එකතු කරන්න', listKey: 'Key', moveUp: 'ඉහළට', moveDown: 'පහළට', disable: 'අක්‍රීය කරන්න', enable: 'සක්‍රීය කරන්න',
+    lists: { workTypes: 'වැඩ වර්ග', problemTypes: 'ගැටලු වර්ග', outcomes: 'වැඩ ප්‍රතිඵල', remarkTemplates: 'සම්මත සටහන්', owners: 'අයිතිකරුවන්', processes: 'Processes', families: 'නිෂ්පාදන වර්ග' },
+    dashboardRole: 'Role', dashboardCards: 'පෙන්වන cards, පිළිවෙලට', dashboardHint: 'එම role එකට card එකක් සඟවන්න tick එක ඉවත් කරන්න.',
+    cards: { total: 'සියලු moulds', limited: 'Cavities වසා run වෙන', isolationTooLong: 'Isolation එකේ ඕනෑවට වඩා රැඳී සිටින', serviceDue: 'Shots අනුව service කළ යුතු', workThisMonth: 'මේ මාසයේ කළ වැඩ', byLocation: 'තැන අනුව', byStatus: 'Status අනුව' }
+  },
+  catalog: {
+    title: 'සමස්ත ලැයිස්තුව', hint: 'හැම process එකකම moulds සහ නිෂ්පාදනවල සම්පූර්ණ ගණන්. Mould එකක් තියෙන තැන සොයන්න Find භාවිත කරන්න.',
+    all: 'සියල්ල', processes: { INJECTION: 'Injection', EXTRUSION: 'Extrusion' }, tabs: { moulds: 'Moulds', products: 'නිෂ්පාදන' },
+    cards: { moulds: 'මුළු moulds', uniqueItems: 'මුළු වෙනස් items', perMould: 'Mould එකකට items', perMouldValue: (avg, max) => `සාමාන්‍ය ${avg} · උපරිම ${max}`, multiItem: 'Items 1කට වඩා ඇති moulds', multiMould: 'Moulds 1කට වඩා හදන items' },
+    breakdown: { process: 'Process', status: 'Status', owner: 'අයිතිය', machine: 'Machine', material: 'Material', family: 'වර්ගය' },
+    noOwner: 'අයිතිය නැත', search: 'Tool ID, Die ID, Pin ID සොයන්න', searchItems: 'Item ID හෝ විස්තරය සොයන්න', clearAll: 'සියල්ල ඉවත් කරන්න', remove: 'පෙරහන ඉවත් කරන්න',
+    showLocation: 'තැන පෙන්වන්න', loadMore: 'තවත් පෙන්වන්න', shown: (n, total) => `${total} න් ${n}`, empty: 'මෙම පෙරහන් වලට ගැළපෙන කිසිවක් නැහැ.',
+    col: { toolId: 'Tool ID', process: 'Process', owner: 'අයිතිය', machines: 'Machines', cavities: 'Cavities', items: 'Items', status: 'Status', location: 'තැන', itemId: 'Item ID', description: 'විස්තරය', material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS', moulds: 'Moulds' },
+    sort: 'පිළිවෙල', sorts: { toolId: 'Tool ID', items: 'වැඩිම items', status: 'Status', itemId: 'Item ID', moulds: 'වැඩිම moulds' },
+    madeBy: (n) => `Moulds ${n}කින් හදනවා`, exportCsv: 'CSV export', exportXlsx: 'Excel export', exported: 'Export සූදානම්', truncated: (n) => `මුල් පේළි ${n} පමණක් export කළා. ඉතිරිය සඳහා පෙරහන් අඩු කරන්න.`
+  },
+  dashboard: {
+    title: 'Dashboard', hint: 'හැම mould එකක්ම තියෙන තැන, අවධානය ඕනෑ දේ සහ මේ මාසයේ කළ වැඩ.',
+    byLocation: 'තැන අනුව', byStatus: 'Status අනුව', limited: 'Cavities වසා run වෙන', isolationTooLong: 'Isolation එකේ ඕනෑවට වඩා රැඳී සිටින',
+    serviceDue: 'Shots අනුව service කළ යුතු', workThisMonth: 'මේ මාසයේ කළ වැඩ', entries: (n) => `සටහන් ${n}`, none: 'නැත', total: (n) => `moulds ${n}`
+  },
+  cavity: {
+    action: 'Cavities වසා run කරන්න', change: 'වසා ඇති cavities වෙනස් කරන්න', title: 'Cavities වසා run කරන්න',
+    hint: 'Cavities කිහිපයක් වසා මේ mould එක නිෂ්පාදනයේ දිගටම run කරනවා. වසා ඇති cavities tap කරන්න.',
+    noCavities: 'මුලින්ම items වල cavities ගණන ඇතුළත් කරන්න.', reason: 'හේතුව', reasonRequired: 'හේතුවක් අනිවාර්යයි.',
+    problemType: 'ගැටලුවේ වර්ගය (අත්‍යවශ්‍ය නැහැ)', photo: 'පින්තූරය (අත්‍යවශ්‍ය නැහැ)', expectedFix: 'සකස් කරන්න බලාපොරොත්තු දිනය (අත්‍යවශ්‍ය නැහැ)',
+    summary: (active, total) => `cavities ${total}න් ${active}ක් ක්‍රියාත්මකයි`, badge: (active, total, d) => `cavities ${active}/${total}${d ? ` · ${d} සිට` : ''}`,
+    restoreAll: 'සියලු cavities නැවත විවෘත කරන්න', confirmTitle: 'වසා ඇති cavities', confirm: (tool, active, total) => `${tool}: cavities ${total}න් ${active}ක් ක්‍රියාත්මකයි. Save කරන්නද?`,
+    confirmRestore: (tool) => `${tool} හි සියලු cavities නැවත විවෘත කරන්නද? එය නැවත හොඳ තත්ත්වයට එනවා.`, saved: 'Cavities save කළා', restored: 'සියලු cavities නැවත විවෘත කළා',
+    filter: 'Cavities වසා run වෙන', queue: 'අලුත්වැඩියා කළ යුතු නමුත් run වෙන', tooLong: 'ඕනෑවට වඩා කාලයක් සීමිතව run වෙනවා',
+    downtime: 'Cavity downtime', downtimeEmpty: 'කිසිදු cavity එකක් වසා නැහැ.', period: 'කාලය', which: 'වසා ඇති cavities', open: 'තවම වසා ඇත', decidedBy: 'තීරණය කළේ', expectedBy: (d) => `${d} වන විට සකස් කිරීමට බලාපොරොත්තුයි`
+  },
+  duration: (days, hours, minutes) => (days ? `දින ${days} පැය ${hours}` : hours ? `පැය ${hours} මි. ${minutes}` : `මි. ${minutes}`),
+  roles: { system_admin: 'System Administrator', super_admin: 'Super Admin', admin: 'Admin', production_supervisor: 'නිෂ්පාදන අධීක්ෂක', mould_technician: 'Mould තාක්ෂණ ශිල්පී', mould_maker: 'Mould සාදන්නා', executive: 'විධායක' },
   rolesHelp: 'Super Admin: සියල්ල • Admin: moulds සහ users • නිෂ්පාදන අධීක්ෂක: මැෂින් වෙනස් කිරීම් • Mould තාක්ෂණ ශිල්පී: මැෂින් වෙනස් කිරීම්, service සහ අලුත්වැඩියා • Mould සාදන්නා: Mould කාමරය, service සහ අලුත්වැඩියා',
 
   nav: {
+    documentation: 'භාවිත උපදෙස්',
     find: 'Mould එකක් සොයන්න', racks: 'Racks බලන්න', workshop: 'Workshop පෝලිම', admin: 'Admin', superAdmin: 'Super Admin',
     machines: 'මැෂින්', users: 'Users', rackAdmin: 'Racks කළමනාකරණය', audit: 'Audit සටහන්', workReport: 'වැඩ සටහන් වාර්තාව', account: 'ගිණුම් විස්තර', menu: 'මෙනුව', closeMenu: 'මෙනුව වහන්න',
     language: 'භාෂාව', findShort: 'සොයන්න', racksShort: 'Racks', workshopShort: 'Workshop', more: 'තවත්', expand: 'මෙනුව විහිදන්න', collapse: 'මෙනුව හකුළන්න', accountMenu: 'ගිණුම සහ මෙනුව'
@@ -304,7 +508,8 @@ const si: Dict = {
 
   search: {
     placeholder: 'Tool ID, Item ID, විස්තරය, මැෂිම හෝ rack එක',
-    clear: 'සෙවුම මකන්න',
+    clear: 'සෙවුම මකන්න', recent: 'මෑත සෙවුම්', suggestMoulds: 'Moulds', suggestItems: 'Items', matchedItem: 'ගැළපුණු item එක',
+    didYouMean: 'ඔබ අදහස් කළේ', onlySymbols: 'සෙවීමට අකුරු හෝ ඉලක්කම් ටයිප් කරන්න.',
     results: (n) => `moulds ${n}`,
     allMoulds: 'සියලුම moulds',
     noMatch: 'සෙවුමට ගැලපෙන mould එකක් නෑ.',
@@ -316,7 +521,7 @@ const si: Dict = {
     moved: (when, who) => (who ? `${when} · ${who} ගෙනගියා` : `${when} ගෙනගියා`),
     items: (n) => `items ${n}`,
     noRack: 'තවම rack නෑ',
-    shotsDue: 'Service කාලයයි'
+    shotsDue: 'Service කාලයයි', shotsSoon: 'ඉක්මනින් service'
   },
 
   detail: {
@@ -327,12 +532,13 @@ const si: Dict = {
     edit: 'Mould එක සංස්කරණය', remove: 'Mould එක මකන්න', restore: 'Mould එක නැවත ගන්න', deletedBanner: 'මේ mould එක මකා දමා ඇත.',
     deleted: (id) => `${id} මකා දැමුවා`, restored: (id) => `${id} නැවත ගත්තා`,
     cavities: (n) => (n == null ? '' : `cavities ${n}`), material: 'Material', masterbatch: 'Masterbatch', qas: 'QAS',
-    openImage: 'පින්තූරය විවෘත කරන්න', lastMoved: 'අවසන් වරට ගෙනගියේ'
+    openImage: 'පින්තූරය විවෘත කරන්න', noImage: 'තවම පින්තූරයක් නෑ', addImage: 'පින්තූරයක් එකතු කරන්න', morePictures: (n) => `+${n}`, lastMoved: 'අවසන් වරට ගෙනගියේ'
   },
 
   act: {
     outOfService: 'Send out of service', returnToWorkshop: 'Return to Workshop',
     title: 'ගෙනයන්න හෝ යාවත්කාලීන කරන්න',
+    moveTo: (place) => `${place} වෙත ගෙනයන්න`,
     mount: 'මැෂිමකට දාන්න', changeMachine: 'වෙනත් මැෂිමකට දාන්න', toFloor: 'Production Floor එකට',
     toMouldRoom: (mr) => `${mr}ට දාන්න`, changeRack: 'Rack එක වෙනස් කරන්න', toWorkshop: 'Workshop එකට යවන්න',
     changeStatus: 'තත්ත්වය වෙනස් කරන්න', recordShots: 'Shots සටහන් කරන්න',
@@ -347,7 +553,7 @@ const si: Dict = {
   },
 
   hist: {
-    CREATED: 'එකතු කළා', IMPORTED: 'Tools list එකෙන් ගත්තා', EDITED: 'විස්තර වෙනස් කළා', DELETED: 'මකා දැමුවා', RESTORED: 'නැවත ගත්තා',
+    CREATED: 'එකතු කළා', IMPORTED: 'Tools list එකෙන් ගත්තා', EDITED: 'සංස්කරණය කළා', DELETED: 'මකා දැමුවා', RESTORED: 'නැවත ගත්තා', CAVITIES_CHANGED: 'වසා ඇති cavities වෙනස් කළා', MOVED: 'ගෙනගියා', STATUS_CHANGED: 'Status වෙනස් කළා',
     moved: (from, to) => `${from} → ${to}`, status: (from, to) => `${from} → ${to}`, override: 'Override', by: ''
   },
 
@@ -364,6 +570,9 @@ const si: Dict = {
 
   dispatch: { title: 'Out of Service යැවූ විස්තර', recipientName: 'ලබන්නාගේ / ආයතනයේ නම', address: 'ලිපිනය', repairDetails: 'අලුත්වැඩියා විස්තර', sentAt: 'යැවූ දිනය', returnedAt: 'නැවත ලැබුණු දිනය' },
   accessAdmin: {
+    roleAccess: 'Role access', userAccess: 'User access', chooseRole: 'Role එකක් තෝරන්න', searchRole: 'Role එකක් සොයන්න', noRoles: 'Roles හමු නොවුණි.', builtIn: 'මුල් අවසර', resetRole: 'මුල් අවසර වෙත යළි සකසන්න',
+    roleHint: 'මෙම role එකේ සියලු users සඳහා access තෝරන්න. User කෙනෙකුගේ custom access එකට ප්‍රමුඛතාව ලැබේ. Role access ලබාගැනීමට එම userගේ access role defaults වෙත යළි සකසන්න.',
+    noRoleAccess: 'අවසර තෝරා නැත. මෙම role එකේ අවසර භාවිත කරන usersට login වී තම account එක කළමනාකරණය කළ හැක.',
     title: 'User access පාලනය', search: 'නම හෝ email එකෙන් user සොයන්න', choose: 'User කෙනෙක් තෝරන්න',
     hint: 'මේ userට බලන්න සහ කරන්න පුළුවන් දේ තෝරන්න. අදාළ pages විවෘත කිරීමට view permissions ද ලබා දෙන්න.',
     defaults: 'Role එකේ සාමාන්‍ය access', custom: 'වෙනම සකස් කළ access', reset: 'Role එකේ සාමාන්‍ය access නැවත යොදන්න',
@@ -371,15 +580,26 @@ const si: Dict = {
     protected: 'System Administratorට සැමවිටම සම්පූර්ණ access ඇත. එම accounts මෙතැනින් සීමා කළ නොහැක.',
     noAccess: 'Permissions තෝරා නැහැ. මේ userට sign in වී තමන්ගේ account එක පාලනය කරන්න තවමත් පුළුවන්.',
     labels: {
-      'moves.outOfService': 'Send out of service / return to Workshop (Super Admin only)',
-      'settings.manage': 'System settings වෙනස් කරන්න', 'racks.manage': 'Zones සහ racks පාලනය කරන්න', 'racks.view': 'Racks බලන්න',
-      'import.run': 'Data import කරන්න', 'export.run': 'Data export කරන්න', 'audit.view': 'Audit සටහන් බලන්න',
-      'users.manage': 'Users සහ roles පාලනය කරන්න', 'moulds.manage': 'Moulds, dies, items සහ machines වෙනස් කරන්න',
-      'moves.machine': 'Machines වලට moulds සවි කරන්න සහ මාරු කරන්න', 'moves.mouldRoom': 'ගබඩාවට සහ ගබඩාවෙන් moulds මාරු කරන්න',
-      'workshop.work': 'Workshop status සහ වැඩ පාලනය කරන්න', 'machines.override': 'හේතුවක් දී machine compatibility override කරන්න',
-      'worklog.create': 'වැඩ සටහන් කරන්න', 'worklog.view': 'වැඩ ඉතිහාසය බලන්න', 'worklog.report': 'වැඩ වාර්තා බලන්න සහ export කරන්න',
-      'problem.report': 'ගැටලු වාර්තා කරන්න', 'moulds.view': 'Moulds, dies, machines සහ workshop පෝලිම බලන්න', 'access.manage': 'User access පාලනය කරන්න'
-    }
+      'mould.view': 'Moulds, සෙවීම, ඉතිහාසය සහ timeline බලන්න', 'catalog.view': 'සමස්ත ලැයිස්තුව (සියලු moulds සහ නිෂ්පාදන)', 'mould.create': 'Moulds සහ dies එකතු කරන්න', 'mould.edit': 'Mould විස්තර, items සහ cavities සංස්කරණය',
+      'mould.machines.edit': 'යොදන්න පුළුවන් machines සංස්කරණය', 'mould.images.manage': 'පින්තූර එකතු කිරීම, මාරු කිරීම, ඉවත් කිරීම', 'mould.delete': 'Moulds ඉවත් කිරීම සහ නැවත ගැනීම',
+      'move.machine': 'Machine එකකට සවි කරන්න', 'move.floor': 'Production Floor එකට / එකෙන් ගෙනයන්න', 'move.mouldroom': 'Mould කාමරයට / කාමරයෙන් ගෙනයන්න',
+      'move.workshop': 'Workshop එකට යවන්න', 'move.isolation': 'Isolation කලාපයට යවන්න', 'move.outOfService': 'Out of service යැවීම / ආපසු ගැනීම (Super Admin පමණයි)',
+      'status.change': 'Workshop එකේදී status වෙනස් කරන්න', 'machines.override': 'හේතුවක් දී machine compatibility override කරන්න',
+      'worklog.create': 'වැඩ සටහන් කරන්න', 'worklog.view': 'වැඩ ඉතිහාසය බලන්න', 'worklog.report': 'වැඩ වාර්තාව සහ cavity downtime',
+      'problem.report': 'ගැටලු වාර්තා කරන්න', 'cavity.manage': 'Cavities වසා run කිරීම / cavities නැවත විවෘත කිරීම',
+      'rack.view': 'Racks බලන්න', 'rack.manage': 'Zones සහ racks පාලනය කරන්න', 'users.manage': 'Users සහ roles පාලනය කරන්න',
+      'access.manage': 'Access පාලනය (System Administrator පමණයි)', 'import.run': 'Data import කරන්න', 'audit.view': 'Audit සටහන් බලන්න',
+      'export.run': 'වාර්තා export කරන්න', 'settings.manage': 'System settings වෙනස් කරන්න'
+    },
+    tabs: { roles: 'Roles', users: 'Users' }, permission: 'අවසරය', resetDefaults: 'මුල් අවසර වෙත යළි සකසන්න',
+    fromRole: 'role එකෙන්', granted: 'අමතර (ලබා දුන්)', denied: 'ඉවත් කළ', notIncluded: 'නැත',
+    expiry: 'කල් ඉකුත් වන දිනය (අත්‍යවශ්‍ය නැත)', reason: 'හේතුව', reasonHint: 'අනිවාර්යයි. Audit සටහනේ save වෙනවා.', reasonRequired: 'හේතුවක් ලියන්න (අකුරු 3+).',
+    effective: 'දැනට ඇති අවසර', effectiveCount: (n) => `අවසර ${n}`, resetUser: 'මේ user role එකේ මුල් අවසර වෙත යළි සකසන්න',
+    overrides: 'වෙනම access', expired: 'කල් ඉකුත්', expires: (d) => `${d} දක්වා`, save: 'Access save කරන්න',
+    confirmMatrix: (role) => `හැම ${role} කෙනෙකුගේම අවසර වෙනස් කරන්නද?`, confirmUser: (name) => `${name}ගේ access වෙනස් කරන්නද?`,
+    confirmReset: (name) => `${name} role එකේ මුල් අවසර වෙත යළි සකසන්නද?`, confirmTitle: 'Access වෙනස් කිරීම',
+    myAccess: 'මගේ access', myAccessHint: 'Access වෙනස් කළ හැක්කේ System Administratorට පමණයි. මේ ඔබට දැන් කළ හැකි දේ.',
+    tapToCycle: 'අවසරයක් tap කර role default, අමතර සහ ඉවත් කළ අතර මාරු කරන්න.'
   },
   machineAdmin: {
     search: 'Machine code, නම හෝ mounted mould සොයන්න', retry: 'නැවත උත්සාහ කරන්න', empty: 'මැෂින් හමු වුණේ නෑ.',
@@ -401,7 +621,8 @@ const si: Dict = {
   audit: {
     title: 'Audit සටහන්', entity: 'වර්ගය', all: 'සියල්ල', empty: 'සටහන් නෑ.', before: 'කලින්', after: 'පසුව', reason: 'හේතුව', more: 'තවත් පෙන්වන්න',
     count: (shown, total) => `${total} න් ${shown}`,
-    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'මැෂින්', User: 'Users', Import: 'Import', Migration: 'Migration' }
+    types: { Mould: 'Moulds', Item: 'Items', Rack: 'Racks', Zone: 'Zones', Machine: 'මැෂින්', User: 'Users', Import: 'Import', Migration: 'Migration' },
+    categories: { access: 'Access වෙනස්කම්', edits: 'සංස්කරණ', images: 'පින්තූර', cavities: 'Cavities' }
   },
 
   form: {
@@ -410,12 +631,17 @@ const si: Dict = {
     startAt: 'ආරම්භක තැන', items: 'Items', itemId: 'Item ID', description: 'විස්තරය', cavities: 'Cavities', qas: 'QAS',
     materialId: 'Material ID', materialDescription: 'Material විස්තරය', masterbatchId: 'Masterbatch ID', masterbatchDescription: 'Masterbatch විස්තරය',
     addItem: 'Item එකක් එකතු කරන්න', removeItem: 'Item එක ඉවත් කරන්න', saveItem: 'Item එක save කරන්න',
-    create: 'Mould එක එකතු කරන්න', save: 'වෙනස්කම් save කරන්න', required: 'අනිවාර්යයි', added: (id) => `${id} එකතු කළා`, saved: (id) => `${id} save කළා`, itemIdRequired: 'හැම item එකකටම Item ID එකක් ඕනේ'
+    create: 'Mould එක එකතු කරන්න', save: 'වෙනස්කම් save කරන්න', required: 'අනිවාර්යයි', added: (id) => `${id} එකතු කළා`, saved: (id) => `${id} save කළා`, itemIdRequired: 'හැම item එකකටම Item ID එකක් ඕනේ',
+    pictures: 'පින්තූර', picturesHint: (max) => `item එකකට ${max}ක් දක්වා`, addPicture: 'පින්තූරයක් එකතු කරන්න', takePhoto: 'කැමරාව',
+    replacePicture: 'පින්තූරය මාරු කරන්න', removePicture: 'පින්තූරය ඉවත් කරන්න', moveEarlier: 'ඉස්සරහට', moveLater: 'පස්සට',
+    picturesPending: (n) => `save කළාම පින්තූර ${n}ක් upload වෙනවා`,
+    uploadingPictures: (done, total) => `පින්තූර upload වෙමින් ${done}/${total}…`, picturesUploaded: 'පින්තූර upload කළා',
+    picturesFailed: (items) => `Mould එක save වුණා, නමුත් පින්තූර කිහිපයක් upload වුණේ නෑ (${items}). පහළින් ආයෙත් එකතු කරන්න.`
   },
 
   work: {
     log: 'වැඩ සටහන් කරන්න', title: 'වැඩ සටහන් කරන්න', correcting: 'කලින් සටහනක් නිවැරදි කරනවා',
-    types: { REPAIR: 'අලුත්වැඩියාව', SERVICE: 'Service', MINOR_FIX: 'සුළු සකස් කිරීම', INSPECTION: 'පරීක්ෂාව', CLEANING: 'පිරිසිදු කිරීම', OTHER: 'වෙනත්' },
+    types: { REPAIR: 'අලුත්වැඩියාව', SERVICE: 'Service', MINOR_FIX: 'සුළු සකස් කිරීම', INSPECTION: 'පරීක්ෂාව', CLEANING: 'පිරිසිදු කිරීම', OTHER: 'වෙනත්', CAVITY_BLOCK: 'Cavities වසා දැමුවා', CAVITY_RESTORE: 'Cavities නැවත විවෘත කළා' },
     type: 'වැඩේ වර්ගය', what: 'කළේ මොකක්ද', whatPh: 'උදා: ejector pin එක මාරු කළා, cavity 3 polish කළා', who: 'කළේ කවුද', whoHint: 'කෙනෙක් එකතු කරන්න හෝ ඉවත් කරන්න තට්ටු කරන්න',
     when: 'කවදාද', parts: 'පාවිච්චි කළ කොටස් (විකල්පයි)', minutes: 'ගතවූ කාලය, මිනිත්තු (විකල්පයි)', shots: 'Shot ගණන (විකල්පයි)',
     outcome: 'ප්‍රතිඵලය', outcomes: { none: 'වෙනසක් නෑ', OK: 'Mould එක හොඳයි', NEEDS_REPAIR: 'තවත් අලුත්වැඩියා ඕනේ', NEEDS_SERVICE: 'Service ඕනේ' },
@@ -454,6 +680,7 @@ const si: Dict = {
     deleteMouldTitle: 'Mould එක මකන්න', deleteMould: (id) => `${id} මකන්නද? පසුව නැවත ගන්න පුළුවන්; ඉතිහාසය තියෙනවා.`, reason: 'හේතුව (විකල්පයි)', deleteBtn: 'මකන්න',
     restoreMouldTitle: 'Mould එක නැවත ගන්න', restoreMould: (id) => `${id} නැවත ගන්නද? සෙවුම්වල නැවත පෙන්වයි.`, restoreBtn: 'නැවත ගන්න',
     removeItemTitle: 'Item එක ඉවත් කරන්න', removeItem: (item, id) => `${id} එකෙන් ${item} item එක ඉවත් කරන්නද?`, removeBtn: 'ඉවත් කරන්න',
+    removePictureTitle: 'පින්තූරය ඉවත් කරන්න', removePicture: (item) => `${item} item එකෙන් මේ පින්තූරය ඉවත් කරන්නද?`,
     deleteUserTitle: 'User මකන්න', deleteUser: (n) => `${n} මකන්නද? එයාට ආයෙ ඇතුල් වෙන්න බෑ.`,
     roleTitle: 'භූමිකාව වෙනස් කරන්න', role: (n, a, b) => `${n} ගේ භූමිකාව ${a} සිට ${b} ලෙස වෙනස් කරන්නද?`, roleBtn: 'වෙනස් කරන්න',
     disableUserTitle: 'User අක්‍රිය කරන්න', disableUser: (n) => `${n} අක්‍රිය කරන්නද? නැවත සක්‍රිය කරන තුරු ඇතුල් වෙන්න බෑ.`, disableBtn: 'අක්‍රිය කරන්න',
@@ -492,7 +719,7 @@ const si: Dict = {
   name: 'නම', role: 'භූමිකාව', active: 'සක්‍රියයි', disabled: 'අක්‍රියයි', userSaved: 'User save කළා', userAdded: 'User එකතු කළා', userDeleted: 'User මකා දැමුවා',
 
   signIn: 'ඇතුල් වෙන්න', signingIn: 'ඇතුල් වෙමින්…', email: 'Email', password: 'Password', signOut: 'ඉවත් වෙන්න', loginSub: 'ඇතුල් වෙලා හැම mould එකක්ම තියෙන තැන බලන්න.',
-  accountTitle: 'ගිණුම් විස්තර', accountSaved: 'ගිණුම් විස්තර වෙනස් කළා', keepPassword: 'Password වෙනස් නොකරන්නේ නම් අලුත් password හිස්ව තබන්න.',
+  accountTitle: 'ගිණුම් විස්තර', mustChangePassword: 'ඉදිරියට යාමට පෙර අලුත් password එකක් තෝරන්න. පහළ වත්මන් password එක සහ අලුත් එක ඇතුළත් කරන්න.', accountSaved: 'ගිණුම් විස්තර වෙනස් කළා', keepPassword: 'Password වෙනස් නොකරන්නේ නම් අලුත් password හිස්ව තබන්න.',
   currentPassword: 'දැන් තියෙන password එක', newPassword: 'අලුත් password එක (අකුරු 8ක්වත්)', repeatPassword: 'අලුත් password එක නැවත',
   pwMismatch: 'අලුත් password දෙක ගැලපෙන්නේ නෑ', saveBtn: 'වෙනස්කම් save කරන්න', close: 'වහන්න', cancel: 'අවලංගු කරන්න', loading: 'පූරණය වෙමින්…', reload: 'නැවත පූරණය',
   install: {
@@ -540,6 +767,18 @@ const si: Dict = {
     DONE_AT_FUTURE: () => 'වැඩ කළ වේලාව අනාගතයේ වෙන්න බෑ.',
     INVALID_CORRECTION: () => 'නිවැරදි කරන සටහන හමු වුණේ නෑ.',
     INVALID_PHOTO: () => 'පින්තූර JPEG, PNG හෝ WebP විය යුතුයි.',
+    ISOLATION_FIRST: () => 'මුලින්ම Isolation කලාපයට යවන්න.',
+    INVALID_DESTINATION: () => 'ඊළඟ තැන දිය හැක්කේ Isolation කලාපයට යවන විට පමණයි.',
+    USE_CAVITY_ACTION: () => 'ඒ සඳහා "Cavities වසා run කරන්න" භාවිත කරන්න.',
+    LAST_SYSTEM_ADMIN: () => 'අවම වශයෙන් සක්‍රීය System Administrator කෙනෙක් සැමවිටම සිටිය යුතුයි.',
+    STALE_ACCESS: () => 'මේ අතරේ වෙන කෙනෙක් මේ access වෙනස් කළා. Reload කර නැවත උත්සාහ කරන්න.',
+    PASSWORD_CHANGE_REQUIRED: () => 'මුලින්ම ඔබේ password එක වෙනස් කරන්න.',
+    ROLE_LOCKED: () => 'System Administratorට සැමවිටම සියලු අවසර ඇත.',
+    SUPER_ADMIN_ONLY: () => 'Out of Service access Super Adminට පමණයි.',
+    INVALID_EXPIRY: () => 'කල් ඉකුත් වන දිනය අනාගතයේ විය යුතුයි.',
+    TOO_MANY_IMAGES: () => 'මේ item එකට උපරිම පින්තූර ගණන දැනටමත් තියෙනවා.',
+    DUPLICATE_IMAGE: () => 'මේ පින්තූරය දැනටමත් item එකේ තියෙනවා.',
+    INVALID_ORDER: () => 'මේ අතරේ පින්තූර වෙනස් වුණා. Form එක ආයෙත් open කරලා උත්සාහ කරන්න.',
     TOO_LARGE: () => 'පින්තූර විශාල වැඩියි. අඩුවෙන් හෝ කුඩා පින්තූර දාන්න.',
     EXPORT_TOO_LARGE: (d) => `සටහන් ${d.total}ක් ගැලපෙනවා. Export කළ හැක්කේ ${d.cap} දක්වා; පෙරහන් හෝ දින අඩු කරන්න.`
   }
@@ -548,4 +787,53 @@ const si: Dict = {
 export const I18N: Record<Lang, Dict> = { en, si };
 
 // Location name; the Mould Room name always comes from its single key.
-export const locationName = (loc: Location, translations: Dict) => (loc === 'MOULD_ROOM' ? translations.mouldRoom : translations.loc[loc]);
+// Location / status names: the workflow config label (editable), else the built-in text.
+export const locationName = (loc: Location, translations: Dict) => locationLabel(loc) ?? (loc === 'MOULD_ROOM' ? translations.mouldRoom : translations.loc[loc as Exclude<Location, 'MOULD_ROOM'>]) ?? String(loc);
+export const statusName = (status: MouldStatus, translations: Dict) => statusLabel(status) ?? translations.status[status] ?? String(status);
+export const statusHint = (status: MouldStatus, translations: Dict) => statusHintText(status) ?? translations.statusHint[status];
+export const roleName = (role: Role, translations: Dict) => roleLabel(role) ?? translations.roles[role] ?? String(role);
+
+// Text overrides from the "Texts / Labels" settings ({ "search.placeholder": "…" }) on top of the code defaults.
+// Only plain string entries can be overridden; functions (texts with numbers or names) keep their code version.
+export function applyTextOverrides(dict: Dict, overrides: Record<string, string> | undefined): Dict {
+  if (!overrides || !Object.keys(overrides).length) return dict;
+  const copy = structuredClone(stripFunctions(dict)) as Record<string, unknown>;
+  restoreFunctions(copy, dict as unknown as Record<string, unknown>);
+  for (const [path, value] of Object.entries(overrides)) {
+    const keys = path.split(".");
+    let node = copy as Record<string, unknown>;
+    for (const k of keys.slice(0, -1)) {
+      if (typeof node[k] !== "object" || node[k] === null) { node = {}; break; }
+      node = node[k] as Record<string, unknown>;
+    }
+    const last = keys[keys.length - 1];
+    if (typeof node[last] === "string" && typeof value === "string" && value.trim()) node[last] = value;
+  }
+  return copy as unknown as Dict;
+}
+function stripFunctions(v: unknown): unknown {
+  if (typeof v === "function") return null;
+  if (Array.isArray(v)) return v.map(stripFunctions);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, stripFunctions(x)]));
+  return v;
+}
+function restoreFunctions(target: Record<string, unknown>, source: Record<string, unknown>) {
+  for (const [k, v] of Object.entries(source)) {
+    if (typeof v === "function") target[k] = v;
+    else if (v && typeof v === "object" && !Array.isArray(v)) restoreFunctions(target[k] as Record<string, unknown>, v as Record<string, unknown>);
+  }
+}
+// Every overridable text: [key, value] for plain strings, for the Texts / Labels screen.
+export function textEntries(dict: Dict): [string, string][] {
+  const out: [string, string][] = [];
+  const walk = (v: unknown, path: string) => {
+    if (typeof v === "string") out.push([path, v]);
+    else if (v && typeof v === "object" && !Array.isArray(v)) for (const [k, x] of Object.entries(v)) walk(x, path ? path + "." + k : k);
+  };
+  walk(dict, "");
+  return out;
+}
+
+// Work types / outcomes: the label from Settings > Lists, else the built-in text.
+export const workTypeName = (type: string, translations: Dict) => listLabel("workTypes", type) ?? (translations.work.types as Record<string, string>)[type] ?? type;
+export const outcomeName = (outcome: string, translations: Dict) => listLabel("outcomes", outcome) ?? (translations.work.outcomes as Record<string, string>)[outcome] ?? outcome;

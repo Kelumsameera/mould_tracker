@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
 import type { Dict, Lang } from "@/utils/i18n";
 import { syncDot, type PageName } from "@/utils/helpers";
 import { passkeyText } from "@/utils/passkeyText";
+import SearchBox from "./SearchBox";
 
 type Props = {
   page: PageName;
@@ -15,6 +15,8 @@ type Props = {
   onSearch: (query: string) => void;
   onLanguageChange: (language: Lang) => void;
   onOpenSidebar: () => void;
+  userId: string;
+  onOpenMould: (id: string) => void;
 };
 
 export default function Navbar({
@@ -25,44 +27,23 @@ export default function Navbar({
   onSearch,
   onLanguageChange,
   onOpenSidebar,
+  userId,
+  onOpenMould,
 }: Props) {
-  // Screen state
-  const [searchText, setSearchText] = useState("");
-  const searchInput = useRef<HTMLInputElement>(null);
   const showSearch = page === "find" || page === "extrusion";
-  let searchPlaceholder = translations.search.placeholder;
-  if (page === "extrusion") {
-    searchPlaceholder = translations.extrusionSearch;
-  }
-
-  // Wait until typing pauses before loading new results.
-  // Effects: load data and update the screen
-  useEffect(() => {
-    if (!showSearch) return;
-    const searchTimer = setTimeout(() => {
-      onSearch(searchText.trim());
-    }, 250);
-    return () => clearTimeout(searchTimer);
-  }, [searchText, showSearch, onSearch]);
-
-  useEffect(() => {
-    if (showSearch) {
-      searchInput.current?.focus();
-    }
-  }, [showSearch]);
-
-  // Button and form actions
-  function clearSearch() {
-    setSearchText("");
-    onSearch("");
-    searchInput.current?.focus();
-  }
+  const searchPlaceholder = page === "extrusion" ? translations.extrusionSearch : translations.search.placeholder;
 
   const titles: Record<PageName, string> = {
     find: translations.brandTitle,
     extrusion: translations.toolTypes.EXTRUSION_DIE,
     racks: translations.racks.title,
     workshop: translations.workshop.title,
+    isolation: translations.isolation.title,
+    catalog: translations.catalog.title,
+    place: translations.place.title,
+    workflow: translations.workflowAdmin.title,
+    settings: translations.settingsAdmin.title,
+    dashboard: translations.dashboard.title,
     workReport: translations.report.title,
     rackAdmin: translations.rackAdmin.title,
     machines: translations.nav.machines,
@@ -88,31 +69,7 @@ export default function Navbar({
       </div>
 
       {showSearch && (
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border-[1.5px] border-solid border-line-strong bg-surface shadow-card pl-3 pr-1 text-ink-faint focus-within:border-ink focus-within:shadow-[0_0_0_3px_rgba(245,184,0,.35)]">
-          <Icon name="search" size={18} />
-          <input
-            ref={searchInput}
-            className="min-w-0 flex-1 h-10 border-0 bg-transparent px-0 py-0 text-[15px] text-ink outline-none focus-visible:shadow-none"
-            type="search"
-            inputMode="search"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
-            autoComplete="off"
-            enterKeyHint="search"
-          />
-          {searchText && (
-            <button
-              type="button"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border-0 bg-surface-3 text-ink-soft cursor-pointer"
-              aria-label={translations.search.clear}
-              onClick={clearSearch}
-            >
-              <Icon name="cancel" size={16} />
-            </button>
-          )}
-        </div>
+        <SearchBox key={page} translations={translations} placeholder={searchPlaceholder} userId={userId} toolType={page === "extrusion" ? "EXTRUSION_DIE" : undefined} onSearch={onSearch} onOpenMould={onOpenMould} />
       )}
 
       <div className="flex shrink-0 rounded-md bg-white/10 p-0.5" role="group" aria-label={translations.nav.language}>

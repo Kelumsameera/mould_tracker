@@ -1,12 +1,12 @@
 import Zone from "../models/Zone.js";
-import Rack, { rackLocationId } from "../models/Rack.js";
+import Rack, { rackLocationId, rackCode } from "../models/Rack.js";
 import AuditLog from "../models/AuditLog.js";
 
 export const DEFAULT_ZONES = [
   { code: "FLK", name: "FLK", sortOrder: 1 },
   { code: "CCI", name: "CCI", sortOrder: 2 }
 ];
-export const DEFAULT_LAYOUT = { rowFrom: "A", rowTo: "C", from: 1, to: 10 };
+export const DEFAULT_LAYOUT = { rowFrom: "A", rowTo: "C", palletFrom: 1, palletTo: 3, from: 1, to: 4 };
 
 const letters = (fromLetter, toLetter) => {
   const a = fromLetter.toUpperCase().charCodeAt(0);
@@ -17,17 +17,21 @@ const letters = (fromLetter, toLetter) => {
 
 // Builds the rack list for a bulk-generate request (zone + row letters + number range).
 // Used for the preview and for saving, so both always agree.
-export function buildRacks({ zone, rowFrom, rowTo, from, to }) {
+export function buildRacks({ zone, rowFrom, rowTo, from, to, palletFrom, palletTo }) {
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || from > to || to > 999) {
     throw new Error("Rack numbers must be whole numbers from 1 to 999, in order");
   }
   const z = zone.trim().toUpperCase();
-  return letters(rowFrom, rowTo).flatMap((row) =>
-    Array.from({ length: to - from + 1 }, (_, i) => {
-      const code = `${row}${from + i}`;
-      return { zone: z, row, number: from + i, code, locationId: rackLocationId(z, code) };
-    })
-  );
+  const rows = letters(rowFrom, rowTo);
+  const modern = palletFrom !== undefined || palletTo !== undefined;
+  if (modern && (!Number.isInteger(palletFrom) || !Number.isInteger(palletTo) || palletFrom < 1 || palletTo > 99 || palletFrom > palletTo)) throw new Error("Pallets must be whole numbers from 1 to 99, in order");
+  const pallets = modern ? Array.from({ length: palletTo - palletFrom + 1 }, (_, i) => palletFrom + i) : [null];
+  if (rows.length * pallets.length * (to - from + 1) > 2000) throw new Error("Create at most 2000 positions at once");
+  return rows.flatMap(row => pallets.flatMap(pallet => Array.from({ length: to - from + 1 }, (_, i) => {
+    const number = from + i;
+    const code = rackCode(row, number, pallet);
+    return { zone: z, row, number, ...(modern ? { pallet, capacity: 1 } : {}), code, locationId: rackLocationId(z, code) };
+  })));
 }
 
 // Bulk-generate preview: which racks are new, which come back from a soft delete, which already exist.

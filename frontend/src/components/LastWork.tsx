@@ -2,7 +2,7 @@
 
 import Icon, { workIcon } from "./Icon";
 
-import { type Dict, type Lang } from "@/utils/i18n";
+import { type Dict, type Lang, workTypeName } from "@/utils/i18n";
 import { formatTime } from "@/utils/format";
 import type { Mould } from "@/utils/types";
 
@@ -14,7 +14,7 @@ export default function LastWork({ mould, translations, lang }: Props) {
   return (
     <div className="text-xs font-bold text-workshop-ink flex items-center gap-1.25">
       <Icon name={workIcon[mould.lastWork.type]} size={13} />
-      {translations.work.last(translations.work.types[mould.lastWork.type], mould.lastWork.names.join(", "), formatTime(mould.lastWork.doneAt, lang))}
+      {translations.work.last(workTypeName(mould.lastWork.type, translations), mould.lastWork.names.join(", "), formatTime(mould.lastWork.doneAt, lang))}
     </div>
   );
 }

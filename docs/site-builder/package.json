@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "test": "node --test public-site.test.mjs",
     "docx": "node build-docx.mjs"
   },
   "dependencies": {

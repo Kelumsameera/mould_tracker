@@ -1,13 +1,14 @@
 "use client";
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { setRuntime, type RuntimeBundle } from "@/utils/runtimeConfig";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const BOTTOM_ITEM = "no-underline min-h-(--nav-h) border-0 bg-transparent flex flex-col items-center justify-center gap-[3px] text-[11px] font-extrabold cursor-pointer px-0.5 py-1.5 [&>span]:max-w-full [&>span]:overflow-hidden [&>span]:text-ellipsis [&>span]:whitespace-nowrap ";
 import { PAGE_PATHS, getPageName, type PageName } from "@/utils/helpers";
 import { api, ApiError } from "@/utils/api";
-import { I18N, type Dict, type Lang } from "@/utils/i18n";
-import { can, canVisitPage } from "@/utils/permissions";
+import { I18N, applyTextOverrides, type Dict, type Lang } from "@/utils/i18n";
+import { can, canEditMoulds, canVisitPage } from "@/utils/permissions";
 import type { Mould, User } from "@/utils/types";
 import Sidebar from "@/components/Sidebar";
 import MouldSheet from "@/components/MouldSheet";
@@ -51,7 +52,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [navOpen, setNavOpen] = useState(false);
   const [formFor, setFormFor] = useState<Mould | null | "new">(null);
-  const translations = I18N[lang];
+  // Workflow config + settings + text overrides (GET /api/config); built-in fallbacks until loaded.
+  const [bundle, setBundle] = useState<RuntimeBundle | null>(null);
+  setRuntime(bundle, lang);
+  const translations = useMemo(() => applyTextOverrides(I18N[lang], bundle?.texts?.[lang]), [lang, bundle]);
+  const loadConfig = useCallback(() => {
+    api.config().then(setBundle).catch(() => { /* keep the last config; retried on the next refresh */ });
+  }, []);
 
   // Effects: load data and update the screen
   useEffect(() => {
@@ -144,13 +151,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const allowed = user ? canVisitPage(user, view) : true;
   useEffect(() => {
-    if (user && !allowed) router.replace(canVisitPage(user, "find") ? PAGE_PATHS.find : PAGE_PATHS.account);
-  }, [user, allowed, router]);
+    if (user?.mustChangePassword && view !== "account") router.replace(PAGE_PATHS.account); // seeded account: new password first
+    else if (user && !allowed) router.replace(canVisitPage(user, "find") ? PAGE_PATHS.find : PAGE_PATHS.account);
+  }, [user, allowed, router, view]);
 
   // A 401 anywhere means the session ended.
+  const signedIn = Boolean(user);
+  useEffect(() => { if (signedIn) loadConfig(); }, [signedIn, loadConfig]);
   useEffect(() => {
     if (!user) return;
     const refreshSession = () => {
+      loadConfig(); // config/label changes reach everyone on the next refresh
       api.me().then(response => setUser(response.user)).catch((error) => {
         if (error instanceof ApiError && error.status === 401) setUser(null);
       });
@@ -161,7 +172,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       clearInterval(id);
       window.removeEventListener("focus", refreshSession);
     };
-  }, [user]);
+  }, [user, loadConfig]);
 
   if (booting || !allowed)
     return (
@@ -209,12 +220,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           onSearch={setSearchQuery}
           onLanguageChange={changeLang}
           onOpenSidebar={() => setNavOpen(true)}
+          userId={user.id}
+          onOpenMould={openMould}
         />
 
         {children}
 
         {(view === "find" || view === "extrusion") &&
-          can(user, "moulds.manage") && (
+          can(user, "mould.create") && (
             <button
               className="fixed right-[calc(var(--s4)+var(--safe-r))] bottom-[calc(var(--nav-h)+var(--safe-b)+var(--s4))] md:right-6 md:bottom-6 bg-action text-white border-0 w-14.5 h-14.5 rounded-[18px] [box-shadow:0_12px_24px_rgba(36,107,117,.34)] flex items-center justify-center cursor-pointer z-20"
               onClick={() => setFormFor("new")}
@@ -267,7 +280,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </nav>
 
       <MouldSheet
-        id={can(user, "moulds.view") ? mouldId : null}
+        id={can(user, "mould.view") ? mouldId : null}
         user={user}
         translations={translations}
         lang={lang}
@@ -276,7 +289,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         onChanged={changed}
         onEdit={(mould) => setFormFor(mould)}
       />
-      {can(user, "moulds.manage") && (
+      {(canEditMoulds(user) || can(user, "mould.create")) && (
         <MouldFormSheet
           open={formFor !== null}
           mould={formFor === "new" ? null : formFor}
@@ -290,6 +303,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             if (close) {
               setFormFor(null);
               openMould(mould.id);
+            } else if (formFor === "new") {
+              setFormFor(mould); // created, but some pictures failed: keep the form open on the saved mould
             }
           }}
         />

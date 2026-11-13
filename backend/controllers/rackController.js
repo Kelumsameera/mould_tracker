@@ -1,18 +1,27 @@
 import Zone from "../models/Zone.js";
-import Rack, { rackLocationId } from "../models/Rack.js";
+import Rack, { rackLocationId, rackCode } from "../models/Rack.js";
 import Mould from "../models/Mould.js";
+import Item from "../models/Item.js";
 import { withTransaction } from "../config/db.js";
 import { fail } from "../utils/ApiError.js";
-import { rackRef } from "../utils/serializers.js";
+import { rackRef, imageDTO } from "../utils/serializers.js";
 import { audit, changes } from "../lib/audit.js";
 import { occupiedRacks, planBulkRacks } from "../lib/racks.js";
 
 const live = { deletedAt: null };
-const RACK_SORT = { zone: 1, row: 1, number: 1 };
+const RACK_SORT = { zone: 1, row: 1, pallet: 1, number: 1 };
 
 const zoneDTO = (z) => ({ id: String(z._id), code: z.code, name: z.name, active: z.active, sortOrder: z.sortOrder });
 const rackDTO = (r, moulds = []) => ({ ...rackRef(r), capacity: r.capacity ?? null, active: r.active, note: r.note || "", occupancy: moulds.length, moulds });
-const mouldChip = (m) => ({ id: String(m._id), toolId: m.toolId, status: m.status, owner: m.owner ?? null });
+const mouldChip = (m) => ({ id: String(m._id), toolId: m.toolId, status: m.status, owner: m.owner ?? null, size: m.size || "", capableMachines: m.capableMachines || [], items: (m.items || []).map(i => ({ itemId: i.itemId, description: i.description, cavities: i.cavities ?? null, thumbUrl: i.images?.length ? imageDTO(i.images[0]).thumbUrl || imageDTO(i.images[0]).url : null })) });
+
+async function attachRackItems(moulds) {
+  if (!moulds.length) return;
+  const items = await Item.find({ ...live, mouldId: { $in: moulds.map(m => m._id) } }, { mouldId: 1, itemId: 1, description: 1, cavities: 1, images: 1 }).sort({ sortOrder: 1, itemId: 1 }).lean();
+  const byMould = new Map();
+  for (const item of items) byMould.set(String(item.mouldId), [...(byMould.get(String(item.mouldId)) || []), item]);
+  for (const mould of moulds) mould.items = byMould.get(String(mould._id)) || [];
+}
 
 async function occupancyMap(rackIds, session) {
   const rows = await Mould.aggregate([{ $match: { ...live, rackId: { $in: rackIds } } }, { $group: { _id: "$rackId", n: { $sum: 1 } } }]).session(session ?? null);
@@ -30,7 +39,8 @@ export async function listRacks(req, res) {
   const zoneFilter = req.query.zone ? { code: String(req.query.zone).toUpperCase() } : {};
   const zones = await Zone.find({ ...live, ...zoneFilter }).sort({ sortOrder: 1, code: 1 }).lean();
   const racks = await Rack.find({ ...live, zone: { $in: zones.map((z) => z.code) } }).sort(RACK_SORT).lean();
-  const moulds = await Mould.find({ ...live, location: "MOULD_ROOM" }, { toolId: 1, status: 1, owner: 1, rackId: 1, awaitingRack: 1 }).sort({ toolId: 1 }).collation({ locale: "en", numericOrdering: true }).lean();
+  const moulds = await Mould.find({ ...live, location: "MOULD_ROOM" }, { toolId: 1, status: 1, owner: 1, rackId: 1, awaitingRack: 1, size: 1, capableMachines: 1 }).sort({ toolId: 1 }).collation({ locale: "en", numericOrdering: true }).lean();
+  await attachRackItems(moulds);
   const onRack = new Map();
   for (const m of moulds) if (m.rackId) onRack.set(String(m.rackId), [...(onRack.get(String(m.rackId)) || []), mouldChip(m)]);
   res.json({
@@ -44,6 +54,7 @@ export async function getRack(req, res) {
   const rack = await Rack.findById(req.params.id).lean();
   if (!rack || rack.deletedAt) fail(404, "NOT_FOUND", "Rack not found");
   const moulds = await Mould.find({ ...live, rackId: rack._id }).sort({ toolId: 1 }).lean();
+  await attachRackItems(moulds);
   res.json({ success: true, rack: rackDTO(rack, moulds.map(mouldChip)) });
 }
 
@@ -108,14 +119,15 @@ export async function deleteZone(req, res) {
 
 // ---- Racks (Super Admin) ----
 export async function createRack(req, res) {
-  const { zone, row, number, capacity, note } = req.body;
+  const { zone, row, number, pallet, note } = req.body;
+  const capacity = pallet == null ? req.body.capacity : 1;
   const rack = await withTransaction(async (session) => {
     await activeZone(zone, session);
-    const code = `${row}${number}`;
+    const code = rackCode(row, number, pallet);
     let r = await Rack.findOne({ locationId: rackLocationId(zone, code) }).session(session);
     if (r && !r.deletedAt) fail(409, "DUPLICATE", `Rack ${r.locationId} already exists`);
     if (r) Object.assign(r, { capacity, note, active: true, deletedAt: null });
-    else r = new Rack({ zone, row, number, code, capacity, note });
+    else r = new Rack({ zone, row, number, pallet, code, capacity, note });
     await r.save({ session });
     await audit(req, { action: "rack.created", entityType: "Rack", entityId: r._id, entityLabel: r.locationId, after: { capacity, note } }, session);
     return r;
@@ -130,7 +142,9 @@ export async function updateRack(req, res) {
     if (!r || r.deletedAt) fail(404, "NOT_FOUND", "Rack not found");
     const before = r.toObject();
     Object.assign(r, Object.fromEntries(Object.entries(req.body).filter(([, v]) => v !== undefined)));
-    r.code = `${r.row}${r.number}`;
+    r.code = rackCode(r.row, r.number, r.pallet);
+    if (r.pallet != null) r.capacity = 1;
+    if (r.capacity != null && (await occupancyMap([r._id], session)).get(String(r._id)) > r.capacity) fail(409, "RACK_OCCUPIED", "Move excess moulds before reducing capacity");
     const locationId = rackLocationId(r.zone, r.code);
     if (locationId !== before.locationId && (await Rack.exists({ locationId, _id: { $ne: r._id } }).session(session))) {
       fail(409, "DUPLICATE", `Rack ${locationId} already exists`);
@@ -143,6 +157,7 @@ export async function updateRack(req, res) {
     return r;
   });
   const moulds = await Mould.find({ ...live, rackId: rack._id }).lean();
+  await attachRackItems(moulds);
   res.json({ success: true, rack: rackDTO(rack, moulds.map(mouldChip)) });
 }
 
@@ -172,8 +187,8 @@ export async function bulkRacks(req, res) {
     const existing = await Rack.find({ zone: request.zone }).session(session).lean();
     plan = planBulkRacks(existing, request);
     if (preview) return plan;
-    if (plan.create.length) await Rack.create(plan.create.map((r) => ({ ...r, capacity })), { session, ordered: true });
-    for (const r of plan.revive) await Rack.updateOne({ _id: r._id }, { $set: { deletedAt: null, active: true, capacity } }, { session });
+    if (plan.create.length) await Rack.create(plan.create.map((r) => ({ ...r, capacity: r.pallet == null ? capacity : 1 })), { session, ordered: true });
+    for (const r of plan.revive) await Rack.updateOne({ _id: r._id }, { $set: { deletedAt: null, active: true, capacity: r.pallet == null ? capacity : 1 } }, { session });
     await audit(req, { action: "rack.bulk_generated", entityType: "Rack", entityLabel: request.zone,
       after: { ...request, capacity, created: plan.create.map((r) => r.locationId), revived: plan.revive.map((r) => r.locationId) } }, session);
     return plan;

@@ -1,5 +1,6 @@
 "use client";
 
+import { matchesQuery } from "@/utils/search";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
 import { useApp } from "@/components/AppLayout";
@@ -12,7 +13,7 @@ import type { Machine } from "@/utils/types";
 
 export default function MachinesPage() {
   const { user, translations, openMould, refreshKey } = useApp();
-  const allowed = can(user, "moulds.manage");
+  const allowed = can(user, "mould.edit");
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -58,7 +59,7 @@ export default function MachinesPage() {
 
   if (!allowed) return null;
   const visible = machines.filter(machine =>
-    [machine.code, machine.name, machine.mould?.toolId ?? ""].join(" ").toLowerCase().includes(query.trim().toLowerCase()));
+    matchesQuery([machine.code, machine.name, machine.mould?.toolId], query));
   return (
     <main className="pt-5 pb-0 pr-[calc(var(--s4)+var(--safe-r))] pl-[calc(var(--s4)+var(--safe-l))] md:pt-6 md:px-6 xl:pt-8 xl:px-8 max-w-[1100px]">
       <h2 className="text-lg font-extrabold flex items-center gap-2 mb-3"><Icon name="machine" />{translations.nav.machines}</h2>

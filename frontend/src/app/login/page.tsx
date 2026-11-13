@@ -52,8 +52,8 @@ export default function LoginPage() {
 
     async function checkSession() {
       try {
-        await api.me();
-        router.replace(nextPage);
+        const { user } = await api.me();
+        router.replace(landingPage(user, nextPage));
       } catch {
         setCheckingSession(false);
       }
@@ -95,8 +95,8 @@ export default function LoginPage() {
     setBusy(true);
     setError("");
     try {
-      await api.login(email, password);
-      router.replace(destination);
+      const { user } = await api.login(email, password);
+      router.replace(landingPage(user, destination));
     } catch (error) {
       setError(errorText(error, translations));
     } finally {
@@ -111,8 +111,8 @@ export default function LoginPage() {
     try {
       const { options } = await api.passkeyLoginOptions();
       const credential = await startAuthentication({ optionsJSON: options });
-      await api.passkeyLoginVerify(credential);
-      router.replace(destination);
+      const { user } = await api.passkeyLoginVerify(credential);
+      router.replace(landingPage(user, destination));
     } catch (error) {
       setError(passkeyError(error, lang));
     } finally {
@@ -127,26 +127,20 @@ export default function LoginPage() {
   // UI and inline Tailwind styles
   return (
     <div className="min-h-dvh grid place-items-center p-5 bg-brand [background:radial-gradient(circle_at_1px_1px,rgba(255,255,255,.05)_1px,transparent_0)_0_0/22px_22px,var(--brand)]">
-      <form onSubmit={submit} className="flex w-full max-w-[420px] flex-col rounded-xl [border-top:4px_solid_var(--accent)] bg-surface p-6 shadow-panel">
+      <form onSubmit={submit} className="flex w-full max-w-105 flex-col rounded-xl [border-top:4px_solid_var(--accent)] bg-surface p-6 shadow-panel">
         <div className="flex items-center justify-end gap-3 mb-4">
           <ThemeToggle translations={translations} />
-          <div className="flex bg-surface-3 rounded-md p-[3px] shrink-0 m-0 w-max">
+          <div className="flex bg-surface-3 rounded-md p-0.75 shrink-0 m-0 w-max">
             <button
               type="button"
-              className={
-                "border-0 text-xs font-extrabold min-w-10 min-h-9 px-2 py-0 rounded-[9px] cursor-pointer " +
-                (lang === "en" ? "bg-ink text-surface" : "bg-transparent text-ink-soft")
-              }
+              className={"border-0 text-xs font-extrabold min-w-10 min-h-9 px-2 py-0 rounded-[9px] cursor-pointer " + (lang === "en" ? "bg-ink text-surface" : "bg-transparent text-ink-soft")}
               onClick={() => changeLanguage("en")}
             >
               EN
             </button>
             <button
               type="button"
-              className={
-                "border-0 text-xs font-extrabold min-w-10 min-h-9 px-2 py-0 rounded-[9px] cursor-pointer " +
-                (lang === "si" ? "bg-ink text-surface" : "bg-transparent text-ink-soft")
-              }
+              className={"border-0 text-xs font-extrabold min-w-10 min-h-9 px-2 py-0 rounded-[9px] cursor-pointer " + (lang === "si" ? "bg-ink text-surface" : "bg-transparent text-ink-soft")}
               onClick={() => changeLanguage("si")}
             >
               සිං
@@ -157,7 +151,7 @@ export default function LoginPage() {
         <p className="mt-1 mb-2 text-md text-ink-soft">{translations.loginSub}</p>
         <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.email}</label>
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           type="email"
           autoComplete="username"
           required
@@ -166,7 +160,7 @@ export default function LoginPage() {
         />
         <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.password}</label>
         <input
-          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-[invalid=true]:border-danger [&:is(textarea)]:resize-y [&:is(textarea)]:min-h-18"
+          className="w-full min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line text-[16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] aria-invalid:border-danger [textarea]:resize-y [textarea]:min-h-18"
           type="password"
           autoComplete="current-password"
           required
@@ -174,10 +168,7 @@ export default function LoginPage() {
           onChange={(event) => setPassword(event.target.value)}
         />
         {error && (
-          <div
-            className="mt-3 p-3 rounded-md bg-danger-bg text-danger-ink text-sm font-bold flex gap-2 items-start"
-            role="alert"
-          >
+          <div className="mt-3 p-3 rounded-md bg-danger-bg text-danger-ink text-sm font-bold flex gap-2 items-start" role="alert">
             {error}
           </div>
         )}
@@ -189,20 +180,23 @@ export default function LoginPage() {
         </button>
         <button
           type="button"
-          className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface-3 text-ink border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
+          className="w-full min-h-12 px-4 py-3 rounded-md text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface-3 text-ink border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
           disabled={busy || !passkeyAvailable}
           onClick={loginWithPasskey}
         >
           {passkeyLabels.login}
         </button>
-        <p className="text-md leading-[1.5] text-ink-soft mx-0 mt-1 mb-2">
-          {passkeyAvailable ? passkeyLabels.description : passkeyLabels.https}
-        </p>
+        <p className="text-md leading-normal text-ink-soft mx-0 mt-1 mb-2">{passkeyAvailable ? passkeyLabels.description : passkeyLabels.https}</p>
         <PwaInstallButton
           lang={lang}
-          className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface-3 text-ink border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
+          className="w-full min-h-12 px-4 py-3 rounded-md text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface-3 text-ink border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
         />
       </form>
     </div>
   );
+}
+
+// Executives land on their dashboard unless a specific page was asked for.
+function landingPage(user: { role: string }, requested: string) {
+  return requested === "/find" && user.role === "executive" ? "/dashboard" : requested;
 }

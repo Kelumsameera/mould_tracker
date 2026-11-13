@@ -1,7 +1,7 @@
 import type { Permission } from "@/utils/permissions";
-import type { UserAccess } from "@/utils/types";
+import type { UserAccess, RoleAccess } from "@/utils/types";
 import type { AuditEntry, ItemInput, Machine, Mould, MouldInput, MoveInput, Movement, Person, Rack, Role, Stats, User, WorkFilter, WorkLog, WorkLogInput, WorkSummary, Zone } from "@/utils/types";
-import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON } from '@simplewebauthn/browser';
+import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON } from "@simplewebauthn/browser";
 
 export type PasskeyInfo = { id: string; name: string; createdAt: string; lastUsedAt?: string };
 
@@ -21,16 +21,16 @@ export class ApiError extends Error {
 
 // Full URL for a server path such as an item picture ("/uploads/items/x.webp").
 export const assetUrl = (path: string | null | undefined) => {
-  if (!path) return '';
+  if (!path) return "";
   // Existing cutouts were repaired in place; bypass the old immutable browser cache once.
-  const revision = path.startsWith('/uploads/items/') ? `${path.includes('?') ? '&' : '?'}v=cutouts-20261022-2` : '';
+  const revision = path.startsWith("/uploads/items/") ? `${path.includes("?") ? "&" : "?"}v=cutouts-20261022-2` : "";
   return BASE + path + revision;
 };
 const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
   const p = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== "") p.set(k, String(v));
   const s = p.toString();
-  return s ? `?${s}` : '';
+  return s ? `?${s}` : "";
 };
 
 async function request<T>(path: string, method = "GET", body?: unknown): Promise<T> {
@@ -56,19 +56,63 @@ export const api = {
   me: () => request<{ user: User }>("/auth/me"),
   updateProfile: (input: { name: string; email: string; currentPassword: string; newPassword?: string }) => request<{ user: User }>("/auth/me", "PATCH", input),
   changePassword: (currentPassword: string, newPassword: string) => request<unknown>("/auth/password", "POST", { currentPassword, newPassword }),
-  passkeyCapabilities: () => request<{ enabled: boolean }>('/auth/passkeys/capabilities'),
-  passkeys: () => request<{ passkeys: PasskeyInfo[] }>('/auth/passkeys'),
-  passkeyRegistrationOptions: (currentPassword: string, name: string) => request<{ options: PublicKeyCredentialCreationOptionsJSON }>('/auth/passkeys/register/options', 'POST', { currentPassword, name }),
-  passkeyRegistrationVerify: (response: RegistrationResponseJSON) => request<unknown>('/auth/passkeys/register/verify', 'POST', { response }),
-  passkeyLoginOptions: () => request<{ options: PublicKeyCredentialRequestOptionsJSON }>('/auth/passkeys/login/options', 'POST'),
-  passkeyLoginVerify: (response: AuthenticationResponseJSON) => request<{ user: User }>('/auth/passkeys/login/verify', 'POST', { response }),
-  removePasskey: (id: string, currentPassword: string) => request<unknown>(`/auth/passkeys/${id}`, 'DELETE', { currentPassword }),
+  passkeyCapabilities: () => request<{ enabled: boolean }>("/auth/passkeys/capabilities"),
+  passkeys: () => request<{ passkeys: PasskeyInfo[] }>("/auth/passkeys"),
+  passkeyRegistrationOptions: (currentPassword: string, name: string) =>
+    request<{ options: PublicKeyCredentialCreationOptionsJSON }>("/auth/passkeys/register/options", "POST", { currentPassword, name }),
+  passkeyRegistrationVerify: (response: RegistrationResponseJSON) => request<unknown>("/auth/passkeys/register/verify", "POST", { response }),
+  passkeyLoginOptions: () => request<{ options: PublicKeyCredentialRequestOptionsJSON }>("/auth/passkeys/login/options", "POST"),
+  passkeyLoginVerify: (response: AuthenticationResponseJSON) => request<{ user: User }>("/auth/passkeys/login/verify", "POST", { response }),
+  removePasskey: (id: string, currentPassword: string) => request<unknown>(`/auth/passkeys/${id}`, "DELETE", { currentPassword }),
 
-  setLanguage: (language: 'en' | 'si') => request<{ user: User }>("/auth/me/language", "PATCH", { language }),
+  setLanguage: (language: "en" | "si") => request<{ user: User }>("/auth/me/language", "PATCH", { language }),
 
-  moulds: (filter: { toolType?: import('./types').ToolType; q?: string; location?: string; status?: string; owner?: string; zone?: string; awaitingRack?: boolean; needsService?: boolean; problem?: boolean; deleted?: boolean } = {}) =>
-    request<{ moulds: Mould[] }>(`/moulds${qs(filter)}`),
-  stats: (toolType?: import('./types').ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
+  moulds: (
+    filter: {
+      toolType?: import("./types").ToolType;
+      q?: string;
+      location?: string;
+      status?: string;
+      owner?: string;
+      zone?: string;
+      awaitingRack?: boolean;
+      needsService?: boolean;
+      problem?: boolean;
+      limited?: boolean;
+      deleted?: boolean;
+    } = {},
+  ) => request<{ moulds: Mould[]; didYouMean?: string[] }>(`/moulds${qs(filter)}`),
+  // Live suggestions; pass an AbortSignal so a newer keystroke cancels the older request.
+  suggest: async (q: string, toolType?: import("./types").ToolType, signal?: AbortSignal) => {
+    const res = await fetch(`${BASE}/moulds/suggest${qs({ q, toolType })}`, { credentials: "include", signal });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(res.status, data.message || "Request failed", data.code, data.details || {});
+    return data as { moulds: Mould[]; items: Mould[]; didYouMean: string[] };
+  },
+  config: () => request<import("./runtimeConfig").RuntimeBundle>("/config"),
+  // General settings (Settings screen).
+  settings: () => request<SettingsPayload>("/settings"),
+  putSetting: (key: string, value: unknown) => request<{ value: unknown }>(`/settings/values/${encodeURIComponent(key)}`, "PUT", { value }),
+  resetSetting: (key: string) => request<{ value: unknown }>(`/settings/values/${encodeURIComponent(key)}`, "DELETE"),
+  putList: (list: string, items: SettingListItem[]) => request<{ items: SettingListItem[] }>(`/settings/lists/${list}`, "PUT", { items }),
+  resetList: (list: string) => request<{ items: SettingListItem[] }>(`/settings/lists/${list}`, "DELETE"),
+  putText: (key: string, en: string, si: string) => request<{ texts: Record<string, Record<string, string>> }>(`/settings/texts/${encodeURIComponent(key)}`, "PUT", { en, si }),
+  resetText: (key: string) => request<{ texts: Record<string, Record<string, string>> }>(`/settings/texts/${encodeURIComponent(key)}`, "DELETE"),
+  exportTexts: () => request<{ texts: Record<string, { en?: string; si?: string }> }>("/settings/texts-export"),
+  importTexts: (texts: Record<string, { en?: string; si?: string }>) => request<{ texts: Record<string, Record<string, string>> }>("/settings/texts-import", "POST", { texts }),
+  // Workflow settings (System Administrator edits; Super Admin / Admin / Executive read).
+  configVersions: () => request<{ current: number; versions: ConfigVersionMeta[] }>("/config/versions"),
+  configVersion: (v: number | "draft") => request<{ meta: ConfigVersionMeta; config: import("./runtimeConfig").WorkflowConfig }>(`/config/versions/${v}`),
+  saveConfigDraft: (config: unknown, draftVersion?: number) => request<{ meta: ConfigVersionMeta; problems: ConfigProblem[] }>("/config/draft", "PUT", { config, draftVersion }),
+  discardConfigDraft: (reason: string) => request<unknown>("/config/draft", "DELETE", { reason }),
+  validateConfig: (config?: unknown) => request<{ problems: ConfigProblem[] }>("/config/validate", "POST", config ? { config } : {}),
+  publishConfig: (reason: string, draftVersion?: number) => request<{ meta: ConfigVersionMeta }>("/config/publish", "POST", { reason, draftVersion }),
+  rollbackConfig: (version: number, reason: string) => request<{ meta: ConfigVersionMeta }>("/config/rollback", "POST", { version, reason }),
+  importConfig: (config: unknown, reason: string) => request<{ meta: ConfigVersionMeta }>("/config/import", "POST", { config, reason }),
+  exportConfig: () => request<{ config: unknown; version: number }>("/config/export"),
+  configDiff: (from?: string, to?: string) => request<{ diff: Record<string, unknown> }>(`/config/diff${qs({ from, to })}`),
+  simulateMove: (body: Record<string, unknown>) => request<{ configVersion: number; verdict: { ok: boolean; path: string[]; requiredFields: string[]; errors: { code: string; message: string }[]; permissionGroups: string[][]; nextStatus: string | null } }>("/config/simulate", "POST", body),
+  stats: (toolType?: import("./types").ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
   mould: (id: string) => request<{ mould: Mould }>(`/moulds/${id}`),
   history: (id: string) => request<{ history: Movement[] }>(`/moulds/${id}/history`),
   createMould: (input: MouldInput & { toolId: string; location: string; rackId?: string; items: ItemInput[] }) => request<{ mould: Mould }>("/moulds", "POST", input),
@@ -78,9 +122,17 @@ export const api = {
   move: (id: string, input: MoveInput) => request<{ mould: Mould; warnings: string[] }>(`/moulds/${id}/move`, "POST", input),
   setStatus: (id: string, status: string, remarks: string, version: number) => request<{ mould: Mould }>(`/moulds/${id}/status`, "POST", { status, remarks, version }),
   recordShots: (id: string, shots: number, version: number) => request<{ mould: Mould }>(`/moulds/${id}/shots`, "POST", { shots, version }),
-  addItem: (id: string, item: ItemInput) => request<{ mould: Mould }>(`/moulds/${id}/items`, "POST", item),
-  updateItem: (id: string, itemId: string, item: ItemInput) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "PATCH", item),
-  deleteItem: (id: string, itemId: string) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "DELETE", {}),
+  setCavities: (id: string, body: { blocked: number[]; reason: string; problemType?: string | null; expectedFixBy?: string | null; photo?: string; version?: number }) =>
+    request<{ mould: Mould }>(`/moulds/${id}/cavities`, "POST", body),
+  cavityDowntime: (id: string) => request<{ toolId: string; periods: import("./types").DowntimePeriod[] }>(`/moulds/${id}/cavity-downtime`),
+  cavityDowntimeCsvUrl: (id: string) => `${BASE}/moulds/${id}/cavity-downtime?format=csv`,
+  addItem: (id: string, item: ItemInput, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items`, "POST", { ...item, version }),
+  updateItem: (id: string, itemId: string, item: ItemInput, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "PATCH", { ...item, version }),
+  deleteItem: (id: string, itemId: string, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}`, "DELETE", { version }),
+  addItemImage: (id: string, itemId: string, photo: string, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images`, "POST", { photo, version }),
+  replaceItemImage: (id: string, itemId: string, key: string, photo: string, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images/${encodeURIComponent(key)}`, "PUT", { photo, version }),
+  removeItemImage: (id: string, itemId: string, key: string, version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images/${encodeURIComponent(key)}`, "DELETE", { version }),
+  reorderItemImages: (id: string, itemId: string, order: string[], version?: number) => request<{ mould: Mould }>(`/moulds/${id}/items/${itemId}/images/order`, "PUT", { order, version }),
 
   machines: (all = false) => request<{ machines: Machine[] }>(all ? "/machines?all=true" : "/machines"),
   updateMachine: (id: string, patch: { name?: string; active?: boolean }) => request<{ machine: Machine }>(`/machines/${id}`, "PATCH", patch),
@@ -90,10 +142,10 @@ export const api = {
   createZone: (z: { code: string; name: string; sortOrder?: number }) => request<unknown>("/racks/zones", "POST", z),
   updateZone: (id: string, z: { code?: string; name?: string; active?: boolean; sortOrder?: number }) => request<unknown>(`/racks/zones/${id}`, "PATCH", z),
   deleteZone: (id: string) => request<unknown>(`/racks/zones/${id}`, "DELETE", {}),
-  bulkRacks: (b: { zone: string; rowFrom: string; rowTo: string; from: number; to: number; capacity: number | null; preview: boolean }) =>
+  bulkRacks: (b: { zone: string; rowFrom: string; rowTo: string; from: number; to: number; palletFrom?: number; palletTo?: number; capacity: number | null; preview: boolean }) =>
     request<{ create: string[]; revive: string[]; existing: string[] }>("/racks/bulk", "POST", b),
-  createRack: (r: { zone: string; row: string; number: number; capacity: number | null; note: string }) => request<{ rack: Rack }>("/racks", "POST", r),
-  updateRack: (id: string, r: { row?: string; number?: number; capacity?: number | null; active?: boolean; note?: string }) => request<{ rack: Rack }>(`/racks/${id}`, "PATCH", r),
+  createRack: (r: { zone: string; row: string; number: number; pallet?: number; capacity: number | null; note: string }) => request<{ rack: Rack }>("/racks", "POST", r),
+  updateRack: (id: string, r: { row?: string; number?: number; pallet?: number; capacity?: number | null; active?: boolean; note?: string }) => request<{ rack: Rack }>(`/racks/${id}`, "PATCH", r),
   deleteRack: (id: string) => request<unknown>(`/racks/${id}`, "DELETE", {}),
   removeRow: (zone: string, row: string) => request<{ removed: string[] }>("/racks/remove-row", "POST", { zone, row }),
 
@@ -103,23 +155,58 @@ export const api = {
   workers: () => request<{ workers: Person[] }>("/worklogs/workers"),
   workReport: (f: WorkFilter) => request<{ total: number; workLogs: WorkLog[] }>(`/worklogs${qs({ ...f })}`),
   workSummary: (f: WorkFilter) => request<WorkSummary>(`/worklogs/summary${qs({ ...f, page: undefined, limit: undefined })}`),
+  catalogSummary: (process?: string) => request<{ summary: import("./types").CatalogSummary }>(`/catalog/summary${qs({ process })}`),
+  catalogMoulds: (f: import("./types").CatalogFilter) => request<import("./types").CatalogList<import("./types").CatalogMould>>(`/catalog/moulds${qs({ ...f })}`),
+  catalogProducts: (f: import("./types").CatalogFilter) => request<import("./types").CatalogList<import("./types").CatalogProduct>>(`/catalog/products${qs({ ...f })}`),
+  catalogProduct: (itemId: string) => request<{ product: import("./types").CatalogProductDetail }>(`/catalog/products/${encodeURIComponent(itemId)}`),
+  // Returns true when the file was cut at the export limit.
+  downloadCatalog: async (f: import("./types").CatalogFilter, format: "csv" | "xlsx") => {
+    const res = await fetch(`${BASE}/catalog/export${qs({ ...f, page: undefined, format })}`, { credentials: "include" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, data.message || "Export failed", data.code, data.details || {});
+    }
+    const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || `catalog.${format}`;
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return Boolean(res.headers.get("X-Export-Truncated"));
+  },
   // Downloads the export with the session cookie and hands it to the browser as a file.
   downloadWorkLogs: async (f: WorkFilter, format: "csv" | "xlsx") => {
     const res = await fetch(`${BASE}/worklogs/export${qs({ ...f, page: undefined, limit: undefined, format })}`, { credentials: "include" });
-    if (!res.ok) { const data = await res.json().catch(() => ({})); throw new ApiError(res.status, data.message || "Export failed", data.code, data.details || {}); }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new ApiError(res.status, data.message || "Export failed", data.code, data.details || {});
+    }
     const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || `work-log.${format}`;
     const url = URL.createObjectURL(await res.blob());
     const a = Object.assign(document.createElement("a"), { href: url, download: name });
-    document.body.appendChild(a); a.click(); a.remove();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   },
 
-  audit: (f: { entityType?: string; page?: number; limit?: number }) => request<{ total: number; entries: AuditEntry[] }>(`/audit${qs(f)}`),
+  audit: (f: { entityType?: string; category?: string; page?: number; limit?: number }) => request<{ total: number; entries: AuditEntry[] }>(`/audit${qs(f)}`),
 
-  userAccess: () => request<{ users: UserAccess[]; permissions: Permission[] }>("/users/access"),
-  updateUserAccess: (id: string, permissions: Permission[] | null) => request<{ user: UserAccess }>(`/users/${id}/access`, "PATCH", { permissions }),
+  userAccess: () => request<{ users: UserAccess[]; roles: RoleAccess[]; permissions: Permission[] }>("/users/access"),
+  updateRoleAccess: (role: Role, body: { permissions: Permission[] | null; version?: number; reason: string }) => request<{ role: RoleAccess }>(`/users/roles/${role}/access`, "PATCH", body),
+  updateUserAccess: (id: string, body: { grant: Permission[]; deny: Permission[]; expiresAt: string | null; reason: string }) => request<{ user: UserAccess }>(`/users/${id}/access`, "PATCH", body),
   users: () => request<{ users: User[] }>("/users"),
   createUser: (u: { name: string; email: string; password: string; role: Role }) => request<{ user: User | null }>("/users", "POST", u),
   updateUser: (id: string, patch: { name?: string; email?: string; role?: Role; active?: boolean; password?: string }) => request<{ user: User | null }>(`/users/${id}`, "PATCH", patch),
   deleteUser: (id: string) => request<unknown>(`/users/${id}`, "DELETE", {}),
 };
+
+export interface ConfigVersionMeta { version: number; state: "draft" | "published" | "archived"; reason: string; basedOn: number | null; publishedAt: string | null; createdAt: string | null; updatedAt: string | null }
+export interface ConfigProblem { code: string; message: string; path: string }
+
+export interface SettingListItem { key: string; labels: { en: string; si: string }; active?: boolean; sortOrder?: number }
+export interface SettingsPayload {
+  settings: { key: string; type: "int" | "bool" | "dashboard"; group: string; default: unknown; value: unknown; min: number | null; max: number | null; affects: string; modified: boolean }[];
+  lists: { key: string; builtIn: boolean; default: SettingListItem[]; items: SettingListItem[]; modified: boolean }[];
+  texts: { en: Record<string, string>; si: Record<string, string> };
+  dashboardCards: string[];
+}

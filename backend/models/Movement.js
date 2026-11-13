@@ -1,9 +1,10 @@
+import { getConfig } from "../lib/configStore.js";
 import mongoose from "mongoose";
 import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { immutable } from "../lib/immutable.js";
-import { LOCATIONS, MOULD_STATUSES } from "../lib/mouldState.js";
+import { LOCATIONS, STORED_STATUSES as MOULD_STATUSES } from "../lib/mouldState.js";
 
-export const MOVEMENT_TYPES = ["CREATED", "EDITED", "MOVED", "STATUS_CHANGED", "DELETED", "RESTORED", "IMPORTED"];
+export const MOVEMENT_TYPES = ["CREATED", "EDITED", "MOVED", "STATUS_CHANGED", "DELETED", "RESTORED", "IMPORTED", "CAVITIES_CHANGED"];
 
 const ref = (model) => ({ type: mongoose.Schema.Types.ObjectId, ref: model, default: null });
 const snapshot = { type: String, default: null };
@@ -28,6 +29,12 @@ const movementSchema = new mongoose.Schema(
     toRackLocationId: snapshot,
     outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
+    changes: { type: mongoose.Schema.Types.Mixed, default: null },
+    configVersion: { type: Number, default: null }, // workflow config version in force when this was written
+    intendedDestination: { type: String, default: null }, // sent to Isolation: where it should go next
+    dwellMinutes: { type: Number, default: null }, // left Isolation: how long this stay lasted
+    isolationSince: { type: Date, default: null },
+    blockedCavities: { type: [Number], default: undefined }, // cavity block / restore: the blocked set after the change // EDITED: { before, after } of the changed fields
     overrideReason: { type: String, default: "", maxlength: 500 }, // capable-machine or owner/zone override
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     legacyMovementId: { type: mongoose.Schema.Types.ObjectId, default: undefined } // ToolMovement copied from
@@ -39,4 +46,6 @@ movementSchema.index({ mouldId: 1, createdAt: -1 });
 movementSchema.index({ legacyMovementId: 1 }, { unique: true, sparse: true });
 movementSchema.plugin(immutable, { name: "Movement" });
 
+// Record which workflow config version applied (immutable history keeps it).
+movementSchema.pre("validate", function () { if (this.configVersion == null) this.configVersion = getConfig().version ?? 0; });
 export default mongoose.model("Movement", movementSchema);

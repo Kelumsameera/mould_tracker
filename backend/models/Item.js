@@ -1,3 +1,4 @@
+import { itemSearchKey } from "../lib/search.js";
 import mongoose from "mongoose";
 
 const imageSchema = new mongoose.Schema(
@@ -26,12 +27,17 @@ const itemSchema = new mongoose.Schema(
     images: { type: [imageSchema], default: [] },
     notes: { type: String, default: "", trim: true, maxlength: 1000 }, // e.g. original cavity text "8 but 4 validated"
     sortOrder: { type: Number, default: 0 },
-    deletedAt: { type: Date, default: null }
+    deletedAt: { type: Date, default: null },
+    searchKey: { type: String, default: null } // normalized Item ID, description, material, pin (lib/search.js)
   },
   { timestamps: true, versionKey: false }
 );
 
 itemSchema.index({ mouldId: 1, itemId: 1 }, { unique: true });
 itemSchema.index({ itemId: 1 });
+itemSchema.index({ materialId: 1 }); // catalog filters
+itemSchema.index({ searchKey: 1 });
+itemSchema.pre("save", function () { this.searchKey = itemSearchKey(this); });
+itemSchema.pre("insertMany", function (next, docs) { for (const d of [].concat(docs)) d.searchKey = itemSearchKey(d); next(); });
 
 export default mongoose.model("Item", itemSchema);

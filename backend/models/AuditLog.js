@@ -1,3 +1,4 @@
+import { getConfig } from "../lib/configStore.js";
 import mongoose from "mongoose";
 import { immutable } from "../lib/immutable.js";
 
@@ -13,7 +14,8 @@ const auditLogSchema = new mongoose.Schema(
     before: { type: mongoose.Schema.Types.Mixed, default: null },
     after: { type: mongoose.Schema.Types.Mixed, default: null },
     reason: { type: String, default: "", maxlength: 1000 },
-    ip: { type: String, default: null }
+    ip: { type: String, default: null },
+    configVersion: { type: Number, default: null } // workflow config version in force
   },
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false, minimize: false }
 );
@@ -21,5 +23,6 @@ const auditLogSchema = new mongoose.Schema(
 auditLogSchema.index({ createdAt: -1 });
 auditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
 auditLogSchema.plugin(immutable, { name: "AuditLog" });
+auditLogSchema.pre("validate", function () { if (this.configVersion == null) this.configVersion = getConfig().version ?? 0; });
 
 export default mongoose.model("AuditLog", auditLogSchema);

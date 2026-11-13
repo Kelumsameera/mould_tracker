@@ -15,15 +15,18 @@ import AuditLog from "./models/AuditLog.js";
 import { ensureDefaultRacks } from "./lib/racks.js";
 
 const source = JSON.parse(fs.readFileSync(new URL("./data/seed-tools.json", import.meta.url), "utf8"));
-const adminEmail = (process.env.SEED_SUPERADMIN_EMAIL || "admin@example.com").toLowerCase();
-const adminPassword = process.env.SEED_SUPERADMIN_PASSWORD || "ChangeMe123!";
+// No default credentials: the Super Admin is only created when both env vars are set.
+const adminEmail = String(process.env.SEED_SUPERADMIN_EMAIL || "").trim().toLowerCase();
+const adminPassword = process.env.SEED_SUPERADMIN_PASSWORD || "";
 
 async function run() {
   await connectDB();
   await Promise.all([User, Machine, Mould, Item, Movement, Zone, Rack, AuditLog].map((m) => m.init())); // make sure indexes exist
 
   let admin = await User.findOne({ role: "super_admin" });
-  if (!admin) {
+  if (!admin && (!adminEmail || adminPassword.length < 8)) {
+    console.log("No Super Admin created: set SEED_SUPERADMIN_EMAIL and SEED_SUPERADMIN_PASSWORD (8+ characters) to create one.");
+  } else if (!admin) {
     // An existing account with this email (e.g. a legacy admin awaiting migration) is left as it is.
     admin = await User.findOne({ email: adminEmail });
     if (!admin) {
@@ -31,10 +34,11 @@ async function run() {
         name: "Super Administrator",
         email: adminEmail,
         role: "super_admin",
+        mustChangePassword: true,
         passwordHash: await bcrypt.hash(adminPassword, 12)
       });
       await AuditLog.create({ action: "user.seeded", entityType: "User", entityId: admin._id, entityLabel: admin.email, after: { role: "super_admin" } });
-      console.log(`Super Admin login: ${adminEmail} / ${process.env.SEED_SUPERADMIN_PASSWORD ? "(from SEED_SUPERADMIN_PASSWORD)" : adminPassword}  (change it after first login)`);
+      console.log("Super Admin created from SEED_SUPERADMIN_EMAIL; the password must be changed at first sign-in.");
     }
   }
 

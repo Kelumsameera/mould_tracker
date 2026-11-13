@@ -1,3 +1,4 @@
+import { loadRoleAccess } from "../lib/roleAccess.js";
 import { randomBytes, createHash } from "node:crypto";
 import bcrypt from "bcryptjs";
 import {
@@ -96,6 +97,7 @@ export async function authenticationVerify(req, res) {
     counter: result.authenticationInfo.newCounter, lastUsedAt: new Date(),
   });
   if (!updated) throw new ApiError(401, "Passkey changed during login. Please try again");
+  await loadRoleAccess(user);
   setSession(res, user);
   res.json({ success: true, user: userDTO(user) });
 }

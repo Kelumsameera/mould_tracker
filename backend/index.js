@@ -6,12 +6,17 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 
 import { connectDB } from "./config/db.js";
+import { refreshConfig } from "./lib/configStore.js";
 import authRoutes from "./routes/authRoutes.js";
 import mouldRoutes from "./routes/mouldRoutes.js";
 import rackRoutes from "./routes/rackRoutes.js";
 import machineRoutes from "./routes/machineRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import auditRoutes from "./routes/auditRoutes.js";
+import catalogRoutes from "./routes/catalogRoutes.js";
+import configRoutes from "./routes/configRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
+import { refreshSettings } from "./lib/settings.js";
 import workLogRoutes from "./routes/workLogRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 import { UPLOAD_DIR } from "./lib/uploads.js";
@@ -25,7 +30,7 @@ const origins = (process.env.CORS_ORIGIN || "http://localhost:3000").split(",").
 
 app.use(helmet());
 app.use(cors({ origin: origins, credentials: true }));
-app.use(["/api/moulds/:id/worklogs", "/api/moulds/:id/problems"], express.json({ limit: "8mb" })); // up to 3 photos as data URLs
+app.use(["/api/moulds/:id/worklogs", "/api/moulds/:id/problems", "/api/moulds/:id/items", "/api/moulds/:id/cavities"], express.json({ limit: "8mb" })); // photos as data URLs
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
@@ -45,6 +50,9 @@ app.use("/api/machines", machineRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/worklogs", workLogRoutes);
+app.use("/api/catalog", catalogRoutes);
+app.use("/api/config", configRoutes);
+app.use("/api/settings", settingsRoutes);
 // The old tool API was replaced by /api/moulds; say so instead of a bare 404.
 app.use("/api/tools", (req, res) => res.status(410).json({ success: false, code: "GONE", message: "The tool API was replaced by /api/moulds" }));
 
@@ -64,6 +72,8 @@ async function start() {
     throw new Error("JWT_SECRET must be set in .env (at least 32 characters)");
   }
   await connectDB();
+  await refreshConfig(); // published workflow config (built-in defaults when none)
+  await refreshSettings(); // general settings, lists and text overrides
   const port = Number(process.env.PORT || 4000);
   app.listen(port, () => console.log(`Tool Tracker API listening on http://localhost:${port}`));
 }

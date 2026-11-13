@@ -17,33 +17,48 @@ afterEach(() => mock.restoreAll());
 const oid = () => new mongoose.Types.ObjectId();
 const user = (role) => ({ _id: oid(), role });
 
-// The permission table from the upgrade spec, one row per capability, columns in ROLES order.
+// Default permission table (Change Pack 2). Columns: super_admin, admin, production_supervisor, mould_technician, mould_maker, executive.
+// system_admin always has everything.
+const COLS = ["super_admin", "admin", "production_supervisor", "mould_technician", "mould_maker", "executive"];
 const TABLE = {
-  "settings.manage":  [1, 0, 0, 0, 0],
-  "racks.manage":     [1, 0, 0, 0, 0],
-  "import.run":       [1, 0, 0, 0, 0],
-  "audit.view":       [1, 0, 0, 0, 0],
-  "racks.view":       [1, 1, 1, 1, 1],
-  "users.manage":     [1, 1, 0, 0, 0],
-  "moulds.manage":    [1, 1, 0, 0, 0],
-  "moves.machine":    [1, 1, 1, 1, 0],
-  "moves.mouldRoom":  [1, 1, 0, 0, 1],
-  "workshop.work":    [1, 1, 0, 1, 1],
-  "machines.override":[1, 1, 0, 0, 0],
-  "moulds.view":      [1, 1, 1, 1, 1],
-  "worklog.create":   [1, 1, 0, 1, 1],
-  "worklog.view":     [1, 1, 1, 1, 1],
-  "worklog.report":   [1, 1, 0, 0, 0],
-  "problem.report":   [1, 1, 1, 1, 1]
+  "settings.manage":     [0, 0, 0, 0, 0, 0],
+  "rack.manage":         [1, 0, 0, 0, 0, 0],
+  "import.run":          [1, 0, 0, 0, 0, 0],
+  "audit.view":          [1, 0, 0, 0, 0, 0],
+  "export.run":          [1, 0, 0, 0, 0, 1],
+  "rack.view":           [1, 1, 1, 1, 1, 1],
+  "users.manage":        [1, 1, 0, 0, 0, 0],
+  "mould.create":        [1, 1, 0, 0, 0, 0],
+  "mould.edit":          [1, 1, 0, 0, 0, 0],
+  "mould.machines.edit": [1, 1, 0, 0, 0, 0],
+  "mould.images.manage": [1, 1, 0, 0, 0, 0],
+  "mould.delete":        [1, 1, 0, 0, 0, 0],
+  "move.machine":        [1, 1, 1, 1, 0, 0],
+  "move.floor":          [1, 1, 1, 1, 0, 0],
+  "move.mouldroom":      [1, 1, 0, 0, 1, 0],
+  "move.workshop":       [1, 1, 0, 1, 1, 0],
+  "move.isolation":      [1, 1, 1, 1, 1, 0],
+  "status.change":       [1, 1, 0, 1, 1, 0],
+  "cavity.manage":       [1, 1, 1, 1, 1, 0],
+  "machines.override":   [1, 1, 0, 0, 0, 0],
+  "mould.view":          [1, 1, 1, 1, 1, 1],
+  "catalog.view":        [1, 1, 1, 1, 1, 1],
+  "worklog.create":      [1, 1, 0, 1, 1, 0],
+  "worklog.view":        [1, 1, 1, 1, 1, 1],
+  "worklog.report":      [1, 1, 0, 0, 0, 1],
+  "problem.report":      [1, 1, 1, 1, 1, 0],
+  "access.manage":       [0, 0, 0, 0, 0, 0]
 };
 
 test("permission map matches the role table for one user per role", () => {
   for (const [permission, row] of Object.entries(TABLE)) {
-    ROLES.forEach((role, i) => assert.equal(can(user(role), permission), role === "system_admin" || Boolean(row[i]), `${role} / ${permission}`));
+    COLS.forEach((role, i) => assert.equal(can(user(role), permission), Boolean(row[i]), `${role} / ${permission}`));
+    assert.equal(can(user("system_admin"), permission), true);
   }
   assert.ok(Object.keys(TABLE).every((p) => p in PERMISSIONS));
+  assert.ok(Object.keys(PERMISSIONS).filter((p) => p !== "move.outOfService").every((p) => p in TABLE), "every permission is in the table");
   assert.throws(() => can(user("admin"), "nope"), /Unknown permission/);
-  assert.equal(can(null, "moulds.view"), false);
+  assert.equal(can(null, "mould.view"), false);
 });
 
 test("legacy roles keep working until migrated, and map as agreed", () => {
@@ -55,9 +70,11 @@ test("legacy roles keep working until migrated, and map as agreed", () => {
   assert.equal(mapRole("mould_maker"), "mould_maker");
 });
 
-test("admins cannot create, edit or appoint super admins", () => {
+test("only a System Administrator manages or appoints super admins", () => {
   const sa = user("super_admin"), admin = user("admin");
-  assert.equal(canManageUser(sa, user("super_admin")), true);
+  assert.equal(canManageUser(sa, user("super_admin")), false);
+  assert.equal(canManageUser(user("system_admin"), user("super_admin")), true);
+  assert.equal(canManageUser(sa, user("admin")), true);
   assert.equal(canManageUser(admin, user("mould_maker")), true);
   assert.equal(canManageUser(admin, user("mould_maker"), "super_admin"), false);
   assert.equal(canManageUser(admin, user("super_admin"), "admin"), false);
@@ -72,19 +89,19 @@ test("user API enforces the super admin boundary on the server", async () => {
   mock.method(User, "findById", async () => target);
   await assert.rejects(updateUser({ user: admin, params: { id: "x" }, body: { active: false } }, {}), (e) => e.status === 403);
 
-  const self = { ...user("super_admin"), equals() {} };
+  const self = { ...user("system_admin"), equals() {} };
   self._id = { equals: () => true };
   mock.method(User, "findById", async () => self);
-  await assert.rejects(updateUser({ user: { _id: self._id, role: "super_admin" }, params: { id: "x" }, body: { role: "admin" } }, {}), (e) => e.status === 400);
+  await assert.rejects(updateUser({ user: { _id: self._id, role: "system_admin" }, params: { id: "x" }, body: { role: "admin" } }, {}), (e) => e.status === 400);
 });
 
 test("requirePermission accepts any listed permission and returns 403 otherwise", () => {
   const res = { statusCode: 200, status(n) { this.statusCode = n; return this; }, json() { return this; } };
   let next = false;
-  requirePermission("moves.mouldRoom", "workshop.work")({ user: user("mould_maker") }, res, () => { next = true; });
+  requirePermission("move.mouldroom", "move.workshop")({ user: user("mould_maker") }, res, () => { next = true; });
   assert.equal(next, true);
   next = false;
-  requirePermission("moves.mouldRoom")({ user: user("production_supervisor") }, res, () => { next = true; });
+  requirePermission("move.mouldroom")({ user: user("production_supervisor") }, res, () => { next = true; });
   assert.equal(next, false); assert.equal(res.statusCode, 403);
 });
 
@@ -113,7 +130,7 @@ test("racks: bulk generation, location IDs and the FLK/CCI A1-C10 defaults", asy
   assert.throws(() => buildRacks({ zone: "FLK", rowFrom: "C", rowTo: "A", from: 1, to: 2 }), /in order/);
   assert.throws(() => buildRacks({ zone: "FLK", rowFrom: "A", rowTo: "A", from: 5, to: 1 }), /in order/);
   assert.deepEqual(DEFAULT_ZONES.map((z) => z.code), ["FLK", "CCI"]);
-  assert.deepEqual(DEFAULT_LAYOUT, { rowFrom: "A", rowTo: "C", from: 1, to: 10 });
+  assert.deepEqual(DEFAULT_LAYOUT, { rowFrom: "A", rowTo: "C", palletFrom: 1, palletTo: 3, from: 1, to: 4 });
 
   const rack = new Rack({ zone: "cci", row: "B", number: 7, code: "b7" });
   await rack.validate();

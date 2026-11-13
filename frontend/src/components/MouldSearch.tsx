@@ -1,21 +1,19 @@
 "use client";
+import { refreshMs } from "@/utils/runtimeConfig";
+import { configLocation, locationKeys, statusKeys } from "@/utils/runtimeConfig";
+import { SEARCH_EVENT } from "@/components/SearchBox";
+import { queryWords } from "@/utils/search";
 import { useCallback, useEffect, useState } from "react";
 import EmptyState from "@/components/EmptyState";
 import MouldCard from "@/components/MouldCard";
 import SkeletonCards from "@/components/SkeletonCards";
-import Icon, { locationIcon, type IconName } from "@/components/Icon";
+import Icon, { iconForLocation, type IconName } from "@/components/Icon";
 
 import { api } from "@/utils/api";
 import { groupMouldsByMachine } from "@/utils/machineLayout";
 import { locationName } from "@/utils/i18n";
 
-import {
-  LOCATIONS,
-  type Location,
-  type Mould,
-  type Stats,
-  type ToolType,
-} from "@/utils/types";
+import { LOCATIONS, type Location, type Mould, type Stats, type ToolType } from "@/utils/types";
 
 import { useApp } from "@/components/AppLayout";
 import { TONE_TEXT } from "@/utils/helpers";
@@ -25,6 +23,7 @@ type Filter = {
   needsService?: boolean;
   awaitingRack?: boolean;
   problem?: boolean;
+  limited?: boolean;
 };
 
 type Props = {
@@ -38,14 +37,13 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
   const [filter, setFilter] = useState<Filter>({});
   const [moulds, setMoulds] = useState<Mould[] | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [didYouMean, setDidYouMean] = useState<string[]>([]);
 
   const loadSearchResults = useCallback(async () => {
     try {
-      const [mouldResult, statsResult] = await Promise.all([
-        api.moulds({ q: searchQuery, ...filter, toolType }),
-        api.stats(toolType),
-      ]);
+      const [mouldResult, statsResult] = await Promise.all([api.moulds({ q: searchQuery, ...filter, toolType }), api.stats(toolType)]);
       setMoulds(mouldResult.moulds);
+      setDidYouMean(mouldResult.didYouMean ?? []);
       setStats(statsResult.stats);
       onSync(true);
     } catch {
@@ -59,7 +57,7 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
       if (document.visibilityState === "visible") {
         loadSearchResults();
       }
-    }, 10_000);
+    }, refreshMs());
     return () => clearInterval(refreshTimer);
   }, [loadSearchResults, refreshKey]);
 
@@ -69,7 +67,8 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
       selectedFilter.location === candidate.location &&
       selectedFilter.needsService === candidate.needsService &&
       selectedFilter.awaitingRack === candidate.awaitingRack &&
-      selectedFilter.problem === candidate.problem
+      selectedFilter.problem === candidate.problem &&
+      selectedFilter.limited === candidate.limited
     );
   }
 
@@ -91,7 +90,7 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
   }[] = [];
 
   if (stats) {
-    for (const location of LOCATIONS) {
+    for (const location of locationKeys(LOCATIONS)) {
       const hiddenLocation = isExtrusion ? "MOULD_ROOM" : "TOOL_ROOM";
       if (location === hiddenLocation) continue;
 
@@ -99,8 +98,8 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
         filter: { location },
         label: locationName(location, translations),
         count: stats.byLocation[location] ?? 0,
-        tone: location,
-        icon: locationIcon[location],
+        tone: TONE_TEXT[location] ? location : (configLocation(location)?.color ?? location),
+        icon: iconForLocation(location),
       });
     }
 
@@ -123,6 +122,14 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
     }
 
     filterButtons.push({
+      filter: { limited: true },
+      label: translations.cavity.filter,
+      count: stats.runningWithBlockedCavities ?? 0,
+      tone: "limited",
+      icon: "attention",
+    });
+
+    filterButtons.push({
       filter: { problem: true },
       label: translations.problem.filter,
       count: stats.problemsReported,
@@ -133,62 +140,46 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
 
   const hasFilters = Object.keys(filter).length > 0;
   const isSearching = Boolean(searchQuery) || hasFilters;
-  let resultsHeading = isExtrusion
-    ? translations.toolTypes.EXTRUSION_DIE
-    : translations.search.allMoulds;
+  let resultsHeading = isExtrusion ? translations.toolTypes.EXTRUSION_DIE : translations.search.allMoulds;
   if (isSearching) {
     const formatResults = isExtrusion ? translations.extrusionResults : translations.search.results;
     resultsHeading = formatResults(moulds?.length ?? 0);
   }
 
   let emptyMessage = translations.search.empty;
-  if (searchQuery) emptyMessage = translations.search.noMatch;
+  if (searchQuery) emptyMessage = queryWords(searchQuery).length ? translations.search.noMatch : translations.search.onlySymbols;
   if (isExtrusion) emptyMessage = translations.extrusionEmpty;
 
-  const orderedMoulds = isExtrusion
-    ? moulds ?? []
-    : groupMouldsByMachine(moulds ?? []).flatMap(group => group.moulds);
-  const renderCard = (mould: Mould) => (
-    <MouldCard key={mould.id} mould={mould} translations={translations} lang={lang} onOpen={onOpen} />
-  );
+  // Search results keep the server's best-match order; browsing groups moulds by machine.
+  const orderedMoulds = isExtrusion || searchQuery ? (moulds ?? []) : groupMouldsByMachine(moulds ?? []).flatMap((group) => group.moulds);
+  const renderCard = (mould: Mould) => <MouldCard key={mould.id} mould={mould} translations={translations} lang={lang} onOpen={onOpen} query={searchQuery} />;
 
   // UI and inline Tailwind styles
   return (
     <>
-      <main className="pt-5 pb-0 pr-[calc(var(--s4)+var(--safe-r))] pl-[calc(var(--s4)+var(--safe-l))] md:pt-6 md:px-6 xl:pt-8 xl:px-8 max-w-[1480px]">
+      <main className="pt-5 pb-0 pr-[calc(var(--s4)+var(--safe-r))] pl-[calc(var(--s4)+var(--safe-l))] md:pt-6 md:px-6 xl:pt-8 xl:px-8 max-w-370">
         <div className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-2 m-0 mb-5">
           {filterButtons.map((chip) => (
             <button
               key={chip.tone}
               className={
-                "bg-surface border border-solid rounded-md px-2 py-3 text-left cursor-pointer text-inherit flex flex-col gap-0.5 min-h-[68px] [transition:border-color_var(--fast),box-shadow_var(--fast)] " +
+                "bg-surface border border-solid rounded-md px-2 py-3 text-left cursor-pointer text-inherit flex flex-col gap-0.5 min-h-17 [transition:border-color_var(--fast),box-shadow_var(--fast)] " +
                 (isFilterSelected(chip.filter) ? "border-ink shadow-[inset_0_-3px_0_var(--accent)]" : "border-line hover:border-line-strong")
               }
               aria-pressed={isFilterSelected(chip.filter)}
               onClick={() => toggleFilter(chip.filter)}
             >
-              <div
-                className={
-                  "text-xl font-extrabold leading-[1.1] flex items-center gap-1.5 " +
-                  TONE_TEXT[chip.tone]
-                }
-              >
+              <div className={"text-xl font-extrabold leading-[1.1] flex items-center gap-1.5 " + TONE_TEXT[chip.tone]}>
                 <Icon name={chip.icon} size={18} />
                 {chip.count}
               </div>
-              <div className="text-xs font-extrabold text-ink-soft leading-[1.3]">
-                {chip.label}
-              </div>
+              <div className="text-xs font-extrabold text-ink-soft leading-[1.3]">{chip.label}</div>
             </button>
           ))}
         </div>
-        <div className="text-sm font-bold text-ink-soft mx-1 mt-1 mb-3 flex items-center gap-2 flex-wrap font-sign tracking-[.1px]">
+        <div className="text-sm font-bold text-ink-soft mx-1 mt-1 mb-3 flex items-center gap-2 flex-wrap font-sign tracking-[.1px]" aria-live="polite">
           {resultsHeading}
-          {stats && !searchQuery && !hasFilters && (
-            <span className="inline-block bg-surface border border-solid border-line [padding:1px_8px] rounded-sm text-xs">
-              {stats.total}
-            </span>
-          )}
+          {stats && !searchQuery && !hasFilters && <span className="inline-block bg-surface border border-solid border-line p-[1px_8px] rounded-sm text-xs">{stats.total}</span>}
           {hasFilters && (
             <button
               className="bg-transparent border-0 text-action font-extrabold text-xs min-h-8 py-0 cursor-pointer inline-flex items-center gap-1.5 disabled:text-ink-faint disabled:cursor-default px-1.5"
@@ -199,17 +190,20 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
           )}
         </div>
         {moulds === null && <SkeletonCards label={translations.loading} />}
-        {moulds !== null && moulds.length === 0 && (
-          <EmptyState
-            icon={searchQuery ? "search" : "mould"}
-            text={emptyMessage}
-          />
+        {moulds !== null && moulds.length === 0 && <EmptyState icon={searchQuery ? "search" : "mould"} text={emptyMessage} />}
+        {moulds !== null && moulds.length === 0 && didYouMean.length > 0 && (
+          <p className="text-center text-sm -mt-2 mb-4">
+            {translations.search.didYouMean}{" "}
+            {didYouMean.map((s, i) => (
+              <span key={s}>
+                {i > 0 && " · "}
+                <button type="button" className="bg-transparent border-0 p-0 text-action font-extrabold cursor-pointer underline" onClick={() => window.dispatchEvent(new CustomEvent(SEARCH_EVENT, { detail: s }))}>{s}</button>
+              </span>
+            ))}
+            ?
+          </p>
         )}
-        {moulds !== null && moulds.length > 0 && (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 min-[1680px]:grid-cols-4">
-            {orderedMoulds.map(renderCard)}
-          </div>
-        )}
+        {moulds !== null && moulds.length > 0 && <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 min-[1680px]:grid-cols-4">{orderedMoulds.map(renderCard)}</div>}
       </main>
     </>
   );

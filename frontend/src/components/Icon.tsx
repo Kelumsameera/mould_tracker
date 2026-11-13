@@ -1,3 +1,4 @@
+import { configLocation } from "@/utils/runtimeConfig";
 // One place for every icon, all from one family (Lucide via react-icons/lu, named imports only),
 // so the same meaning always gets the same picture and a swap is one line.
 import type { IconType } from "react-icons";
@@ -5,6 +6,7 @@ import {
   LuArchiveRestore,
   LuArrowRightLeft,
   LuBox,
+  LuBookOpen,
   LuCamera,
   LuChartBar,
   LuCheck,
@@ -52,6 +54,7 @@ import {
 import type { Location, MouldStatus, WorkType } from "@/utils/types";
 
 export const ICONS = {
+  documentation: LuBookOpen,
   sun: LuSun,
   moon: LuMoon,
   search: LuSearch,
@@ -130,6 +133,7 @@ export default function Icon({ name, size = 18, label, className }: Props) {
 export const locationIcon: Record<Location, IconName> = {
   MACHINE: "machine",
   PRODUCTION_FLOOR: "floor",
+  ISOLATION: "clock",
   WORKSHOP: "workshop",
   OUT_OF_SERVICE: "attention",
   MOULD_ROOM: "mouldRoom",
@@ -144,4 +148,13 @@ export const workIcon: Record<WorkType, IconName> = {
   INSPECTION: "search",
   CLEANING: "confirm",
   OTHER: "worklog",
+  CAVITY_BLOCK: "attention",
+  CAVITY_RESTORE: "good",
 };
+
+// Icon of a location: built-in map, then the icon chosen in Workflow Settings, then a generic pin.
+export function iconForLocation(key: string | null | undefined): IconName {
+  const builtIn = (locationIcon as Record<string, IconName>)[key ?? ""];
+  const chosen = configLocation(key)?.icon;
+  return builtIn ?? (chosen && chosen in ICONS ? (chosen as IconName) : "location");
+}

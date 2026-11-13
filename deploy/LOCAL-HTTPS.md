@@ -115,3 +115,16 @@ root. Only the server certificate/key are mounted into Nginx, read-only.
 The server certificate is valid for one year; renew it using the existing CA
 before expiry and redeploy the proxy. Retain the same hostname and CA to keep
 existing device trust and passkeys working.
+
+## Combined Windows setup (2.3.1+)
+
+Open `http://192.168.0.116:8081/` on the factory network to reach the
+installation page using the LAN IP, before browser certificate trust is configured.
+Windows 2.3.1 includes the public factory CA in its installer. Accept the Windows
+certificate prompt during setup. Android already embeds this CA in the APK.
+Browser/PWA setup on Android and Apple still uses the device trust steps above.
+
+Publish the Windows installer and `windows-latest.json` together, copy
+`frontend/public/install.html` into the mounted certificate directory, and validate
+Nginx configuration before reloading it. The page resolves download filenames
+from the published Windows/Android feeds with release links as fallbacks.

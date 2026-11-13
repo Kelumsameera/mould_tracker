@@ -1,5 +1,7 @@
 // Imports moulds and items (with pictures) from the tools-list workbook.
 //   node scripts/import-moulds.mjs --file <xlsx> [--sheet "INJECTION MOULDING"] [--dry-run] [--apply] [--match "A05-083=A05 083"]...
+//   --images-only: only (re)attach sheet pictures to existing items and restore missing picture files; never
+//   overwrites a manually uploaded picture. Dry run unless --apply.
 // Without --apply it is a dry run: it reads the workbook and the database and writes nothing.
 // Merge rule: Tool ID (ignoring spaces) matches an existing mould -> sheet values win, history stays.
 // If two existing moulds match, the one spelled exactly like the sheet wins and the other is left untouched.
@@ -21,6 +23,7 @@ import User from "../models/User.js";
 import { normalizeMachineCode, parseCapableMachines } from "../lib/machines.js";
 import { UPLOAD_DIR } from "../lib/uploads.js";
 import { renderImage } from "../lib/images.js";
+import { itemSearchKey } from "../lib/search.js";
 import { storageLocation } from "../lib/mouldState.js";
 
 const BACKEND_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -422,6 +425,7 @@ async function applyPlan(plan, images, actor, sheetName) {
           // Keep pictures not from the sheet, and keep a cleaned (background-removed) version of a sheet picture.
           const current = new Map((p.old.images || []).filter(fromSheet).map((i) => [i.source, i]));
           set.images = [...(p.old.images || []).filter((i) => !fromSheet(i)), ...sheetImages.map((img) => current.get(img.source) ?? img)];
+          set.searchKey = itemSearchKey({ ...p.old, ...set });
           await Item.updateOne({ _id: p.old._id }, { $set: set }, { session });
           itemChanges.push({ itemId: p.item.itemId, changed: Object.keys(p.changed), images: p.imagesChanged });
         }
@@ -435,6 +439,55 @@ async function applyPlan(plan, images, actor, sheetName) {
   }
 }
 
+// --images-only: attaches workbook pictures to existing items and nothing else. Pure; idempotent.
+// Never touches an item that has a manually uploaded picture (no xlsx source), never creates moulds or items.
+//   dbMoulds: [{ _id, toolId, deletedAt }]  dbItems: [{ _id, mouldId, itemId, images }]  imageDoc(id) -> image doc or null
+export function planImagesOnly(sheetMoulds, dbMoulds, dbItems, imageDoc) {
+  const byKey = new Map();
+  for (const m of dbMoulds.filter((m) => !m.deletedAt)) byKey.set(toolKey(m.toolId), [...(byKey.get(toolKey(m.toolId)) || []), m]);
+  const itemsByMould = new Map();
+  for (const i of dbItems.filter((i) => !i.deletedAt)) itemsByMould.set(String(i.mouldId), [...(itemsByMould.get(String(i.mouldId)) || []), i]);
+  const out = { attach: [], replace: [], unchanged: 0, skippedManual: [], noSheetPicture: 0, mouldNotFound: [], ambiguousMould: [], itemNotFound: [] };
+  for (const sm of sheetMoulds) {
+    const matches = byKey.get(sm.key) || [];
+    if (!matches.length) { out.mouldNotFound.push(sm.toolId); continue; }
+    if (matches.length > 1) { out.ambiguousMould.push(sm.toolId); continue; }
+    const items = itemsByMould.get(String(matches[0]._id)) || [];
+    for (const si of sm.items) {
+      const docs = si.imageIds.map(imageDoc).filter(Boolean);
+      if (!docs.length) { out.noSheetPicture++; continue; }
+      const item = items.find((i) => i.itemId === si.itemId);
+      if (!item) { out.itemNotFound.push(`${sm.toolId} / ${si.itemId}`); continue; }
+      const current = item.images || [];
+      if (current.some((i) => !fromSheet(i))) { out.skippedManual.push(`${sm.toolId} / ${si.itemId}`); continue; }
+      const sameSources = current.length === docs.length && current.every((i, j) => i.source === docs[j].source);
+      if (sameSources) { out.unchanged++; continue; }
+      // Keep a cleaned (background-removed) version already attached for the same source.
+      const kept = new Map(current.map((i) => [i.source, i]));
+      const images = docs.map((d) => kept.get(d.source) ?? d);
+      (current.length ? out.replace : out.attach).push({ itemDbId: item._id, label: `${sm.toolId} / ${si.itemId}`, before: current.map((i) => i.path), images });
+    }
+  }
+  return out;
+}
+
+async function applyImagesOnly(plan, images, actor) {
+  fs.mkdirSync(path.join(UPLOAD_DIR, "items"), { recursive: true });
+  for (const r of images.rendered.values()) {
+    for (const [rel, data] of [[r.path, r.main], [r.thumbPath, r.thumb]]) {
+      const target = path.join(UPLOAD_DIR, rel);
+      if (!fs.existsSync(target)) fs.writeFileSync(target, data); // also repairs missing files of already-attached pictures
+    }
+  }
+  for (const u of [...plan.attach, ...plan.replace]) {
+    // Guard: only update if the item still has no manual picture (someone may have uploaded one since the plan).
+    const res = await Item.updateOne({ _id: u.itemDbId, images: { $not: { $elemMatch: { source: { $not: /^xlsx:/ } } } } }, { $set: { images: u.images } });
+    if (!res.modifiedCount) continue;
+    await AuditLog.create({ actorId: actor._id, actorName: actor.name, action: "item.images_imported", entityType: "Item", entityId: u.itemDbId, entityLabel: u.label,
+      before: { images: u.before }, after: { images: u.images.map((i) => i.path) }, reason: "Pictures from tools list (--images-only)" });
+  }
+}
+
 const args = (argv) => {
   const get = (k) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined);
   // --match "SHEET=DB" (repeatable) confirms a near match the dry run held back.
@@ -445,7 +498,7 @@ const args = (argv) => {
     if (!sheetId || !dbId) throw new Error('--match expects "SHEET TOOL ID=DATABASE TOOL ID"');
     matches[toolKey(sheetId)] = toolKey(dbId);
   });
-  return { file: get("--file"), sheet: get("--sheet") || "INJECTION MOULDING", apply: argv.includes("--apply"), matches };
+  return { file: get("--file"), sheet: get("--sheet") || "INJECTION MOULDING", apply: argv.includes("--apply"), imagesOnly: argv.includes("--images-only"), matches };
 };
 
 async function main() {
@@ -462,6 +515,23 @@ async function main() {
   await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
   try {
     const mediaName = (id) => images.rendered.get(id)?.source;
+    if (opt.imagesOnly) {
+      const [moulds, items] = await Promise.all([Mould.find({}, { toolId: 1, deletedAt: 1 }).lean(), Item.find({ deletedAt: null }, { mouldId: 1, itemId: 1, images: 1 }).lean()]);
+      const imageDoc = (id) => { const r = images.rendered.get(id); return r ? { path: r.path, thumbPath: r.thumbPath, width: r.width, height: r.height, source: r.source } : null; };
+      const plan = planImagesOnly(sheet.moulds, moulds, items, imageDoc);
+      const missingFiles = items.flatMap((i) => i.images || []).filter((i) => !fs.existsSync(path.join(UPLOAD_DIR, i.path)) || !fs.existsSync(path.join(UPLOAD_DIR, i.thumbPath))).length;
+      const summary = { mode: opt.apply ? "apply" : "dry-run", imagesOnly: true, database: mongoose.connection.db.databaseName, sheet: opt.sheet, attach: plan.attach.length, replace: plan.replace.length,
+        unchanged: plan.unchanged, skippedManual: plan.skippedManual.length, itemsWithoutSheetPicture: plan.noSheetPicture, mouldNotFound: plan.mouldNotFound.length,
+        ambiguousMould: plan.ambiguousMould.length, itemNotFound: plan.itemNotFound.length, referencedFilesMissingOnDisk: missingFiles, filesToWrite: images.summary.filesToWrite, renderFailures: images.failed.length };
+      console.log(JSON.stringify(summary, null, 2));
+      if (opt.apply) {
+        const actor = await User.findOne({ role: "super_admin", active: true, deletedAt: null });
+        if (!actor) throw new Error("No active Super Admin to record the import under");
+        await applyImagesOnly(plan, images, actor);
+        console.log("Applied.");
+      }
+      return;
+    }
     const [moulds, items, machines] = await Promise.all([Mould.find().lean(), Item.find().lean(), Machine.find().lean()]);
     const plan = makePlan(sheet, { moulds, items, machines, imageSource: mediaName }, { matches: opt.matches });
     const summary = summarize(plan, sheet, images);

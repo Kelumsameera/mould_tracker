@@ -1,4 +1,5 @@
 "use client";
+import { refreshMs } from "@/utils/runtimeConfig";
 import toast from "react-hot-toast";
 import { useApp } from "@/components/AppLayout";
 
@@ -21,14 +22,18 @@ export default function WorkshopPage() {
   const [workshopMoulds, setWorkshopMoulds] = useState<Mould[]>([]);
   const [serviceDueMoulds, setServiceDueMoulds] = useState<Mould[]>([]);
   const [problemMoulds, setProblemMoulds] = useState<Mould[]>([]);
+  const [limitedMoulds, setLimitedMoulds] = useState<Mould[]>([]);
   const [loaded, setLoaded] = useState(false);
   const loadWorkshop = useCallback(async () => {
     try {
-      const [workshopResult, serviceResult, problemResult] = await Promise.all([
+      const [workshopResult, serviceResult, problemResult, limitedResult] = await Promise.all([
         api.moulds({ location: "WORKSHOP" }),
         api.moulds({ needsService: true }),
         api.moulds({ problem: true }),
+        api.moulds({ limited: true }),
       ]);
+      // Running with blocked cavities outside the Workshop: needs repair but production keeps it running.
+      setLimitedMoulds(limitedResult.moulds.filter((mould) => mould.location !== "WORKSHOP"));
 
       setWorkshopMoulds(workshopResult.moulds);
       setServiceDueMoulds(
@@ -47,7 +52,7 @@ export default function WorkshopPage() {
       if (document.visibilityState === "visible") {
         loadWorkshop();
       }
-    }, 10_000);
+    }, refreshMs());
     return () => clearInterval(refreshTimer);
   }, [loadWorkshop, refreshKey]);
 
@@ -69,7 +74,7 @@ export default function WorkshopPage() {
   return (
     <main className="pt-5 pb-0 pr-[calc(var(--s4)+var(--safe-r))] pl-[calc(var(--s4)+var(--safe-l))] md:pt-6 md:px-6 xl:pt-8 xl:px-8 max-w-[1480px]">
       {!loaded && <SkeletonCards count={4} label={translations.loading} />}
-      {loaded && !workshopMoulds.length && !serviceDueMoulds.length && !problemMoulds.length && (
+      {loaded && !workshopMoulds.length && !serviceDueMoulds.length && !problemMoulds.length && !limitedMoulds.length && (
         <EmptyState icon="good" text={translations.workshop.none} />
       )}
       {problemMoulds.length > 0 && (
@@ -87,6 +92,20 @@ export default function WorkshopPage() {
             <MouldCard key={mould.id} mould={mould} translations={translations} lang={lang} onOpen={onOpen} />
           ))}
         </div>
+      )}
+      {limitedMoulds.length > 0 && (
+        <>
+          <div className="text-sm font-bold text-ink-soft mx-1 mt-1 mb-3 flex items-center gap-2 flex-wrap font-sign tracking-[.1px]">
+            <Icon name="attention" size={16} />
+            {translations.cavity.queue}{" "}
+            <span className="inline-block bg-surface border border-solid border-line [padding:1px_8px] rounded-sm text-xs">{limitedMoulds.length}</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 min-[1680px]:grid-cols-4 mb-4">
+            {limitedMoulds.map((mould) => (
+              <MouldCard key={mould.id} mould={mould} translations={translations} lang={lang} onOpen={onOpen} />
+            ))}
+          </div>
+        </>
       )}
       {serviceDueMoulds.length > 0 && (
         <div className="text-sm font-bold text-ink-soft mx-1 mt-1 mb-3 flex items-center gap-2 flex-wrap font-sign tracking-[.1px]">

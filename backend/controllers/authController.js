@@ -1,3 +1,4 @@
+import { loadRoleAccess } from "../lib/roleAccess.js";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -10,6 +11,7 @@ export async function login(req, res) {
   const valid = user?.active && (await bcrypt.compare(req.body.password, user.passwordHash));
   if (!valid) throw new ApiError(401, "Invalid email or password");
 
+  await loadRoleAccess(user);
   setSession(res, user);
   res.json({ success: true, user: userDTO(user) });
 }
@@ -29,6 +31,7 @@ export async function changePassword(req, res) {
     throw new ApiError(400, "Current password is incorrect");
   }
   user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
+  user.mustChangePassword = false;
   await user.save();
   res.json({ success: true });
 }
@@ -40,13 +43,13 @@ export async function updateProfile(req, res) {
   }
   user.name = req.body.name;
   user.email = req.body.email;
-  if (req.body.newPassword) user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
+  if (req.body.newPassword) { user.passwordHash = await bcrypt.hash(req.body.newPassword, 12); user.mustChangePassword = false; }
   await user.save();
-  res.json({ success: true, user: userDTO(user) });
+  res.json({ success: true, user: userDTO(await loadRoleAccess(user)) });
 }
 
 // PATCH /api/auth/me/language - the UI language follows the user to every device.
 export async function setLanguage(req, res) {
   const user = await User.findByIdAndUpdate(req.user._id, { $set: { language: req.body.language } }, { new: true });
-  res.json({ success: true, user: userDTO(user) });
+  res.json({ success: true, user: userDTO(await loadRoleAccess(user)) });
 }
