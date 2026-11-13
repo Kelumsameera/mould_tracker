@@ -1,7 +1,7 @@
 "use client";
 import { CONDITIONAL_STATUS } from "@/utils/types";
 import { useConfirm } from "@/components/ConfirmHost";
-import Icon, { locationIcon, type IconName } from "@/components/Icon";
+import Icon, { iconForLocation, type IconName } from "@/components/Icon";
 import LastWork from "@/components/LastWork";
 import Lightbox from "@/components/Lightbox";
 import DispatchDetails from "@/components/DispatchDetails";
@@ -20,6 +20,16 @@ import { TOOL_ID_TAG } from "@/utils/helpers";
 const ACTION_BTN =
   "min-h-14 px-3 py-2 rounded-md border-[1.5px] border-solid border-line bg-surface-2 text-ink text-sm font-extrabold cursor-pointer flex items-center justify-center gap-2 text-left leading-[1.3] [transition:border-color_var(--fast),background_var(--fast)]";
 // Panel behind the location line, and history dots, per location.
+// Background for locations added in Workflow Settings, by their chosen colour.
+const COLOR_BG: Record<string, string> = {
+  machine: "bg-machine-bg",
+  floor: "bg-floor-bg",
+  room: "bg-room-bg",
+  workshop: "bg-workshop-bg",
+  warn: "bg-warn-bg",
+  danger: "bg-danger-bg",
+  good: "bg-good-bg",
+};
 const WHERE_BG: Record<string, string> = { MACHINE: "bg-machine-bg", PRODUCTION_FLOOR: "bg-floor-bg", MOULD_ROOM: "bg-room-bg", TOOL_ROOM: "bg-room-bg", WORKSHOP: "bg-workshop-bg" };
 const DOT_TONE: Record<string, string> = {
   MACHINE: "bg-machine-bg text-machine",
@@ -28,9 +38,10 @@ const DOT_TONE: Record<string, string> = {
   TOOL_ROOM: "bg-room-bg text-room",
   WORKSHOP: "bg-workshop-bg text-workshop",
 };
-import { locationName, type Dict, type Lang } from "@/utils/i18n";
-import { can, canEditMoulds, canMoveTo } from "@/utils/permissions";
-import { type Mould, type MouldStatus, type Movement, type User, type WorkLog, type WorkOutcome } from "@/utils/types";
+import { locationName, type Dict, type Lang, statusName, roleName, workTypeName } from "@/utils/i18n";
+import { can, canEditMoulds, canMoveTo, limitedRunPlaces, moveTargets } from "@/utils/permissions";
+import { configLocation } from "@/utils/runtimeConfig";
+import { type Location, type Mould, type MouldStatus, type Movement, type User, type WorkLog, type WorkOutcome } from "@/utils/types";
 import { useCallback, useEffect, useState } from "react";
 import MouldActions, { type MouldAction } from "./MouldActions";
 import ProblemForm from "./ProblemForm";
@@ -200,50 +211,35 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
     return secondEntry.at.localeCompare(firstEntry.at);
   });
   const getWorkLocation = (workLog: WorkLog) => [locationName(workLog.location, translations), workLog.machineCode, workLog.rackLocationId].filter(Boolean).join(" ");
-  const actions: { key: MouldAction; label: string }[] = [];
-  const actionIcon: Record<MouldAction, IconName> = {
-    MACHINE: "machine",
-    PRODUCTION_FLOOR: "floor",
-    ISOLATION: "clock",
-    MOULD_ROOM: "mouldRoom",
-    TOOL_ROOM: "mouldRoom",
-    WORKSHOP: "workshop",
-    OUT_OF_SERVICE: "attention",
-    STATUS: "busy",
-    SHOTS: "shots",
-    CAVITIES: "attention",
-  };
+  const actions: { key: MouldAction; label: string; icon: IconName }[] = [];
+  const BUILT_IN_ICON: Record<string, IconName> = { STATUS: "busy", SHOTS: "shots", CAVITIES: "attention" };
   if (mould && !mould.deletedAt) {
-    // Running with blocked cavities may still run on a machine or the floor.
-    const good = mould.status === "GOOD" || mould.status === CONDITIONAL_STATUS;
-    // Any status may wait in the Isolation Area; it is the first hop of every non-machine move.
-    if (mould.location !== "ISOLATION" && canMoveTo(user, mould.location, "ISOLATION")) actions.push({ key: "ISOLATION", label: translations.isolation.send });
-    if (good && canMoveTo(user, mould.location, "MACHINE"))
-      actions.push({
-        key: "MACHINE",
-        label: mould.location === "MACHINE" ? translations.act.changeMachine : translations.act.mount,
-      });
-    if (good && mould.location !== "PRODUCTION_FLOOR" && canMoveTo(user, mould.location, "PRODUCTION_FLOOR")) actions.push({ key: "PRODUCTION_FLOOR", label: translations.act.toFloor });
-    if (mould.toolType === "EXTRUSION_DIE") {
-      if (good && mould.location !== "TOOL_ROOM" && canMoveTo(user, mould.location, "TOOL_ROOM"))
-        actions.push({
-          key: "TOOL_ROOM",
-          label: translations.act.toMouldRoom(translations.loc.TOOL_ROOM),
-        });
-    } else if (mould.status === "GOOD" && canMoveTo(user, mould.location, "MOULD_ROOM"))
-      actions.push({
-        key: "MOULD_ROOM",
-        label: mould.location === "MOULD_ROOM" && mould.rack ? translations.act.changeRack : translations.act.toMouldRoom(translations.mouldRoom),
-      });
-    if (mould.location !== "WORKSHOP" && canMoveTo(user, mould.location, "WORKSHOP"))
-      actions.push({ key: "WORKSHOP", label: mould.location === "OUT_OF_SERVICE" ? translations.act.returnToWorkshop : translations.act.toWorkshop });
-    if (canMoveTo(user, mould.location, "OUT_OF_SERVICE")) actions.push({ key: "OUT_OF_SERVICE", label: translations.act.outOfService });
-    if (mould.location === "WORKSHOP" && can(user, "status.change")) actions.push({ key: "STATUS", label: translations.act.changeStatus });
-    if (mould.location === "MACHINE" && (can(user, "move.machine") || can(user, "status.change"))) actions.push({ key: "SHOTS", label: translations.act.recordShots });
-    // Running with blocked cavities: where a mould runs or waits; at the Workshop only to change/restore a blocked list.
+    // One button per place this mould may go now, from the workflow config (same rules as the server).
+    for (const loc of moveTargets(mould)) {
+      if (!canMoveTo(user, mould.location, loc.key)) continue;
+      const same = loc.key === mould.location;
+      actions.push({ key: loc.key as MouldAction, label: moveLabel(loc, same), icon: (loc.icon as IconName) || "move" });
+    }
+    const here = configLocation(mould.location);
+    if ((here ? here.statusChange : mould.location === "WORKSHOP") && can(user, "status.change")) actions.push({ key: "STATUS", label: translations.act.changeStatus, icon: BUILT_IN_ICON.STATUS });
+    if ((here ? here.kind === "machine" : mould.location === "MACHINE") && (can(user, "move.machine") || can(user, "status.change")))
+      actions.push({ key: "SHOTS", label: translations.act.recordShots, icon: BUILT_IN_ICON.SHOTS });
+    // Running with blocked cavities: where the limited-run status may be; at a status-change place only to change/restore a list.
     const blockedNow = (mould.blockedCavities?.length ?? 0) > 0;
-    if (can(user, "cavity.manage") && (["MACHINE", "PRODUCTION_FLOOR", "ISOLATION"].includes(mould.location) || (mould.location === "WORKSHOP" && blockedNow)) && mould.status !== "IN_SERVICE")
-      actions.push({ key: "CAVITIES", label: blockedNow ? translations.cavity.change : translations.cavity.action });
+    if (can(user, "cavity.manage") && mould.status !== "IN_SERVICE" && (limitedRunPlaces().includes(mould.location) || ((here ? here.statusChange : mould.location === "WORKSHOP") && blockedNow)))
+      actions.push({ key: "CAVITIES", label: blockedNow ? translations.cavity.change : translations.cavity.action, icon: BUILT_IN_ICON.CAVITIES });
+  }
+  // Built-in wording for the original places; "Move to …" for places added in Workflow Settings.
+  function moveLabel(loc: { key: string; kind: string; external?: boolean }, same: boolean) {
+    const name = locationName(loc.key as Location, translations);
+    if (loc.kind === "machine") return same ? translations.act.changeMachine : translations.act.mount;
+    if (loc.kind === "rack") return same && mould?.rack ? translations.act.changeRack : translations.act.toMouldRoom(name);
+    if (loc.kind === "transit") return translations.isolation.send.replace(locationName("ISOLATION", translations), name);
+    if (loc.external) return translations.act.outOfService;
+    if (loc.key === "WORKSHOP") return mould?.location === "OUT_OF_SERVICE" ? translations.act.returnToWorkshop : translations.act.toWorkshop;
+    if (loc.key === "PRODUCTION_FLOOR") return translations.act.toFloor;
+    if (configLocation(loc.key)?.storage) return translations.act.toMouldRoom(name);
+    return translations.act.moveTo(name);
   }
 
   // UI and inline Tailwind styles
@@ -268,7 +264,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
           </div>
           {mould.deletedAt && <div className="mt-3 p-3 rounded-md bg-danger-bg text-danger-ink text-sm font-bold flex gap-2 items-start">{translations.detail.deletedBanner}</div>}
 
-          <div className={"rounded-lg p-4 m-[var(--s3)_0] " + (WHERE_BG[mould.location] ?? "")}>
+          <div className={"rounded-lg p-4 m-[var(--s3)_0] " + (WHERE_BG[mould.location] ?? COLOR_BG[configLocation(mould.location)?.color ?? ""] ?? "")}>
             <LocationLine mould={mould} translations={translations} big />
             {mould.limitedRun && (
               <div className="mt-2 text-sm">
@@ -382,7 +378,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                       setProblemOpen(false);
                     }}
                   >
-                    <Icon name={actionIcon[a.key]} size={20} />
+                    <Icon name={a.icon} size={20} />
                     {a.label}
                   </button>
                 ))}
@@ -525,7 +521,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                     }
                   >
                     <Icon
-                      name={entry.movement.type === "MOVED" && entry.movement.toLocation ? locationIcon[entry.movement.toLocation] : entry.movement.type === "STATUS_CHANGED" ? "busy" : "history"}
+                      name={entry.movement.type === "MOVED" && entry.movement.toLocation ? iconForLocation(entry.movement.toLocation) : entry.movement.type === "STATUS_CHANGED" ? "busy" : "history"}
                       size={15}
                     />
                   </span>
@@ -539,37 +535,37 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                       <div className="font-medium text-ink-soft text-sm mt-0.5">{translations.isolation.stayed(duration(entry.movement.dwellMinutes, translations))}</div>
                     )}
                     {entry.movement.intendedDestination && (
-                      <div className="font-medium text-ink-soft text-sm [margin-top:2px]">
+                      <div className="font-medium text-ink-soft text-sm mt-0.5">
                         {translations.isolation.plannedFor}: {locationName(entry.movement.intendedDestination, translations)}
                       </div>
                     )}
                     {entry.movement.type === "EDITED" && entry.movement.changes && (
-                      <ul className="font-medium text-ink-soft text-xs [margin-top:2px] list-none p-0 m-0">
+                      <ul className="font-medium text-ink-soft text-xs mt-0.5 list-none p-0 m-0">
                         {Object.keys(entry.movement.changes.after).map((field) => (
-                          <li key={field} className="break-words">
+                          <li key={field} className="wrap-break-word">
                             <b>{field}</b>: {showValue(entry.movement.changes!.before[field])} → {showValue(entry.movement.changes!.after[field])}
                           </li>
                         ))}
                       </ul>
                     )}
                     {entry.movement.overrideReason && (
-                      <div className="font-medium text-ink-soft text-sm [margin-top:2px]">
+                      <div className="font-medium text-ink-soft text-sm mt-0.5">
                         {translations.hist.override}: {entry.movement.overrideReason}
                       </div>
                     )}
-                    {entry.movement.by && <div className="font-semibold text-ink-faint text-xs [margin-top:2px] flex items-center gap-1.5 flex-wrap">{entry.movement.by.name}</div>}
+                    {entry.movement.by && <div className="font-semibold text-ink-faint text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">{entry.movement.by.name}</div>}
                   </div>
                   <span className="text-ink-faint text-xs whitespace-nowrap">{formatTime(entry.movement.createdAt, lang)}</span>
                 </div>
               ) : (
-                <div className={"flex items-start gap-3 [padding:var(--s3)_0] [border-bottom:1px_solid_var(--line)] last:border-b-0 text-sm"} key={"w" + entry.workLog.id}>
-                  <span className="w-7 h-7 [border-radius:50%] shrink-0 flex items-center justify-center bg-workshop-bg text-workshop">
+                <div className={"flex items-start gap-3 p-[var(--s3)_0] [border-bottom:1px_solid_var(--line)] last:border-b-0 text-sm"} key={"w" + entry.workLog.id}>
+                  <span className="w-7 h-7 rounded-[50%] shrink-0 flex items-center justify-center bg-workshop-bg text-workshop">
                     <Icon name={entry.workLog.problemReported ? "problem" : "worklog"} size={15} />
                   </span>
                   <div className="font-bold flex-1 min-w-0">
                     {!entry.workLog.problemReported && (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-[4px] whitespace-nowrap leading-[1.6] bg-workshop-bg text-workshop-ink tracking-[.1px]">
-                        {translations.work.types[entry.workLog.type]}
+                        {workTypeName(entry.workLog.type, translations)}
                       </span>
                     )}
                     {entry.workLog.problemReported && (
@@ -593,19 +589,19 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                       </span>
                     )}
                     <div className="font-extrabold text-sm mt-1 flex items-center gap-1.5">
-                      {entry.workLog.doneBy.map((person) => (person.role ? `${person.name} (${translations.roles[person.role] ?? person.role})` : person.name)).join(", ")}
+                      {entry.workLog.doneBy.map((person) => (person.role ? `${person.name} (${roleName(person.role, translations)})` : person.name)).join(", ")}
                     </div>
-                    <div className={"font-medium [margin-top:2px]" + (entry.workLog.corrected ? " line-through opacity-60" : "")}>{entry.workLog.description}</div>
+                    <div className={"font-medium mt-0.5" + (entry.workLog.corrected ? " line-through opacity-60" : "")}>{entry.workLog.description}</div>
                     {(entry.workLog.partsUsed || entry.workLog.timeSpentMinutes != null) && (
-                      <div className="font-medium text-ink-soft text-sm [margin-top:2px]">
+                      <div className="font-medium text-ink-soft text-sm mt-0.5">
                         {[entry.workLog.partsUsed, entry.workLog.timeSpentMinutes != null && translations.work.minutesShort(entry.workLog.timeSpentMinutes)].filter(Boolean).join(" · ")}
                       </div>
                     )}
-                    <div className="font-medium text-ink-soft text-sm [margin-top:2px]">
+                    <div className="font-medium text-ink-soft text-sm mt-0.5">
                       {[
                         getWorkLocation(entry.workLog),
                         entry.workLog.statusAfter !== entry.workLog.statusBefore &&
-                          translations.work.statusChange(translations.status[entry.workLog.statusBefore], translations.status[entry.workLog.statusAfter]),
+                          translations.work.statusChange(statusName(entry.workLog.statusBefore, translations), statusName(entry.workLog.statusAfter, translations)),
                         entry.workLog.sentToWorkshop && translations.work.movedToWorkshop,
                       ]
                         .filter(Boolean)
@@ -616,7 +612,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                         {entry.workLog.photos.map((ph, index) => (
                           <button
                             key={index}
-                            className="relative w-14 [aspect-ratio:1] rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-pointer [&_img]:size-full [&_img]:object-cover"
+                            className="relative w-14 aspect-[1] rounded-md border border-solid border-line bg-white p-0 overflow-hidden cursor-pointer [&_img]:size-full [&_img]:object-cover"
                             onClick={() => setImage(assetUrl(ph.url))}
                             aria-label={translations.detail.openImage}
                           >
@@ -625,7 +621,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                         ))}
                       </div>
                     )}
-                    <div className="font-semibold text-ink-faint text-xs [margin-top:2px] flex items-center gap-1.5 flex-wrap">
+                    <div className="font-semibold text-ink-faint text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
                       {translations.work.recordedBy(entry.workLog.recordedBy.name)}
                       {canLog && !entry.workLog.corrected && !entry.workLog.problemReported && (
                         <button
@@ -650,7 +646,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
             (mould.deletedAt ? (
               can(user, "mould.delete") && (
                 <button
-                  className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface text-ink-soft border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
+                  className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface text-ink-soft border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
                   disabled={busy}
                   onClick={restoreMould}
                 >
@@ -662,7 +658,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
               <>
                 {canEditMoulds(user) && (
                   <button
-                    className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface text-ink-soft border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
+                    className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface text-ink-soft border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96"
                     onClick={() => onEdit(mould)}
                   >
                     <Icon name="edit" />
@@ -671,7 +667,7 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
                 )}
                 {mould.location !== "MACHINE" && can(user, "mould.delete") && (
                   <button
-                    className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface border-[1.5px] border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96 text-danger"
+                    className="w-full min-h-12 px-4 py-3 rounded-md border-0 text-md font-semibold cursor-pointer mt-3 inline-flex items-center justify-center gap-2 [transition:filter_var(--fast),background_var(--fast)] bg-surface border-solid border-line tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96 text-danger"
                     disabled={busy}
                     onClick={deleteMould}
                   >
@@ -690,8 +686,8 @@ export default function MouldSheet({ id, user, translations, lang, refreshKey, o
 
 const Fact = ({ label, value }: { label: string; value: string }) => (
   <div className="bg-surface-2 border border-solid border-line rounded-md px-3 py-2 min-w-0">
-    <span className="flex items-center gap-[5px] text-xs font-bold text-ink-soft">{label}</span>
-    <b className="block text-sm mt-0.5 break-words">{value}</b>
+    <span className="flex items-center gap-1.25 text-xs font-bold text-ink-soft">{label}</span>
+    <b className="block text-sm mt-0.5 wrap-break-word">{value}</b>
   </div>
 );
 

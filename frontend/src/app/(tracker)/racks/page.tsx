@@ -1,4 +1,5 @@
 "use client";
+import { refreshMs } from "@/utils/runtimeConfig";
 import { matchesQuery, queryWords } from "@/utils/search";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "@/components/AppLayout";
@@ -28,7 +29,7 @@ export default function RacksPage() {
   }, [t]);
   useEffect(() => {
     void load();
-    const timer = setInterval(() => { if (document.visibilityState === "visible") void load(); }, 10_000);
+    const timer = setInterval(() => { if (document.visibilityState === "visible") void load(); }, refreshMs());
     return () => clearInterval(timer);
   }, [load, refreshKey]);
   const visible = zones.filter(z => !zoneCode || z.code === zoneCode);

@@ -1,11 +1,13 @@
 "use client";
+import { refreshMs } from "@/utils/runtimeConfig";
+import { configLocation, locationKeys, statusKeys } from "@/utils/runtimeConfig";
 import { SEARCH_EVENT } from "@/components/SearchBox";
 import { queryWords } from "@/utils/search";
 import { useCallback, useEffect, useState } from "react";
 import EmptyState from "@/components/EmptyState";
 import MouldCard from "@/components/MouldCard";
 import SkeletonCards from "@/components/SkeletonCards";
-import Icon, { locationIcon, type IconName } from "@/components/Icon";
+import Icon, { iconForLocation, type IconName } from "@/components/Icon";
 
 import { api } from "@/utils/api";
 import { groupMouldsByMachine } from "@/utils/machineLayout";
@@ -55,7 +57,7 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
       if (document.visibilityState === "visible") {
         loadSearchResults();
       }
-    }, 10_000);
+    }, refreshMs());
     return () => clearInterval(refreshTimer);
   }, [loadSearchResults, refreshKey]);
 
@@ -88,7 +90,7 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
   }[] = [];
 
   if (stats) {
-    for (const location of LOCATIONS) {
+    for (const location of locationKeys(LOCATIONS)) {
       const hiddenLocation = isExtrusion ? "MOULD_ROOM" : "TOOL_ROOM";
       if (location === hiddenLocation) continue;
 
@@ -96,8 +98,8 @@ export default function MouldSearch({ toolType = "INJECTION_MOULD" }: Props) {
         filter: { location },
         label: locationName(location, translations),
         count: stats.byLocation[location] ?? 0,
-        tone: location,
-        icon: locationIcon[location],
+        tone: TONE_TEXT[location] ? location : (configLocation(location)?.color ?? location),
+        icon: iconForLocation(location),
       });
     }
 

@@ -63,7 +63,7 @@ export default function MouldCard({ mould, translations, lang, onOpen, query }: 
           </div>
         )}
         <LastWork mould={mould} translations={translations} lang={lang} />
-        {(mould.openProblem || mould.serviceDue || hasAlertBadges(mould)) && (
+        {(mould.openProblem || mould.serviceDue || mould.serviceSoon || hasAlertBadges(mould)) && (
           <div className="flex gap-1.5 flex-wrap">
             <AlertBadges mould={mould} translations={translations} />
             {mould.openProblem && (
@@ -73,6 +73,12 @@ export default function MouldCard({ mould, translations, lang, onOpen, query }: 
               >
                 <Icon name="problem" size={12} />
                 {translations.problem.badge}
+              </span>
+            )}
+            {mould.serviceSoon && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold tracking-[.1px] px-2 py-0.5 rounded-[4px] whitespace-nowrap leading-[1.6] bg-surface-2 text-warn-ink">
+                <Icon name="shots" size={12} />
+                {translations.card.shotsSoon}
               </span>
             )}
             {mould.serviceDue && (

@@ -1,4 +1,5 @@
-// Workflow constants in one place (Change Pack 2). Server rules and the UI badges read these.
+// Workflow thresholds. Defaults below; the live values come from the workflow config (lib/configStore.js).
+import { getConfig } from "./configStore.js";
 const num = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
 
 // Isolation Area: holding area between Production Floor, Mould Room and Workshop.
@@ -17,18 +18,21 @@ export const LIMITED_RUN_LOCATIONS = ["MACHINE", "PRODUCTION_FLOOR", ISOLATION];
 export const LIMITED_RUN_ALERT_DAYS = num(process.env.LIMITED_RUN_ALERT_DAYS, 7);
 
 // "Waiting too long" level for a stay that began at `since`: null | "amber" | "red".
-export function isolationLevel(since, now = new Date()) {
+// Max wait of the holding (transit) location in the config.
+export const isolationMaxWaitHours = (config = getConfig()) => config.locations.find((l) => l.kind === "transit" && l.maxWaitHours > 0)?.maxWaitHours ?? ISOLATION_MAX_WAIT_HOURS;
+export function isolationLevel(since, now = new Date(), config = getConfig()) {
   if (!since) return null;
   const hours = (now - new Date(since)) / 3_600_000;
-  if (hours >= ISOLATION_MAX_WAIT_HOURS * 2) return "red";
-  if (hours >= ISOLATION_MAX_WAIT_HOURS) return "amber";
+  const max = isolationMaxWaitHours(config);
+  if (hours >= max * 2) return "red";
+  if (hours >= max) return "amber";
   return null;
 }
 
 // Limited-run level: "amber" while running limited, "red" when too long or past the expected fix date.
-export function limitedRunLevel(limitedRun, now = new Date()) {
+export function limitedRunLevel(limitedRun, now = new Date(), config = getConfig()) {
   if (!limitedRun?.since) return null;
   const days = (now - new Date(limitedRun.since)) / 86_400_000;
-  if (days > LIMITED_RUN_ALERT_DAYS || (limitedRun.expectedFixBy && now > new Date(limitedRun.expectedFixBy))) return "red";
+  if (days > (config.limitedRunAlertDays ?? LIMITED_RUN_ALERT_DAYS) || (limitedRun.expectedFixBy && now > new Date(limitedRun.expectedFixBy))) return "red";
   return "amber";
 }

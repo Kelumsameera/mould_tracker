@@ -1,5 +1,6 @@
 import { fail } from "../utils/ApiError.js";
-import { imageKey, MAX_ITEM_IMAGES } from "./images.js";
+import { imageKey } from "./images.js";
+import { setting } from "./settings.js";
 
 // Pure rules for an item's picture list. Each returns a NEW array; the controller stores it and audits.
 const keysOf = (images) => images.map((i) => imageKey(i.path));
@@ -14,7 +15,8 @@ function rejectDuplicate(images, saved, except = -1) {
 }
 
 export function addImage(images, saved) {
-  if (images.length >= MAX_ITEM_IMAGES) fail(400, "TOO_MANY_IMAGES", `An item can have at most ${MAX_ITEM_IMAGES} pictures`);
+  const max = setting("limits.maxItemImages"); // Settings > Thresholds & limits
+  if (images.length >= max) fail(400, "TOO_MANY_IMAGES", `An item can have at most ${max} pictures`, { max });
   rejectDuplicate(images, saved);
   return [...images, saved];
 }

@@ -1,9 +1,13 @@
 "use client";
+import { activeLocations } from "@/utils/runtimeConfig";
+import { locationName } from "@/utils/i18n";
+import type { Location } from "@/utils/types";
+import { roleName } from "@/utils/i18n";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PAGE_PATHS, RAIL_HIDE, RAIL_ITEM, syncDot, type PageName } from "@/utils/helpers";
-import Icon, { type IconName } from "@/components/Icon";
+import Icon, { iconForLocation, type IconName } from "@/components/Icon";
 import type { Dict, Lang } from "@/utils/i18n";
 import type { User } from "@/utils/types";
 import { can, canVisitPage } from "@/utils/permissions";
@@ -71,6 +75,10 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
     { key: "catalog", label: translations.catalog.title, icon: "documentation" },
   ];
   const adminLinks: { key: PageName; label: string; icon: IconName }[] = [];
+  const BUILT_IN_PLACES = ["MACHINE", "PRODUCTION_FLOOR", "ISOLATION", "MOULD_ROOM", "TOOL_ROOM", "WORKSHOP", "OUT_OF_SERVICE"];
+  const customPlaces = (activeLocations() || []).filter((l) => !BUILT_IN_PLACES.includes(l.key));
+  if (canVisitPage(user, "workflow")) adminLinks.push({ key: "workflow", label: translations.workflowAdmin.title, icon: "admin" });
+  if (canVisitPage(user, "settings")) adminLinks.push({ key: "settings", label: translations.settingsAdmin.title, icon: "admin" });
 
   if (can(user, "access.manage")) {
     adminLinks.push({ key: "access", label: translations.accessAdmin.title, icon: "admin" });
@@ -178,6 +186,13 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
 
         <nav className="flex flex-col gap-0.5 mx-0 my-4">
           {mainLinks.filter((link) => canVisitPage(user, link.key)).map(renderNavItem)}
+          {/* Locations added in Workflow Settings get the generic location screen. */}
+          {canVisitPage(user, "place") && customPlaces.map((loc) => (
+            <Link key={"place-" + loc.key} className={itemBase} href={`${PAGE_PATHS.place}?key=${encodeURIComponent(loc.key)}`} onClick={onClose} title={locationName(loc.key as Location, translations)} aria-label={locationName(loc.key as Location, translations)}>
+              <Icon name={iconForLocation(loc.key)} size={20} />
+              <span className={"overflow-hidden text-ellipsis " + RAIL_HIDE}>{locationName(loc.key as Location, translations)}</span>
+            </Link>
+          ))}
           {adminLinks.map(renderNavItem)}
           <a className={itemBase} href="/docs/index.html" target="_blank" rel="noopener noreferrer" onClick={onClose} title={translations.nav.documentation} aria-label={translations.nav.documentation}>
             <Icon name="documentation" size={20} />
@@ -190,7 +205,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
             <Icon name="user" size={20} />
             <div className={"min-w-0 [&>*]:block [&>*]:overflow-hidden [&>*]:text-ellipsis [&>*]:whitespace-nowrap " + RAIL_HIDE}>
               <strong>{user.name}</strong>
-              <small className="text-brand-soft">{translations.roles[user.role] ?? user.role}</small>
+              <small className="text-brand-soft">{roleName(user.role, translations)}</small>
             </div>
           </div>
           {renderNavItem({

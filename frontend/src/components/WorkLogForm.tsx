@@ -1,4 +1,6 @@
 "use client";
+import { activeList } from "@/utils/runtimeConfig";
+import { roleName, workTypeName, outcomeName } from "@/utils/i18n";
 import { useConfirm } from "@/components/ConfirmHost";
 import Icon from "@/components/Icon";
 import { api } from "@/utils/api";
@@ -114,7 +116,7 @@ export default function WorkLogForm({
     if (
       !(await confirm({
         title: translations.confirm.workTitle,
-        message: translations.confirm.work(mould.toolId, translations.work.types[type], names),
+        message: translations.confirm.work(mould.toolId, workTypeName(type, translations), names),
         confirmText: translations.confirm.workBtn,
         note:
           [correcting && translations.confirm.workCorrection, moving && translations.confirm.workMove]
@@ -178,7 +180,7 @@ export default function WorkLogForm({
       )}
       <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.work.type}</label>
       <div className="flex flex-wrap gap-2 mt-2">
-        {WORK_TYPES.map((w) => (
+        {(activeList("workTypes").map((x) => x.key as WorkType).filter((k) => !k.startsWith("CAVITY_")).length ? activeList("workTypes").map((x) => x.key as WorkType).filter((k) => !k.startsWith("CAVITY_")) : WORK_TYPES).map((w) => (
           <button
             type="button"
             key={w}
@@ -188,7 +190,7 @@ export default function WorkLogForm({
             }
             onClick={() => setType(w)}
           >
-            {translations.work.types[w]}
+            {workTypeName(w, translations)}
           </button>
         ))}
       </div>
@@ -230,7 +232,7 @@ export default function WorkLogForm({
             }
             onClick={() => toggleWorker(person.id)}
           >
-            {person.name} <small>{translations.roles[person.role]}</small>
+            {person.name} <small>{roleName(person.role, translations)}</small>
           </button>
         ))}
       </div>
@@ -300,7 +302,7 @@ export default function WorkLogForm({
         >
           {translations.work.outcomes.none}
         </button>
-        {(["OK", "NEEDS_REPAIR", "NEEDS_SERVICE"] as const).map((o) => (
+        {(activeList("outcomes").length ? activeList("outcomes").map((x) => x.key as WorkOutcome) : (["OK", "NEEDS_REPAIR", "NEEDS_SERVICE"] as const)).map((o) => (
           <button
             type="button"
             key={o}
@@ -310,7 +312,7 @@ export default function WorkLogForm({
             }
             onClick={() => setOutcome(o)}
           >
-            {translations.work.outcomes[o]}
+            {outcomeName(o, translations)}
           </button>
         ))}
       </div>

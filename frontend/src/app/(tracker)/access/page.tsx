@@ -1,5 +1,6 @@
 "use client";
 
+import { roleName } from "@/utils/i18n";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useApp } from "@/components/AppLayout";
@@ -9,6 +10,9 @@ import { api } from "@/utils/api";
 import { errorText } from "@/utils/format";
 import { can, PERMISSIONS, type Permission } from "@/utils/permissions";
 import { matchesQuery } from "@/utils/search";
+import { activeLocations } from "@/utils/runtimeConfig";
+import { locationName } from "@/utils/i18n";
+import type { Location } from "@/utils/types";
 import type { RoleAccess, UserAccess } from "@/utils/types";
 
 // Access Control (System Administrator). Everyone else sees a read-only list of their own effective permissions.
@@ -16,13 +20,18 @@ const input =
   "min-h-12 p-3 rounded-sm border-[1.5px] border-solid border-line [font-size:16px] bg-surface-2 text-ink focus:outline-none focus:border-ink focus:shadow-[0_0_0_3px_rgba(245,184,0,.35)] w-full";
 const btn = "tracking-[.1px] disabled:opacity-50 disabled:cursor-default [@media(hover:hover)]:enabled:hover:brightness-96";
 const same = (a: Permission[], b: Permission[]) => a.length === b.length && a.every((p) => b.includes(p));
-const ordered = (list: Permission[]) => PERMISSIONS.filter((p) => list.includes(p));
+// Static keys first, then keys created by the workflow config (move.<location>) in their given order.
+const ordered = (list: Permission[]) => [...PERMISSIONS.filter((p) => list.includes(p)), ...list.filter((p) => !(PERMISSIONS as readonly string[]).includes(p))];
 
 type UserDraft = { grant: Permission[]; deny: Permission[]; expiresAt: string };
 
 export default function AccessPage() {
   const { user, translations } = useApp();
   const t = translations.accessAdmin;
+  // A permission created for a new location has no built-in label: "Move to <location>".
+  const permLabel = (p: Permission) =>
+    (t.labels as Record<string, string>)[p] ??
+    (p.startsWith("move.") ? translations.act.moveTo(locationName(((activeLocations() || []).find((l) => l.permission === p)?.key ?? p) as Location, translations)) : p);
   const { confirm } = useConfirm();
   const admin = can(user, "access.manage");
   const [tab, setTab] = useState<"roles" | "users">("roles");
@@ -54,7 +63,9 @@ export default function AccessPage() {
       setLoading(false);
     }
   }, [admin, translations]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const selected = users.find((u) => u.id === selectedId);
   const pickUser = (u: UserAccess | undefined) => {
@@ -86,7 +97,7 @@ export default function AccessPage() {
   }
 
   const saveRole = (r: RoleAccess, permissions: Permission[] | null) =>
-    guarded(t.confirmTitle, t.confirmMatrix(translations.roles[r.role]), async () => {
+    guarded(t.confirmTitle, t.confirmMatrix(roleName(r.role, translations)), async () => {
       const { role } = await api.updateRoleAccess(r.role, { permissions, version: r.version, reason: reason.trim() });
       setRoles((cur) => cur.map((x) => (x.role === role.role ? role : x)));
       setRoleDrafts((cur) => ({ ...cur, [role.role]: role.permissions }));
@@ -132,11 +143,17 @@ export default function AccessPage() {
   if (!admin) {
     return (
       <main className={main}>
-        <h2 className="text-lg font-extrabold mb-2 flex items-center gap-2"><Icon name="admin" />{t.myAccess}</h2>
+        <h2 className="text-lg font-extrabold mb-2 flex items-center gap-2">
+          <Icon name="admin" />
+          {t.myAccess}
+        </h2>
         <p className="text-sm text-ink-soft mb-4">{t.myAccessHint}</p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {ordered(user?.permissions ?? []).map((p) => (
-            <li key={p} className="rounded-md bg-surface-2 p-3 text-sm font-bold flex gap-2 items-start"><Icon name="confirm" size={16} />{t.labels[p]}</li>
+            <li key={p} className="rounded-md bg-surface-2 p-3 text-sm font-bold flex gap-2 items-start">
+              <Icon name="confirm" size={16} />
+              {permLabel(p)}
+            </li>
           ))}
         </ul>
       </main>
@@ -147,7 +164,9 @@ export default function AccessPage() {
   const visibleUsers = users.filter((u) => matchesQuery([u.name, u.email], query));
   const reasonField = (
     <div className="mb-4">
-      <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-reason">{t.reason}</label>
+      <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-reason">
+        {t.reason}
+      </label>
       <input id="access-reason" className={input} value={reason} maxLength={500} disabled={saving} aria-invalid={reason.length > 0 && !reasonOk} onChange={(e) => setReason(e.target.value)} />
       <p className="text-xs text-ink-soft mt-1">{t.reasonHint}</p>
     </div>
@@ -155,7 +174,10 @@ export default function AccessPage() {
 
   return (
     <main className={main}>
-      <h2 className="text-lg font-extrabold mb-3 flex items-center gap-2"><Icon name="admin" />{t.title}</h2>
+      <h2 className="text-lg font-extrabold mb-3 flex items-center gap-2">
+        <Icon name="admin" />
+        {t.title}
+      </h2>
       <p className="text-sm text-ink-soft mb-4">{t.protected}</p>
       <div className="flex gap-2 mb-4" role="group" aria-label={t.title}>
         {(["roles", "users"] as const).map((value) => (
@@ -164,8 +186,15 @@ export default function AccessPage() {
           </button>
         ))}
       </div>
-      {loading ? <p role="status">{translations.feedback.working}</p> : error ? (
-        <div role="alert"><p>{error}</p><button className={btn} onClick={() => void load()}>{t.retry}</button></div>
+      {loading ? (
+        <p role="status">{translations.feedback.working}</p>
+      ) : error ? (
+        <div role="alert">
+          <p>{error}</p>
+          <button className={btn} onClick={() => void load()}>
+            {t.retry}
+          </button>
+        </div>
       ) : tab === "roles" ? (
         <>
           {reasonField}
@@ -173,21 +202,30 @@ export default function AccessPage() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="bg-surface-2">
-                  <th className="text-left p-2 sticky left-0 bg-surface-2 min-w-[220px]">{t.permission}</th>
-                  {roleList.map((r) => <th key={r.role} className="p-2 text-center min-w-[96px]">{translations.roles[r.role]}</th>)}
+                  <th className="text-left p-2 sticky left-0 bg-surface-2 min-w-55">{t.permission}</th>
+                  {roleList.map((r) => (
+                    <th key={r.role} className="p-2 text-center min-w-24">
+                      {roleName(r.role, translations)}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {catalog.map((p) => (
                   <tr key={p} className="[border-top:1px_solid_var(--line)]">
-                    <td className="p-2 sticky left-0 bg-surface font-semibold">{t.labels[p]}</td>
+                    <td className="p-2 sticky left-0 bg-surface font-semibold">{permLabel(p)}</td>
                     {roleList.map((r) => {
                       const draft = roleDrafts[r.role] ?? [];
                       const locked = p === "move.outOfService" && r.role !== "super_admin";
                       return (
                         <td key={r.role} className="p-2 text-center">
-                          <input type="checkbox" aria-label={`${translations.roles[r.role]}: ${t.labels[p]}`} disabled={saving || locked} checked={draft.includes(p)}
-                            onChange={(e) => setRoleDrafts((cur) => ({ ...cur, [r.role]: e.target.checked ? [...draft, p] : draft.filter((x) => x !== p) }))} />
+                          <input
+                            type="checkbox"
+                            aria-label={`${roleName(r.role, translations)}: ${permLabel(p)}`}
+                            disabled={saving || locked}
+                            checked={draft.includes(p)}
+                            onChange={(e) => setRoleDrafts((cur) => ({ ...cur, [r.role]: e.target.checked ? [...draft, p] : draft.filter((x) => x !== p) }))}
+                          />
                         </td>
                       );
                     })}
@@ -199,8 +237,12 @@ export default function AccessPage() {
                     const dirty = !same(roleDrafts[r.role] ?? [], r.permissions);
                     return (
                       <td key={r.role} className="p-2 text-center align-top">
-                        <button type="button" className={"primary text-xs! min-h-9! px-2! " + btn} disabled={saving || !dirty} onClick={() => void saveRole(r, ordered(roleDrafts[r.role] ?? []))}>{translations.confirm.saveBtn}</button>
-                        <button type="button" className={"text-xs! min-h-9! px-2! mt-1 " + btn} disabled={saving || (!r.customised && !dirty)} onClick={() => void saveRole(r, null)}>{t.resetDefaults}</button>
+                        <button type="button" className={"primary text-xs! min-h-9! px-2! " + btn} disabled={saving || !dirty} onClick={() => void saveRole(r, ordered(roleDrafts[r.role] ?? []))}>
+                          {translations.confirm.saveBtn}
+                        </button>
+                        <button type="button" className={"text-xs! min-h-9! px-2! mt-1 " + btn} disabled={saving || (!r.customised && !dirty)} onClick={() => void saveRole(r, null)}>
+                          {t.resetDefaults}
+                        </button>
                       </td>
                     );
                   })}
@@ -212,18 +254,26 @@ export default function AccessPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-[280px_1fr]">
           <div>
-            <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-search">{t.search}</label>
+            <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-search">
+              {t.search}
+            </label>
             <input id="access-search" type="search" className={input + " mb-2"} value={query} onChange={(e) => setQuery(e.target.value)} />
             <ul className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
               {visibleUsers.map((u) => (
                 <li key={u.id}>
-                  <button type="button" disabled={saving} aria-pressed={u.id === selectedId} onClick={() => pickUser(u)}
-                    className={"w-full text-left rounded-md p-2 border border-solid " + (u.id === selectedId ? "border-ink bg-surface-2" : "border-line bg-surface")}>
-                    <span className="font-bold block break-words">{u.name}</span>
-                    <span className="text-xs text-ink-soft">{translations.roles[u.role]}</span>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    aria-pressed={u.id === selectedId}
+                    onClick={() => pickUser(u)}
+                    className={"w-full text-left rounded-md p-2 border border-solid " + (u.id === selectedId ? "border-ink bg-surface-2" : "border-line bg-surface")}
+                  >
+                    <span className="font-bold block wrap-break-word">{u.name}</span>
+                    <span className="text-xs text-ink-soft">{roleName(u.role, translations)}</span>
                     {u.permissionOverrides && (
                       <span className={"ml-2 text-[11px] font-extrabold rounded-pill px-1.5 " + (u.permissionOverrides.active ? "bg-warn-bg text-warn-ink" : "bg-surface-3 text-ink-faint")}>
-                        {t.overrides}{!u.permissionOverrides.active && ` · ${t.expired}`}
+                        {t.overrides}
+                        {!u.permissionOverrides.active && ` · ${t.expired}`}
                       </span>
                     )}
                   </button>
@@ -232,19 +282,28 @@ export default function AccessPage() {
               {!visibleUsers.length && <li className="text-sm">{t.none}</li>}
             </ul>
           </div>
-          {!selected ? <p>{t.noSelection}</p> : (
+          {!selected ? (
+            <p>{t.noSelection}</p>
+          ) : (
             <section className="bg-surface border border-solid border-line rounded-lg p-4">
-              <h3 className="font-extrabold text-lg break-words">{selected.name}</h3>
-              <p className="text-sm text-ink-soft mb-3">{translations.roles[selected.role]} · {selected.email}</p>
+              <h3 className="font-extrabold text-lg wrap-break-word">{selected.name}</h3>
+              <p className="text-sm text-ink-soft mb-3">
+                {roleName(selected.role, translations)} · {selected.email}
+              </p>
               <p className="text-sm mb-3">{t.tapToCycle}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {catalog.map((p) => {
                   const state = stateOf(p);
                   const locked = p === "move.outOfService" && selected.role !== "super_admin";
                   return (
-                    <button key={p} type="button" disabled={saving || locked} onClick={() => toggle(p)}
-                      className={"text-left rounded-md p-2.5 border-[1.5px] border-solid border-line text-sm " + stateClass[state]}>
-                      <span className="font-bold block">{t.labels[p]}</span>
+                    <button
+                      key={p}
+                      type="button"
+                      disabled={saving || locked}
+                      onClick={() => toggle(p)}
+                      className={"text-left rounded-md p-2.5 border-[1.5px] border-solid border-line text-sm " + stateClass[state]}
+                    >
+                      <span className="font-bold block">{permLabel(p)}</span>
                       <span className="text-xs">{t[state as "fromRole" | "granted" | "denied" | "notIncluded"]}</span>
                     </button>
                   );
@@ -252,19 +311,38 @@ export default function AccessPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2 mt-4">
                 <div>
-                  <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-expiry">{t.expiry}</label>
-                  <input id="access-expiry" type="date" className={input} value={userDraft.expiresAt} min={new Date().toISOString().slice(0, 10)} disabled={saving}
-                    onChange={(e) => setUserDraft((d) => ({ ...d, expiresAt: e.target.value }))} />
+                  <label className="block mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="access-expiry">
+                    {t.expiry}
+                  </label>
+                  <input
+                    id="access-expiry"
+                    type="date"
+                    className={input}
+                    value={userDraft.expiresAt}
+                    min={new Date().toISOString().slice(0, 10)}
+                    disabled={saving}
+                    onChange={(e) => setUserDraft((d) => ({ ...d, expiresAt: e.target.value }))}
+                  />
                 </div>
               </div>
               <div className="mt-3">{reasonField}</div>
-              <h4 className="font-extrabold mt-2 mb-1">{t.effective} <small className="text-ink-soft font-normal">· {t.effectiveCount(preview.length)}</small></h4>
+              <h4 className="font-extrabold mt-2 mb-1">
+                {t.effective} <small className="text-ink-soft font-normal">· {t.effectiveCount(preview.length)}</small>
+              </h4>
               <div className="flex flex-wrap gap-1.5 mb-4">
-                {preview.map((p) => <span key={p} className="text-xs rounded-pill bg-surface-2 px-2 py-1">{t.labels[p]}</span>)}
+                {preview.map((p) => (
+                  <span key={p} className="text-xs rounded-pill bg-surface-2 px-2 py-1">
+                    {permLabel(p)}
+                  </span>
+                ))}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className={"primary " + btn} disabled={saving} onClick={() => void saveUser(false)}>{t.save}</button>
-                <button type="button" className={btn} disabled={saving || !selected.permissionOverrides} onClick={() => void saveUser(true)}>{t.resetUser}</button>
+                <button type="button" className={"primary " + btn} disabled={saving} onClick={() => void saveUser(false)}>
+                  {t.save}
+                </button>
+                <button type="button" className={btn} disabled={saving || !selected.permissionOverrides} onClick={() => void saveUser(true)}>
+                  {t.resetUser}
+                </button>
               </div>
             </section>
           )}

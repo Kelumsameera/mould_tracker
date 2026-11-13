@@ -1,4 +1,5 @@
 "use client";
+import { refreshMs } from "@/utils/runtimeConfig";
 import toast from "react-hot-toast";
 import { useApp } from "@/components/AppLayout";
 
@@ -51,7 +52,7 @@ export default function WorkshopPage() {
       if (document.visibilityState === "visible") {
         loadWorkshop();
       }
-    }, 10_000);
+    }, refreshMs());
     return () => clearInterval(refreshTimer);
   }, [loadWorkshop, refreshKey]);
 

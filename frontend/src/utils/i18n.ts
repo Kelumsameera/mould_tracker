@@ -2,6 +2,7 @@
 // "Mould Room" lives in exactly one key (`mouldRoom`); everything else refers to it.
 import type { Location, MouldStatus, Role, WorkType } from "@/utils/types";
 import type { Permission } from "@/utils/permissions";
+import { listLabel, locationLabel, roleLabel, statusHintText, statusLabel } from "./runtimeConfig.ts"; // explicit path: also loaded by node --test
 
 export type Lang = 'en' | 'si';
 type D = Record<string, unknown>; // error detail values sent by the server
@@ -36,6 +37,46 @@ const en = {
     empty: 'Nothing is waiting in the Isolation Area.', send: 'Send to Isolation Area', moveOn: 'Move on', plannedFor: 'Waiting to go to', notDecided: 'Not decided yet',
     choosePlan: 'Where should it go next? (optional)', setStatus: 'Status (optional)', waiting: (d: string) => `waiting ${d}`, waitingFor: (d: string) => `Waiting ${d}`,
     tooLong: 'Waiting too long', tooLongCount: (n: number) => `${n} waiting too long`, stayed: (d: string) => `stayed ${d} in Isolation`, from: 'Came from'
+  },
+  place: { title: 'Location', empty: 'No moulds here.', maxWait: (h: number) => `Max wait ${h} h` },
+  workflowAdmin: {
+    title: 'Workflow settings', readOnly: 'Read-only view. Only a System Administrator can change the workflow.',
+    tabs: { locations: 'Locations', statuses: 'Statuses', roles: 'Roles', rules: 'Workflow rules', simulator: 'Simulator', versions: 'Versions' } as Record<string, string>,
+    published: (v: number) => `Published version ${v}`, builtIn: 'Built-in defaults (nothing published yet)', draft: (v: number) => `Draft v${v}`,
+    noDraft: 'No draft. Editing starts a draft from the published version; nothing changes until you publish.', editing: 'Editing the draft',
+    saveDraft: 'Save draft', discardDraft: 'Discard draft', publish: 'Publish', reason: 'Reason', reasonHint: 'Required. Saved in the audit log.',
+    problems: 'Fix these before publishing', noProblems: 'No problems found.', unsaved: 'Unsaved changes',
+    add: 'Add', remove: 'Remove', key: 'Key', keyHint: 'Capital letters, numbers and _ (cannot change later)', labelEn: 'English label', labelSi: 'Sinhala label',
+    kind: 'Kind', kinds: { machine: 'Machine (one mould per machine)', rack: 'Rack (zone + rack)', simple: 'Simple place', transit: 'Holding area (max wait)' } as Record<string, string>,
+    active: 'Active', order: 'Order', icon: 'Icon', color: 'Colour', maxWait: 'Max wait (hours)', capacity: 'Capacity',
+    statusChange: 'Allow status changes here', allowNewMoulds: 'Allow new moulds to start here', acceptsStatus: 'A status can be set on arrival',
+    storage: 'Storage room (tool types)', external: 'Outside repair (dispatch details)', permission: 'Permission',
+    allowedAt: 'Allowed at (at rest)', moveTo: 'May move to', anywhere: 'Anywhere',
+    statusFlags: { isGood: 'Good (available)', needsAttention: 'Needs attention', countsAsAvailable: 'Counts as available', limitedRun: 'Running with blocked cavities', resetsShotsWhenGood: 'Resets the shot count when it becomes Good' } as Record<string, string>,
+    hintEn: 'Explanation (English)', hintSi: 'Explanation (Sinhala)',
+    copyFrom: 'Copy permissions from', builtInRole: 'Built-in', customRole: 'Custom', assignable: 'May assign roles', permissions: 'Permissions', lockedRole: 'Locked: always everything',
+    rulesHint: 'Rows: from · Columns: to. Click a cell to edit the rule.', newMould: 'New mould',
+    cell: { off: 'not allowed', direct: 'direct', via: (x: string) => `via ${x}` },
+    allowed: 'Allowed', via: 'Must go through', none: '— none —', requires: 'Requires', groups: 'Permissions (one from each line)', addGroup: 'Add line',
+    requirement: { remarks: 'Remarks', remarksWhenStatus: 'Remarks when a status is set', dispatchDetails: 'Dispatch details', intendedDestination: 'Planned destination' } as Record<string, string>,
+    summary: (from: string, to: string, how: string) => `${from} → ${to}: ${how}`,
+    sim: { mould: 'Mould', toolId: 'Tool ID (optional)', orFake: 'or try a location and status', location: 'Location', status: 'Status', to: 'Destination', draft: 'Use the draft', role: 'As role', run: 'Check',
+      allowed: 'Allowed', blocked: 'Blocked', path: 'Route', required: 'Required fields', permissions: 'Needs one permission from each line' },
+    versions: { version: 'Version', state: 'State', reason: 'Reason', when: 'When', changes: 'Changes', rollback: 'Roll back to this version', exportJson: 'Export JSON', importJson: 'Import JSON',
+      states: { draft: 'Draft', published: 'Published', archived: 'Archived' } as Record<string, string>, noChanges: 'No differences.', added: 'added', removed: 'removed', changed: 'changed' },
+    confirmPublish: (v: number) => `Publish draft v${v}? Everyone gets the new rules on their next refresh.`, confirmRollback: (v: number) => `Roll back to version ${v}? It is published as a new version.`,
+    confirmDiscard: 'Discard the draft? Its changes are lost.', confirmImport: 'Import this file as the draft?', publishedOk: 'Published', savedOk: 'Draft saved'
+  },
+  settingsAdmin: {
+    title: 'Settings', readOnly: 'You can view the settings. Changing them needs the "Manage system settings" permission.',
+    tabs: { texts: 'Texts / Labels', limits: 'Thresholds & limits', lists: 'Lists', dashboards: 'Dashboards' } as Record<string, string>,
+    search: 'Search by key or text', missingSi: 'Only texts without a Sinhala override', modified: 'Modified', reset: 'Reset to default', resetAll: 'Reset all texts',
+    codeDefault: 'Default', english: 'English', sinhala: 'Sinhala', save: 'Save', saved: 'Saved', affects: 'Affects',
+    exportJson: 'Export JSON', importJson: 'Import JSON', confirmSave: (k: string) => `Change "${k}"?`, confirmReset: (k: string) => `Reset "${k}" to its default?`,
+    invalid: 'This value is not valid.', listAdd: 'Add item', listKey: 'Key', moveUp: 'Move up', moveDown: 'Move down', disable: 'Disable', enable: 'Enable',
+    lists: { workTypes: 'Work log types', problemTypes: 'Problem types', outcomes: 'Work outcomes', remarkTemplates: 'Standard remarks', owners: 'Owners', processes: 'Processes', families: 'Product families' } as Record<string, string>,
+    dashboardRole: 'Role', dashboardCards: 'Cards shown, in order', dashboardHint: 'Untick a card to hide it for that role.',
+    cards: { total: 'All moulds', limited: 'Running with blocked cavities', isolationTooLong: 'Waiting too long in Isolation', serviceDue: 'Service due by shots', workThisMonth: 'Work done this month', byLocation: 'By location', byStatus: 'By status' } as Record<string, string>
   },
   catalog: {
     title: 'Catalog', hint: 'Complete totals of moulds and of products for every process. To find where a mould is, use Find.',
@@ -91,7 +132,7 @@ const en = {
     moved: (when: string, who: string) => (who ? `Moved ${when} · ${who}` : `Moved ${when}`),
     items: (n: number) => (n === 1 ? '1 item' : `${n} items`),
     noRack: 'no rack yet',
-    shotsDue: 'Service due'
+    shotsDue: 'Service due', shotsSoon: 'Service soon'
   },
 
   detail: {
@@ -108,7 +149,7 @@ const en = {
   act: {
     outOfService: 'Send out of service', returnToWorkshop: 'Return to Workshop',
     title: 'Move or update',
-    mount: 'Mount on a machine', changeMachine: 'Move to another machine', toFloor: 'To Production Floor',
+    moveTo: (place: string) => `Move to ${place}`, mount: 'Mount on a machine', changeMachine: 'Move to another machine', toFloor: 'To Production Floor',
     toMouldRoom: (mr: string) => `Put in ${mr}`, changeRack: 'Change rack', toWorkshop: 'Send to Workshop',
     changeStatus: 'Change status', recordShots: 'Record shots',
     machine: 'Machine', capable: 'Listed for this mould', other: 'Other machines', occupiedBy: (id: string) => `has ${id}`, free: 'free',
@@ -386,6 +427,46 @@ const si: Dict = {
     choosePlan: 'ඊළඟට යා යුත්තේ කොහෙටද? (අත්‍යවශ්‍ය නැහැ)', setStatus: 'Status (අත්‍යවශ්‍ය නැහැ)', waiting: (d) => `${d} ක් රැඳී සිටී`, waitingFor: (d) => `${d} ක් රැඳී සිටී`,
     tooLong: 'ඕනෑවට වඩා වෙලා රැඳී සිටී', tooLongCount: (n) => `${n}ක් ඕනෑවට වඩා වෙලා රැඳී සිටී`, stayed: (d) => `Isolation එකේ ${d} ක් සිටියා`, from: 'ආවේ'
   },
+  place: { title: 'ස්ථානය', empty: 'මෙහි moulds නැහැ.', maxWait: (h) => `උපරිම රැඳී සිටීම පැය ${h}` },
+  workflowAdmin: {
+    title: 'Workflow සැකසුම්', readOnly: 'බැලීමට පමණයි. Workflow වෙනස් කළ හැක්කේ System Administratorට පමණයි.',
+    tabs: { locations: 'ස්ථාන', statuses: 'Status', roles: 'Roles', rules: 'Workflow නීති', simulator: 'Simulator', versions: 'Versions' },
+    published: (v) => `ප්‍රකාශිත version ${v}`, builtIn: 'මුල් සැකසුම් (තවම ප්‍රකාශ කර නැහැ)', draft: (v) => `කෙටුම්පත v${v}`,
+    noDraft: 'කෙටුම්පතක් නැහැ. වෙනස් කිරීම ප්‍රකාශිත version එකෙන් කෙටුම්පතක් අරඹයි; ප්‍රකාශ කරන තුරු කිසිවක් වෙනස් නොවේ.', editing: 'කෙටුම්පත සංස්කරණය',
+    saveDraft: 'කෙටුම්පත save කරන්න', discardDraft: 'කෙටුම්පත ඉවත් කරන්න', publish: 'ප්‍රකාශ කරන්න', reason: 'හේතුව', reasonHint: 'අනිවාර්යයි. Audit සටහනේ save වෙනවා.',
+    problems: 'ප්‍රකාශ කිරීමට පෙර මේවා නිවැරදි කරන්න', noProblems: 'ගැටලු නැහැ.', unsaved: 'Save නොකළ වෙනස්කම්',
+    add: 'එකතු කරන්න', remove: 'ඉවත් කරන්න', key: 'Key', keyHint: 'ලොකු අකුරු, ඉලක්කම් සහ _ (පසුව වෙනස් කළ නොහැක)', labelEn: 'ඉංග්‍රීසි නම', labelSi: 'සිංහල නම',
+    kind: 'වර්ගය', kinds: { machine: 'Machine (machine එකකට mould එකයි)', rack: 'Rack (zone + rack)', simple: 'සාමාන්‍ය ස්ථානය', transit: 'රැඳවුම් ස්ථානය (උපරිම කාලය)' },
+    active: 'සක්‍රීයයි', order: 'පිළිවෙල', icon: 'Icon', color: 'වර්ණය', maxWait: 'උපරිම රැඳී සිටීම (පැය)', capacity: 'ධාරිතාව',
+    statusChange: 'මෙහිදී status වෙනස් කිරීමට ඉඩ දෙන්න', allowNewMoulds: 'අලුත් moulds මෙතැනින් ආරම්භ කිරීමට ඉඩ දෙන්න', acceptsStatus: 'පැමිණෙන විට status දිය හැක',
+    storage: 'ගබඩා කාමරය (tool වර්ග)', external: 'පිටත repair (යැවූ විස්තර)', permission: 'අවසරය',
+    allowedAt: 'රැඳී සිටිය හැකි තැන්', moveTo: 'යා හැකි තැන්', anywhere: 'ඕනෑම තැනක',
+    statusFlags: { isGood: 'හොඳයි (භාවිතයට ඇත)', needsAttention: 'අවධානය අවශ්‍යයි', countsAsAvailable: 'භාවිතයට ඇති ලෙස ගණන් කරන්න', limitedRun: 'Cavities වසා run වෙනවා', resetsShotsWhenGood: 'හොඳ වූ විට shot ගණන මුල සිට' },
+    hintEn: 'පැහැදිලි කිරීම (ඉංග්‍රීසි)', hintSi: 'පැහැදිලි කිරීම (සිංහල)',
+    copyFrom: 'අවසර පිටපත් කරන්න', builtInRole: 'මුල්', customRole: 'වෙනම', assignable: 'දිය හැකි roles', permissions: 'අවසර', lockedRole: 'අගුළු දමා ඇත: සැමවිටම සියල්ල',
+    rulesHint: 'පේළි: සිට · තීරු: දක්වා. නීතිය වෙනස් කිරීමට cell එක click කරන්න.', newMould: 'අලුත් mould',
+    cell: { off: 'ඉඩ නැත', direct: 'කෙළින්ම', via: (x) => `${x} හරහා` },
+    allowed: 'ඉඩ ඇත', via: 'මුලින් යා යුතු තැන', none: '— නැත —', requires: 'අවශ්‍යයි', groups: 'අවසර (හැම පේළියකින්ම එකක්)', addGroup: 'පේළියක් එකතු කරන්න',
+    requirement: { remarks: 'සටහන්', remarksWhenStatus: 'Status දෙන විට සටහන්', dispatchDetails: 'යැවූ විස්තර', intendedDestination: 'ඊළඟ තැන' },
+    summary: (from, to, how) => `${from} → ${to}: ${how}`,
+    sim: { mould: 'Mould', toolId: 'Tool ID (අත්‍යවශ්‍ය නැහැ)', orFake: 'නැත්නම් ස්ථානයක් සහ status එකක් උත්සාහ කරන්න', location: 'ස්ථානය', status: 'Status', to: 'ගමනාන්තය', draft: 'කෙටුම්පත භාවිත කරන්න', role: 'Role ලෙස', run: 'පරීක්ෂා කරන්න',
+      allowed: 'ඉඩ ඇත', blocked: 'අවහිරයි', path: 'මාර්ගය', required: 'අවශ්‍ය තොරතුරු', permissions: 'හැම පේළියකින්ම එක අවසරයක් අවශ්‍යයි' },
+    versions: { version: 'Version', state: 'තත්ත්වය', reason: 'හේතුව', when: 'කවදාද', changes: 'වෙනස්කම්', rollback: 'මෙම version එකට ආපසු යන්න', exportJson: 'JSON export', importJson: 'JSON import',
+      states: { draft: 'කෙටුම්පත', published: 'ප්‍රකාශිත', archived: 'පැරණි' }, noChanges: 'වෙනස්කම් නැහැ.', added: 'එකතු කළා', removed: 'ඉවත් කළා', changed: 'වෙනස් කළා' },
+    confirmPublish: (v) => `කෙටුම්පත v${v} ප්‍රකාශ කරන්නද? ඊළඟ refresh එකේදී හැමෝටම අලුත් නීති ලැබෙනවා.`, confirmRollback: (v) => `Version ${v} වෙත ආපසු යන්නද? එය අලුත් version එකක් ලෙස ප්‍රකාශ වෙනවා.`,
+    confirmDiscard: 'කෙටුම්පත ඉවත් කරන්නද? එහි වෙනස්කම් නැති වෙනවා.', confirmImport: 'මෙම file එක කෙටුම්පත ලෙස import කරන්නද?', publishedOk: 'ප්‍රකාශ කළා', savedOk: 'කෙටුම්පත save කළා'
+  },
+  settingsAdmin: {
+    title: 'සැකසුම්', readOnly: 'සැකසුම් බැලිය හැක. වෙනස් කිරීමට "System settings වෙනස් කරන්න" අවසරය අවශ්‍යයි.',
+    tabs: { texts: 'පෙළ / නම්', limits: 'සීමා', lists: 'ලැයිස්තු', dashboards: 'Dashboards' },
+    search: 'Key හෝ පෙළ අනුව සොයන්න', missingSi: 'සිංහල override නැති ඒවා පමණක්', modified: 'වෙනස් කළා', reset: 'මුල් අගයට', resetAll: 'සියලු පෙළ මුල් අගයට',
+    codeDefault: 'මුල් අගය', english: 'ඉංග්‍රීසි', sinhala: 'සිංහල', save: 'Save කරන්න', saved: 'Save කළා', affects: 'බලපාන තැන්',
+    exportJson: 'JSON export', importJson: 'JSON import', confirmSave: (k) => `"${k}" වෙනස් කරන්නද?`, confirmReset: (k) => `"${k}" මුල් අගයට ගන්නද?`,
+    invalid: 'මෙම අගය වලංගු නැහැ.', listAdd: 'එකතු කරන්න', listKey: 'Key', moveUp: 'ඉහළට', moveDown: 'පහළට', disable: 'අක්‍රීය කරන්න', enable: 'සක්‍රීය කරන්න',
+    lists: { workTypes: 'වැඩ වර්ග', problemTypes: 'ගැටලු වර්ග', outcomes: 'වැඩ ප්‍රතිඵල', remarkTemplates: 'සම්මත සටහන්', owners: 'අයිතිකරුවන්', processes: 'Processes', families: 'නිෂ්පාදන වර්ග' },
+    dashboardRole: 'Role', dashboardCards: 'පෙන්වන cards, පිළිවෙලට', dashboardHint: 'එම role එකට card එකක් සඟවන්න tick එක ඉවත් කරන්න.',
+    cards: { total: 'සියලු moulds', limited: 'Cavities වසා run වෙන', isolationTooLong: 'Isolation එකේ ඕනෑවට වඩා රැඳී සිටින', serviceDue: 'Shots අනුව service කළ යුතු', workThisMonth: 'මේ මාසයේ කළ වැඩ', byLocation: 'තැන අනුව', byStatus: 'Status අනුව' }
+  },
   catalog: {
     title: 'සමස්ත ලැයිස්තුව', hint: 'හැම process එකකම moulds සහ නිෂ්පාදනවල සම්පූර්ණ ගණන්. Mould එකක් තියෙන තැන සොයන්න Find භාවිත කරන්න.',
     all: 'සියල්ල', processes: { INJECTION: 'Injection', EXTRUSION: 'Extrusion' }, tabs: { moulds: 'Moulds', products: 'නිෂ්පාදන' },
@@ -440,7 +521,7 @@ const si: Dict = {
     moved: (when, who) => (who ? `${when} · ${who} ගෙනගියා` : `${when} ගෙනගියා`),
     items: (n) => `items ${n}`,
     noRack: 'තවම rack නෑ',
-    shotsDue: 'Service කාලයයි'
+    shotsDue: 'Service කාලයයි', shotsSoon: 'ඉක්මනින් service'
   },
 
   detail: {
@@ -457,6 +538,7 @@ const si: Dict = {
   act: {
     outOfService: 'Send out of service', returnToWorkshop: 'Return to Workshop',
     title: 'ගෙනයන්න හෝ යාවත්කාලීන කරන්න',
+    moveTo: (place) => `${place} වෙත ගෙනයන්න`,
     mount: 'මැෂිමකට දාන්න', changeMachine: 'වෙනත් මැෂිමකට දාන්න', toFloor: 'Production Floor එකට',
     toMouldRoom: (mr) => `${mr}ට දාන්න`, changeRack: 'Rack එක වෙනස් කරන්න', toWorkshop: 'Workshop එකට යවන්න',
     changeStatus: 'තත්ත්වය වෙනස් කරන්න', recordShots: 'Shots සටහන් කරන්න',
@@ -705,4 +787,53 @@ const si: Dict = {
 export const I18N: Record<Lang, Dict> = { en, si };
 
 // Location name; the Mould Room name always comes from its single key.
-export const locationName = (loc: Location, translations: Dict) => (loc === 'MOULD_ROOM' ? translations.mouldRoom : translations.loc[loc]);
+// Location / status names: the workflow config label (editable), else the built-in text.
+export const locationName = (loc: Location, translations: Dict) => locationLabel(loc) ?? (loc === 'MOULD_ROOM' ? translations.mouldRoom : translations.loc[loc as Exclude<Location, 'MOULD_ROOM'>]) ?? String(loc);
+export const statusName = (status: MouldStatus, translations: Dict) => statusLabel(status) ?? translations.status[status] ?? String(status);
+export const statusHint = (status: MouldStatus, translations: Dict) => statusHintText(status) ?? translations.statusHint[status];
+export const roleName = (role: Role, translations: Dict) => roleLabel(role) ?? translations.roles[role] ?? String(role);
+
+// Text overrides from the "Texts / Labels" settings ({ "search.placeholder": "…" }) on top of the code defaults.
+// Only plain string entries can be overridden; functions (texts with numbers or names) keep their code version.
+export function applyTextOverrides(dict: Dict, overrides: Record<string, string> | undefined): Dict {
+  if (!overrides || !Object.keys(overrides).length) return dict;
+  const copy = structuredClone(stripFunctions(dict)) as Record<string, unknown>;
+  restoreFunctions(copy, dict as unknown as Record<string, unknown>);
+  for (const [path, value] of Object.entries(overrides)) {
+    const keys = path.split(".");
+    let node = copy as Record<string, unknown>;
+    for (const k of keys.slice(0, -1)) {
+      if (typeof node[k] !== "object" || node[k] === null) { node = {}; break; }
+      node = node[k] as Record<string, unknown>;
+    }
+    const last = keys[keys.length - 1];
+    if (typeof node[last] === "string" && typeof value === "string" && value.trim()) node[last] = value;
+  }
+  return copy as unknown as Dict;
+}
+function stripFunctions(v: unknown): unknown {
+  if (typeof v === "function") return null;
+  if (Array.isArray(v)) return v.map(stripFunctions);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, stripFunctions(x)]));
+  return v;
+}
+function restoreFunctions(target: Record<string, unknown>, source: Record<string, unknown>) {
+  for (const [k, v] of Object.entries(source)) {
+    if (typeof v === "function") target[k] = v;
+    else if (v && typeof v === "object" && !Array.isArray(v)) restoreFunctions(target[k] as Record<string, unknown>, v as Record<string, unknown>);
+  }
+}
+// Every overridable text: [key, value] for plain strings, for the Texts / Labels screen.
+export function textEntries(dict: Dict): [string, string][] {
+  const out: [string, string][] = [];
+  const walk = (v: unknown, path: string) => {
+    if (typeof v === "string") out.push([path, v]);
+    else if (v && typeof v === "object" && !Array.isArray(v)) for (const [k, x] of Object.entries(v)) walk(x, path ? path + "." + k : k);
+  };
+  walk(dict, "");
+  return out;
+}
+
+// Work types / outcomes: the label from Settings > Lists, else the built-in text.
+export const workTypeName = (type: string, translations: Dict) => listLabel("workTypes", type) ?? (translations.work.types as Record<string, string>)[type] ?? type;
+export const outcomeName = (outcome: string, translations: Dict) => listLabel("outcomes", outcome) ?? (translations.work.outcomes as Record<string, string>)[outcome] ?? outcome;

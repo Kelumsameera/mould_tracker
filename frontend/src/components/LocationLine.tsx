@@ -1,8 +1,8 @@
 "use client";
 
-import Icon, { locationIcon } from "./Icon";
+import Icon, { iconForLocation } from "./Icon";
 
-import { locationName, type Dict } from "@/utils/i18n";
+import { locationName, type Dict, statusName } from "@/utils/i18n";
 
 import type { Mould } from "@/utils/types";
 
@@ -33,7 +33,7 @@ export default function LocationLine({ mould, translations, big = false, compact
   return (
     <div className={"flex items-center gap-1.5 flex-wrap font-black uppercase tracking-[.2px] leading-[1.3] si:normal-case si:tracking-normal " + size + " " + tone.text}>
       <span className={"inline-flex items-center justify-center " + icon + " " + tone.icon}>
-        <Icon name={locationIcon[mould.location]} size={big ? 22 : 16} />
+        <Icon name={iconForLocation(mould.location)} size={big ? 22 : 16} />
       </span>
       <span>{locationName(mould.location, translations)}</span>
       {mould.location === "MOULD_ROOM" &&
@@ -46,7 +46,7 @@ export default function LocationLine({ mould, translations, big = false, compact
           <span className={softChip}>{translations.card.noRack}</span>
         ))}
       {mould.location === "MACHINE" && mould.machine && <span className={chip + " font-black"}>{mould.machine.code}</span>}
-      {mould.location === "WORKSHOP" && mould.status !== "GOOD" && <span className={softChip}>{translations.status[mould.status]}</span>}
+      {mould.location === "WORKSHOP" && mould.status !== "GOOD" && <span className={softChip}>{statusName(mould.status, translations)}</span>}
     </div>
   );
 }

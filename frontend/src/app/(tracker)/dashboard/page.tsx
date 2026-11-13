@@ -1,11 +1,12 @@
 "use client";
+import { locationKeys, setting, statusKeys } from "@/utils/runtimeConfig";
 import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/components/AppLayout";
-import Icon, { locationIcon, type IconName } from "@/components/Icon";
+import Icon, { iconForLocation, type IconName } from "@/components/Icon";
 import MouldCard from "@/components/MouldCard";
 import SkeletonCards from "@/components/SkeletonCards";
 import { api } from "@/utils/api";
-import { locationName } from "@/utils/i18n";
+import { locationName, statusName } from "@/utils/i18n";
 import { can } from "@/utils/permissions";
 import { CONDITIONAL_STATUS, LOCATIONS, STATUSES, type Mould, type Stats } from "@/utils/types";
 
@@ -40,6 +41,9 @@ export default function DashboardPage() {
     return () => clearInterval(timer);
   }, [load, refreshKey]);
 
+  // Cards and their order per role: Settings > Dashboards (dashboard.cards); a role without a layout sees all.
+  const layout = setting<Record<string, string[]>>("dashboard.cards", {});
+  const cards = (user && layout[user.role]) || ["total", "limited", "isolationTooLong", "serviceDue", "workThisMonth", "byLocation", "byStatus"];
   const tile = (icon: IconName, label: string, value: number | string, tone = "") => (
     <div className={"rounded-lg border border-solid border-line bg-surface p-4 flex flex-col gap-1 " + tone}>
       <span className="text-sm font-bold text-ink-soft flex items-center gap-1.5"><Icon name={icon} size={16} />{label}</span>
@@ -62,37 +66,40 @@ export default function DashboardPage() {
       {!stats ? <SkeletonCards count={4} label={t.loading} /> : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {tile("mould", t.dash.total, stats.total)}
-            {tile("attention", t.dashboard.limited, stats.runningWithBlockedCavities ?? 0, (stats.runningWithBlockedCavities ?? 0) ? "bg-warn-bg" : "")}
-            {tile("clock", t.dashboard.isolationTooLong, stats.isolationTooLong ?? 0, (stats.isolationTooLong ?? 0) ? "bg-warn-bg" : "")}
-            {tile("shots", t.dashboard.serviceDue, due.length, due.length ? "bg-warn-bg" : "")}
-            {workCount !== null && tile("worklog", t.dashboard.workThisMonth, t.dashboard.entries(workCount))}
+            {cards.map((card) => {
+              if (card === "total") return <div key={card}>{tile("mould", t.dash.total, stats.total)}</div>;
+              if (card === "limited") return <div key={card}>{tile("attention", t.dashboard.limited, stats.runningWithBlockedCavities ?? 0, (stats.runningWithBlockedCavities ?? 0) ? "bg-warn-bg" : "")}</div>;
+              if (card === "isolationTooLong") return <div key={card}>{tile("clock", t.dashboard.isolationTooLong, stats.isolationTooLong ?? 0, (stats.isolationTooLong ?? 0) ? "bg-warn-bg" : "")}</div>;
+              if (card === "serviceDue") return <div key={card}>{tile("shots", t.dashboard.serviceDue, due.length, due.length ? "bg-warn-bg" : "")}</div>;
+              if (card === "workThisMonth" && workCount !== null) return <div key={card}>{tile("worklog", t.dashboard.workThisMonth, t.dashboard.entries(workCount))}</div>;
+              return null;
+            })}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 mt-6">
-            <section className="rounded-lg border border-solid border-line bg-surface p-4">
+            {cards.includes("byLocation") && <section className="rounded-lg border border-solid border-line bg-surface p-4">
               <h3 className="text-md font-extrabold mb-2">{t.dashboard.byLocation}</h3>
               <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
-                {LOCATIONS.filter((l) => stats.byLocation[l]).map((l) => (
+                {locationKeys(LOCATIONS).filter((l) => stats.byLocation[l]).map((l) => (
                   <li key={l} className="flex items-center gap-2 text-sm">
-                    <Icon name={locationIcon[l]} size={16} /><span className="flex-1">{locationName(l, t)}</span><b className="tabular-nums">{stats.byLocation[l]}</b>
+                    <Icon name={iconForLocation(l)} size={16} /><span className="flex-1">{locationName(l, t)}</span><b className="tabular-nums">{stats.byLocation[l]}</b>
                   </li>
                 ))}
               </ul>
-            </section>
-            <section className="rounded-lg border border-solid border-line bg-surface p-4">
+            </section>}
+            {cards.includes("byStatus") && <section className="rounded-lg border border-solid border-line bg-surface p-4">
               <h3 className="text-md font-extrabold mb-2">{t.dashboard.byStatus}</h3>
               <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
-                {[...STATUSES, CONDITIONAL_STATUS].filter((s) => stats.byStatus[s]).map((s) => (
-                  <li key={s} className="flex items-center gap-2 text-sm"><span className="flex-1">{t.status[s]}</span><b className="tabular-nums">{stats.byStatus[s]}</b></li>
+                {statusKeys([...STATUSES, CONDITIONAL_STATUS]).filter((s) => stats.byStatus[s]).map((s) => (
+                  <li key={s} className="flex items-center gap-2 text-sm"><span className="flex-1">{statusName(s, t)}</span><b className="tabular-nums">{stats.byStatus[s]}</b></li>
                 ))}
               </ul>
-            </section>
+            </section>}
           </div>
 
-          {section(t.dashboard.limited, limited)}
-          {section(t.dashboard.isolationTooLong, waiting)}
-          {section(t.dashboard.serviceDue, due)}
+          {cards.includes("limited") && section(t.dashboard.limited, limited)}
+          {cards.includes("isolationTooLong") && section(t.dashboard.isolationTooLong, waiting)}
+          {cards.includes("serviceDue") && section(t.dashboard.serviceDue, due)}
         </>
       )}
     </main>

@@ -1,4 +1,5 @@
 "use client";
+import { activeList } from "@/utils/runtimeConfig";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/components/ConfirmHost";
@@ -91,7 +92,9 @@ export default function CavityForm({ mould, translations: t, onDone, onStale, on
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
         <div>
           <label className={label} htmlFor="cav-type">{t.cavity.problemType}</label>
-          <input id="cav-type" className={field} maxLength={100} value={problemType} disabled={busy} onChange={(e) => setProblemType(e.target.value)} />
+          <input id="cav-type" className={field} maxLength={100} value={problemType} disabled={busy} onChange={(e) => setProblemType(e.target.value)} list="cav-problem-types" />
+          {/* Problem types: Settings > Lists */}
+          <datalist id="cav-problem-types">{activeList("problemTypes").map((x) => <option key={x.key} value={x.labels.en}>{x.labels.si}</option>)}</datalist>
         </div>
         <div>
           <label className={label} htmlFor="cav-fix">{t.cavity.expectedFix}</label>

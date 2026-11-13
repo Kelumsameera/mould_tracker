@@ -1,5 +1,5 @@
 import { ApiError } from "@/utils/api";
-import { locationName, type Dict, type Lang } from "@/utils/i18n";
+import { locationName, type Dict, type Lang, statusName } from "@/utils/i18n";
 import type { Location, Mould, Movement, MouldStatus } from "@/utils/types";
 
 // Build the location text shown on mould cards.
@@ -20,7 +20,7 @@ export function locationLine(
     return `${placeName} ${machineCode}`.trim();
   }
   if (mould.location === 'WORKSHOP' && mould.status !== 'GOOD') {
-    return `${placeName} – ${text.status[mould.status]}`;
+    return `${placeName} – ${statusName(mould.status, text)}`;
   }
   if (mould.location === 'ISOLATION' && mould.isolation) {
     // ISOLATION AREA · waiting 3h → MOULD ROOM
@@ -77,7 +77,7 @@ export function movementText(movement: Movement, text: Dict): string {
       movement.fromStatus !== movement.toStatus;
 
     if (hasStatusChange && movement.toStatus) {
-      return `${description} (${text.status[movement.toStatus]})`;
+      return `${description} (${statusName(movement.toStatus, text)})`;
     }
     return description;
   }
@@ -86,10 +86,10 @@ export function movementText(movement: Movement, text: Dict): string {
     let previousStatus = '—';
     let nextStatus = '—';
     if (movement.fromStatus) {
-      previousStatus = text.status[movement.fromStatus];
+      previousStatus = statusName(movement.fromStatus, text);
     }
     if (movement.toStatus) {
-      nextStatus = text.status[movement.toStatus];
+      nextStatus = statusName(movement.toStatus, text);
     }
     return text.hist.status(previousStatus, nextStatus);
   }

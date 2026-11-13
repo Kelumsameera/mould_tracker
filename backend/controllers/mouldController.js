@@ -20,7 +20,7 @@ import { displayStatus, mouldStateError, statusQuery, toolTypeFilter } from "../
 const NUMERIC_SORT = { locale: "en", numericOrdering: true };
 const SERVICE_STATUSES = ["NEEDS_SERVICE", "NEEDS_REPAIR", "IN_SERVICE", "IN_REPAIR"];
 import { MOULD_FIELDS, planMouldEdit } from "../lib/mouldEdit.js";
-import { ISOLATION_MAX_WAIT_HOURS } from "../lib/flowConfig.js";
+import { isolationMaxWaitHours } from "../lib/flowConfig.js";
 import { buildDowntime, planCavities, totalCavities } from "../lib/cavities.js";
 import { searchMoulds } from "../lib/mouldSearch.js";
 import WorkLog from "../models/WorkLog.js";
@@ -124,7 +124,7 @@ export async function listMoulds(req, res) {
 // GET /api/moulds/stats - dashboard counts.
 export async function mouldStats(req, res) {
   const live = { deletedAt: null, ...toolTypeFilter(req.validQuery?.toolType) };
-  const tooLongSince = new Date(Date.now() - ISOLATION_MAX_WAIT_HOURS * 3_600_000);
+  const tooLongSince = new Date(Date.now() - isolationMaxWaitHours() * 3_600_000);
   const [byLocation, byStatus, awaitingRack, serviceDue, problems, isolationTooLong, limitedRun] = await Promise.all([
     Mould.aggregate([{ $match: live }, { $group: { _id: "$location", n: { $sum: 1 } } }]),
     Mould.aggregate([{ $match: live }, { $group: { _id: "$status", n: { $sum: 1 } } }]),
@@ -149,7 +149,7 @@ export async function mouldStats(req, res) {
       problemsReported: problems,
       isolation: toObj(byLocation).ISOLATION || 0,
       isolationTooLong,
-      isolationMaxWaitHours: ISOLATION_MAX_WAIT_HOURS,
+      isolationMaxWaitHours: isolationMaxWaitHours(),
       runningWithBlockedCavities: limitedRun
     }
   });

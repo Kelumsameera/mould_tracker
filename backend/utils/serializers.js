@@ -2,6 +2,7 @@ import { normalizeOverrides, overridesActive, permissionsFor, rolePermissionsFor
 import { isServiceDue } from "../lib/workflow.js";
 import { isolationLevel, limitedRunLevel } from "../lib/flowConfig.js";
 import { displayStatus } from "../lib/mouldState.js";
+import { setting } from "../lib/settings.js";
 
 // Turns Mongoose documents into the flat JSON shape the frontend uses.
 const plain = (d) => (d && typeof d.toObject === "function" ? d.toObject() : d);
@@ -64,6 +65,8 @@ export function mouldDTO(m, refs = {}, summary = {}) {
     shotsToService: o.shotsToService ?? null,
     totalShots: o.totalShots ?? 0,
     serviceDue: isServiceDue(o),
+    // "Service soon": shots reached the warning level of Settings (limits.shotsWarnPercent) but not the limit yet.
+    serviceSoon: !isServiceDue(o) && Number(o.shotsToService) > 0 && Number(o.totalShots || 0) >= (Number(o.shotsToService) * (setting("limits.shotsWarnPercent") ?? 90)) / 100,
     lastServicedAt: o.lastServicedAt ?? null,
     notes: o.notes || "",
     remarks: o.remarks || "",

@@ -44,7 +44,7 @@ export default function AuditPage() {
   const entityTypes = Object.keys(translations.audit.types) as (keyof Dict["audit"]["types"])[];
   // UI and inline Tailwind styles
   return (
-    <main className="pt-5 pb-0 pr-[calc(var(--s4)+var(--safe-r))] pl-[calc(var(--s4)+var(--safe-l))] md:pt-6 md:px-6 xl:pt-8 xl:px-8 max-w-[1100px]">
+    <main className="pt-5 pb-0 pr-[calc(var(--s4)+var(--safe-r))] pl-[calc(var(--s4)+var(--safe-l))] md:pt-6 md:px-6 xl:pt-8 xl:px-8 max-w-275">
       <div className="flex gap-2 overflow-x-auto p-[2px_2px_var(--s1)] mb-3 scrollbar-none max-w-full [&::-webkit-scrollbar]:hidden">
         <button
           className={

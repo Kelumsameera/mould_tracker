@@ -2,7 +2,8 @@
 // "repair status -> Workshop". Pure functions; the controller saves Mould + Movement + WorkLog + AuditLog.
 import { fail } from "../utils/ApiError.js";
 import { can } from "./permissions.js";
-import { LIMITED_RUN_LOCATIONS, LIMITED_RUN_STATUS } from "./flowConfig.js";
+import { LIMITED_RUN_STATUS } from "./flowConfig.js";
+import { limitedRunLocations } from "./mouldState.js";
 import { personSnapshot, placeSnapshot } from "./workLog.js";
 import { displayStatus } from "./mouldState.js";
 
@@ -29,7 +30,7 @@ export function planCavities({ mould, user, blocked, total, reason, problemType 
   const restoring = next.length === 0;
   const atWorkshop = mould.location === "WORKSHOP";
   // Blocking (or changing the set) only where a mould can keep running; the Workshop keeps its list until restored.
-  if (!restoring && !LIMITED_RUN_LOCATIONS.includes(mould.location) && !(atWorkshop && current.length)) {
+  if (!restoring && !limitedRunLocations().includes(mould.location) && !(atWorkshop && current.length)) {
     fail(409, "LIMITED_RUN_LOCATION", "Cavities can only be blocked on a machine, the Production Floor or in the Isolation Area");
   }
   if (!restoring && !text(reason)) fail(400, "REASON_REQUIRED", "Give the reason for running with blocked cavities");

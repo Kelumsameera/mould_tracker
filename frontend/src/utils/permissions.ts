@@ -1,6 +1,7 @@
 // Mirrors backend/lib/permissions.js. The server decides; /api/auth/me returns the caller's EFFECTIVE
 // permission list (role matrix + personal grants - denies) and the UI only uses it to show or hide controls.
-import type { User } from "@/utils/types";
+import type { Mould as MouldT, User } from "@/utils/types";
+import { activeLocations, activeStatuses, configLocation, configStatus, transitionOf } from "./runtimeConfig.ts";
 import type { PageName } from "./helpers";
 
 export const ROLES = [
@@ -58,6 +59,9 @@ export function canVisitPage(user: User, page: PageName) {
   if (["find", "extrusion", "workshop", "isolation", "dashboard"].includes(page)) return can(user, "mould.view");
   if (page === "racks") return can(user, "rack.view");
   if (page === "catalog") return can(user, "catalog.view");
+  if (page === "place") return can(user, "mould.view");
+  if (page === "workflow") return can(user, "config.manage" as Permission) || can(user, "users.manage") || can(user, "worklog.report");
+  if (page === "settings") return can(user, "settings.manage") || can(user, "config.manage" as Permission);
   if (page === "machines") return can(user, "mould.edit");
   if (page === "audit") return can(user, "audit.view");
   if (page === "workReport") return can(user, "worklog.report");
@@ -85,7 +89,7 @@ export function routeAllowed(from: string, to: string) {
   return from === to || from === "ISOLATION";
 }
 // Mirrors movePermissionGroups in backend/lib/workflow.js: one permission from every group is needed.
-export function canMoveTo(user: User | null | undefined, from: string, to: string) {
+function builtInCanMoveTo(user: User | null | undefined, from: string, to: string) {
   if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return from !== to && can(user, "move.outOfService");
   if (!routeAllowed(from, to)) return false;
   const groups: Permission[][] = [];
@@ -96,3 +100,35 @@ export function canMoveTo(user: User | null | undefined, from: string, to: strin
   if (to === "PRODUCTION_FLOOR" && !STORAGE.includes(from)) groups.push(from === "WORKSHOP" ? ["move.floor", "move.workshop"] : ["move.floor"]);
   return groups.every((g) => g.some((p) => can(user, p)));
 }
+
+// ---- Workflow config (GET /api/config): the same transitions the server enforces ----
+// canMoveTo above is the built-in fallback; once the config is loaded these decide.
+
+const legacyCanMoveTo = builtInCanMoveTo;
+export function canMoveTo(user: User | null | undefined, from: string, to: string) {
+  if (!activeLocations()) return legacyCanMoveTo(user, from, to);
+  const t = transitionOf(from, to);
+  if (!t || t.allowed === false || t.via) return false;
+  const perms = user?.permissions as string[] | undefined;
+  return (t.permissions || []).every((g) => g.some((p) => perms?.includes(p)));
+}
+// Places a mould could go next, before permission checks: active, right tool type, allowed for its status.
+export function moveTargets(mould: Pick<MouldT, "location" | "status" | "toolType">) {
+  const list = activeLocations();
+  if (!list) return [];
+  const status = configStatus(mould.status);
+  return list.filter((loc) => {
+    if (loc.storage && !(loc.toolTypes || []).includes(mould.toolType ?? "INJECTION_MOULD")) return false;
+    const same = loc.key === mould.location;
+    if (same && loc.kind !== "machine" && loc.kind !== "rack") return false; // a status change at the same place is its own action
+    const allowed = status?.moveTo === "any" || (Array.isArray(status?.moveTo) && status.moveTo.includes(loc.key)) || Boolean(loc.acceptsStatus);
+    return allowed || !status;
+  });
+}
+// Where "Run with blocked cavities" is possible (the limited-run status's allowed locations).
+export function limitedRunPlaces() {
+  const s = (activeStatuses() || []).find((x) => x.limitedRun);
+  if (!s) return ["MACHINE", "PRODUCTION_FLOOR", "ISOLATION"];
+  return s.allowedLocations === "any" ? (activeLocations() || []).map((l) => l.key) : s.allowedLocations;
+}
+export const locationKind = (key: string) => configLocation(key)?.kind ?? ({ MACHINE: "machine", MOULD_ROOM: "rack", ISOLATION: "transit" } as Record<string, string>)[key] ?? "simple";

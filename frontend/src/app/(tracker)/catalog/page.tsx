@@ -9,7 +9,7 @@ import SkeletonCards from "@/components/SkeletonCards";
 import StatusBadge from "@/components/StatusBadge";
 import { api, assetUrl } from "@/utils/api";
 import { errorText } from "@/utils/format";
-import { locationName } from "@/utils/i18n";
+import { locationName, statusName } from "@/utils/i18n";
 import { can } from "@/utils/permissions";
 import type { CatalogFilter, CatalogList, CatalogMould, CatalogProduct, CatalogProductDetail, CatalogSummary, CatalogTotals, Process } from "@/utils/types";
 
@@ -83,7 +83,7 @@ export default function CatalogPage() {
   }
 
   const chipLabel = (key: string, value: string | null, label?: string | null) => {
-    if (key === "status" && value) return t.status[value as keyof typeof t.status] ?? value;
+    if (key === "status" && value) return statusName(value as keyof typeof t.status, t) ?? value;
     if (key === "process" && value) return c.processes[value] ?? value;
     if (key === "owner" && (value === null || value === "NONE")) return c.noOwner;
     return label ?? value ?? "—";

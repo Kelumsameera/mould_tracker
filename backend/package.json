@@ -13,6 +13,7 @@
     "migrate:permissions": "node scripts/migrate-permissions.mjs",
     "migrate:conditional": "node scripts/migrate-conditional-status.mjs",
     "backfill:search": "node scripts/backfill-search-keys.mjs",
+    "seed:workflow": "node scripts/seed-workflow-config.mjs",
     "migrate:supabase": "node migrateSupabase.js"
   },
   "dependencies": {

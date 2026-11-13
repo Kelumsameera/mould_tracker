@@ -43,7 +43,7 @@ export interface Mould {
   toolType: ToolType;
   id: string; toolId: string; toolSetCount: string; size: string; owner: string | null; capableMachines: string[];
   status: MouldStatus; location: Location; machine: MachineRef | null; rack: RackRef | null; awaitingRack: boolean;
-  shotsToService: number | null; totalShots: number; serviceDue: boolean; lastServicedAt: string | null;
+  shotsToService: number | null; totalShots: number; serviceDue: boolean; serviceSoon?: boolean; lastServicedAt: string | null;
   notes: string; remarks: string; lastMovedAt: string | null; lastMovedBy: { id: string | null; name: string } | null;
   lastWork: { type: WorkType; names: string[]; doneAt: string } | null;
   openProblem: { by: { name: string; role: Role | null }; at: string; text: string } | null;

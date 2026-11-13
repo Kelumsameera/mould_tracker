@@ -1,4 +1,5 @@
 "use client";
+import { refreshMs } from "@/utils/runtimeConfig";
 import toast from "react-hot-toast";
 import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/components/AppLayout";
@@ -26,7 +27,7 @@ export default function IsolationPage() {
   }, [t]);
   useEffect(() => {
     load();
-    const timer = setInterval(() => document.visibilityState === "visible" && load(), 10_000);
+    const timer = setInterval(() => document.visibilityState === "visible" && load(), refreshMs());
     return () => clearInterval(timer);
   }, [load, refreshKey]);
 

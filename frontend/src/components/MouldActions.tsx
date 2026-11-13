@@ -1,13 +1,15 @@
 "use client";
 
+import RemarkTemplates from "@/components/RemarkTemplates";
 import { useConfirm } from "@/components/ConfirmHost";
 import Icon from "@/components/Icon";
 import RackPicker from "@/components/RackPicker";
 import { api, ApiError } from "@/utils/api";
 import toast from "react-hot-toast";
 import { errorText, locationLine } from "@/utils/format";
-import { locationName, type Dict } from "@/utils/i18n";
-import { can } from "@/utils/permissions";
+import { locationName, type Dict, statusName } from "@/utils/i18n";
+import { can, locationKind } from "@/utils/permissions";
+import { activeStatuses, configLocation, configStatus, currentConfig, transitionOf } from "@/utils/runtimeConfig";
 import { CONDITIONAL_STATUS, INTENDED_DESTINATIONS, STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
 import { useEffect, useState } from "react";
 
@@ -52,11 +54,11 @@ export default function MouldActions({
   useEffect(() => {
     async function loadDestinations() {
       try {
-        if (action === "MACHINE") {
+        if (locationKind(action) === "machine") {
           const response = await api.machines();
           setMachines(response.machines);
         }
-        if (action === "MOULD_ROOM") {
+        if (locationKind(action) === "rack") {
           const response = await api.racks();
           setZones(response.zones);
         }
@@ -67,22 +69,35 @@ export default function MouldActions({
     loadDestinations();
   }, [action, translations]);
 
+  // What kind of place the destination is (workflow config; built-in fallback for the original places).
+  const dest = configLocation(action);
+  const kind = locationKind(action);
+  const isMachine = kind === "machine";
+  const isRack = kind === "rack";
+  const isTransit = kind === "transit";
+  const isExternal = dest ? Boolean(dest.external) : action === "OUT_OF_SERVICE";
+  const fromExternal = configLocation(mould.location) ? Boolean(configLocation(mould.location)?.external) : mould.location === "OUT_OF_SERVICE";
+  const isStatusPlace = dest ? Boolean(dest.acceptsStatus) && !isTransit : action === "WORKSHOP";
+  const transitionNeedsRemarks = dest ? (transitionOf(mould.location, action)?.requires || []).includes("remarks") : action === "WORKSHOP" || action === "OUT_OF_SERVICE";
+  const statusChoices = (activeStatuses()?.map((x) => x.key as MouldStatus) ?? STATUSES).filter((x) => !configStatus(x)?.limitedRun);
+  const destinations = (currentConfig()?.intendedDestinations as Location[] | undefined) ?? INTENDED_DESTINATIONS;
   const machine = machines.find((x) => x.id === machineId);
   const needsMachineReason = Boolean(machine && !mould.capableMachines.includes(machine.code));
   const needsZoneReason = Boolean(rack && mould.owner && mould.owner !== rack.zone);
-  const needsRemarks = action === "WORKSHOP" || action === "STATUS" || action === "OUT_OF_SERVICE" || mould.location === "OUT_OF_SERVICE" || (action === "ISOLATION" && Boolean(status) && status !== "GOOD");
+  // Fields follow the destination kind and the transition rules of the workflow config.
+  const needsRemarks = action === "STATUS" || transitionNeedsRemarks || fromExternal || (isTransit && Boolean(status) && status !== "GOOD");
   const canOverride = can(user, "machines.override");
 
   // Where the mould would go, in the same words as the location line ("Mould Room · FLK · A3").
   // Button and form actions
   function getDestinationLabel() {
-    if (action === "MACHINE") return `${locationName("MACHINE", translations)} ${machine?.code ?? ""}`;
-    if (action === "MOULD_ROOM") {
+    if (isMachine) return `${locationName(action as Location, translations)} ${machine?.code ?? ""}`;
+    if (isRack) {
       const code = zones.find((z) => z.code === rack?.zone)?.racks.find((r) => r.id === rack?.id)?.code ?? "";
-      return `${translations.mouldRoom} · ${rack?.zone} · ${code}`;
+      return `${locationName(action as Location, translations)} · ${rack?.zone} · ${code}`;
     }
-    if (action === "WORKSHOP") return locationName("WORKSHOP", translations) + (status ? ` – ${translations.status[status]}` : "");
-    if (action === "ISOLATION") return locationName("ISOLATION", translations) + (plan ? ` → ${locationName(plan, translations)}` : "") + (status ? ` – ${translations.status[status]}` : "");
+    if (isStatusPlace) return locationName(action as Location, translations) + (status ? ` – ${statusName(status, translations)}` : "");
+    if (isTransit) return locationName(action as Location, translations) + (plan ? ` → ${locationName(plan, translations)}` : "") + (status ? ` – ${statusName(status, translations)}` : "");
     return locationName(action as Location, translations);
   }
 
@@ -93,7 +108,7 @@ export default function MouldActions({
       if (
         !(await confirm({
           title: translations.confirm.statusTitle,
-          message: translations.confirm.status(mould.toolId, translations.status[mould.status], translations.status[status as MouldStatus]),
+          message: translations.confirm.status(mould.toolId, statusName(mould.status, translations), statusName(status as MouldStatus, translations)),
           confirmText: translations.confirm.statusBtn,
         }))
       )
@@ -104,7 +119,7 @@ export default function MouldActions({
           title: translations.confirm.moveTitle,
           message: translations.confirm.move(mould.toolId, locationLine(mould, translations), getDestinationLabel()),
           confirmText: translations.confirm.moveBtn,
-          tone: override || action === "OUT_OF_SERVICE" ? "danger" : "default",
+          tone: override || isExternal ? "danger" : "default",
           note: override ? translations.confirm.overrideNote(reason.trim()) : undefined,
         }))
       )
@@ -135,19 +150,19 @@ export default function MouldActions({
           version: version,
           remarks: remarks,
         };
-        if (action === "OUT_OF_SERVICE") {
+        if (isExternal) {
           moveDetails.outOfServiceDetails = { recipientName: recipientName.trim(), address: address.trim(), repairDetails: remarks.trim() };
         }
-        if (action === "MACHINE" && machineId) {
+        if (isMachine && machineId) {
           moveDetails.machineId = machineId;
         }
-        if (action === "MOULD_ROOM" && rack) {
+        if (isRack && rack) {
           moveDetails.rackId = rack.id;
         }
-        if ((action === "WORKSHOP" && mould.location !== "OUT_OF_SERVICE" && status) || (action === "ISOLATION" && status)) {
+        if ((isStatusPlace && !fromExternal && status) || (isTransit && status)) {
           moveDetails.status = status as MouldStatus;
         }
-        if (action === "ISOLATION" && plan) {
+        if (isTransit && plan) {
           moveDetails.intendedDestination = plan;
         }
         if (override) {
@@ -170,10 +185,10 @@ export default function MouldActions({
   }
 
   let ready = true;
-  if (action === "MACHINE") {
+  if (isMachine) {
     ready = Boolean(machineId);
     if (needsMachineReason && reason.trim() === "") ready = false;
-  } else if (action === "MOULD_ROOM") {
+  } else if (isRack) {
     ready = Boolean(rack);
     if (needsZoneReason && reason.trim() === "") ready = false;
   } else if (action === "STATUS") {
@@ -183,7 +198,7 @@ export default function MouldActions({
     ready = shotCount > 0 && Number.isInteger(shotCount);
   }
   if (needsRemarks && remarks.trim() === "") ready = false;
-  if (action === "OUT_OF_SERVICE" && (!recipientName.trim() || !address.trim())) ready = false;
+  if (isExternal && (!recipientName.trim() || !address.trim())) ready = false;
 
   const capable = machines.filter((x) => mould.capableMachines.includes(x.code));
   const others = machines.filter((x) => !mould.capableMachines.includes(x.code));
@@ -219,7 +234,7 @@ export default function MouldActions({
   // UI and inline Tailwind styles
   return (
     <div className="mt-3 [border-top:1px_dashed_var(--line)] pt-1">
-      {action === "OUT_OF_SERVICE" && (
+      {isExternal && (
         <>
           <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="dispatch-name">
             {translations.dispatch.recipientName} *
@@ -248,7 +263,7 @@ export default function MouldActions({
           />
         </>
       )}
-      {action === "MACHINE" && (
+      {isMachine && (
         <>
           <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.act.capable}</label>
           <div className="flex flex-wrap gap-2 mt-2">{capable.length ? capable.map((x) => machineChip(x, true)) : <span className="text-ink-soft">{translations.detail.none}</span>}</div>
@@ -269,7 +284,7 @@ export default function MouldActions({
           )}
         </>
       )}
-      {action === "MOULD_ROOM" && (
+      {isRack && (
         <>
           <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.act.chooseRack}</label>
           {zones.length > 0 && (
@@ -289,11 +304,11 @@ export default function MouldActions({
           )}
         </>
       )}
-      {action === "ISOLATION" && (
+      {isTransit && (
         <>
           <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{translations.isolation.choosePlan}</label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {(["", ...INTENDED_DESTINATIONS.filter((l) => l !== (mould.toolType === "EXTRUSION_DIE" ? "MOULD_ROOM" : "TOOL_ROOM") && l !== mould.location)] as (Location | "")[]).map((l) => (
+            {(["", ...destinations.filter((l) => l !== (mould.toolType === "EXTRUSION_DIE" ? "MOULD_ROOM" : "TOOL_ROOM") && l !== mould.location)] as (Location | "")[]).map((l) => (
               <button
                 type="button"
                 key={l || "none"}
@@ -309,11 +324,11 @@ export default function MouldActions({
           </div>
         </>
       )}
-      {((action === "WORKSHOP" && mould.location !== "OUT_OF_SERVICE") || action === "STATUS" || action === "ISOLATION") && (
+      {((isStatusPlace && !fromExternal) || action === "STATUS" || isTransit) && (
         <>
-          <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{action === "ISOLATION" ? translations.isolation.setStatus : translations.act.status}</label>
+          <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink">{isTransit ? translations.isolation.setStatus : translations.act.status}</label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {(action === "WORKSHOP" || action === "ISOLATION") && (
+            {(isStatusPlace || isTransit) && (
               <button
                 type="button"
                 className={
@@ -325,7 +340,7 @@ export default function MouldActions({
                 {translations.act.keepStatus}
               </button>
             )}
-            {STATUSES.filter((s) => s !== mould.status && s !== CONDITIONAL_STATUS && (action === "STATUS" || s !== "GOOD")).map((s) => (
+            {statusChoices.filter((s) => s !== mould.status && s !== CONDITIONAL_STATUS && (action === "STATUS" || s !== "GOOD")).map((s) => (
               <button
                 type="button"
                 key={s}
@@ -335,7 +350,7 @@ export default function MouldActions({
                 }
                 onClick={() => setStatus(s)}
               >
-                {translations.status[s]}
+                {statusName(s, translations)}
               </button>
             ))}
           </div>
@@ -361,7 +376,7 @@ export default function MouldActions({
       {action !== "SHOTS" && (
         <>
           <label className="block mt-4 mb-1.5 ml-0.5 text-sm font-semibold text-ink" htmlFor="remarks">
-            {action === "OUT_OF_SERVICE" ? translations.dispatch.repairDetails : translations.act.remarks}
+            {isExternal ? translations.dispatch.repairDetails : translations.act.remarks}
             {needsRemarks ? " *" : ""}
           </label>
           {needsRemarks && <p className="text-sm leading-normal text-ink-soft mx-0 mt-2 mb-0">{translations.act.remarksHint}</p>}
@@ -373,6 +388,7 @@ export default function MouldActions({
             value={remarks}
             onChange={(event) => setRemarks(event.target.value)}
           />
+          <RemarkTemplates onPick={(text) => setRemarks((cur) => (cur.trim() ? cur.trim() + " " : "") + text)} />
         </>
       )}
       {error && (

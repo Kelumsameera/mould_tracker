@@ -3,6 +3,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { UPLOAD_DIR } from "./uploads.js";
+import { setting } from "./settings.js";
 
 export const MAX_ITEM_IMAGES = 5; // pictures per item
 // Stable key of a stored picture: its content hash (file name without extension).
@@ -15,7 +16,8 @@ const THUMB_MAX = 200;
 export async function renderImage(buffer, folder = "items") {
   const hash = createHash("sha256").update(buffer).digest("hex").slice(0, 20);
   const base = sharp(buffer, { failOn: "none" }).rotate();
-  const main = await base.clone().resize(IMAGE_MAX, IMAGE_MAX, { fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toBuffer({ resolveWithObject: true });
+  const size = setting("limits.imageMaxPx") ?? IMAGE_MAX;
+  const main = await base.clone().resize(size, size, { fit: "inside", withoutEnlargement: true }).webp({ quality: setting("limits.imageQuality") ?? 80 }).toBuffer({ resolveWithObject: true });
   const thumb = await base.clone().resize(THUMB_MAX, THUMB_MAX, { fit: "inside", withoutEnlargement: true }).webp({ quality: 75 }).toBuffer();
   return { path: `${folder}/${hash}.webp`, thumbPath: `${folder}/${hash}_thumb.webp`, width: main.info.width, height: main.info.height, main: main.data, thumb };
 }

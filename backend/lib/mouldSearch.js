@@ -5,6 +5,7 @@ import Item from "../models/Item.js";
 import Machine from "../models/Machine.js";
 import Rack from "../models/Rack.js";
 import { compactToken, didYouMean, keyFilter, looseRegex, queryWords, rank } from "./search.js";
+import { setting } from "./settings.js";
 
 const CANDIDATE_LIMIT = 300;
 
@@ -49,7 +50,7 @@ export async function searchMoulds(q, baseFilter = {}, { limit = CANDIDATE_LIMIT
   }
   const ranked = [...byId.values()].sort((a, b) => a.score - b.score).slice(0, limit);
   let suggestions = [];
-  if (!ranked.length && suggest) {
+  if (!ranked.length && suggest && setting("search.typoTolerance") !== false) {
     // Typo fallback: compare against Tool IDs and Item IDs only (small projection).
     const [allMoulds, allItems] = await Promise.all([
       Mould.find(live, { toolId: 1 }).limit(5000).lean(),

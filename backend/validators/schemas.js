@@ -1,11 +1,17 @@
 import { z } from "zod";
 import { dispatchDetailsSchema } from "../lib/outOfService.js";
-import { CUSTOM_PERMISSIONS, ROLES } from "../lib/permissions.js";
-import { LOCATIONS, MOULD_STATUSES, TOOL_TYPES } from "../lib/mouldState.js";
+import { grantablePermissions, roleKeys } from "../lib/permissions.js";
+import { listKeys, setting } from "../lib/settings.js";
+import { TOOL_TYPES, isKnownLocation, isKnownStatus } from "../lib/mouldState.js";
+// Locations and statuses come from the workflow config (checked at request time, so new ones are accepted).
+const locationKey = z.string().trim().min(1).max(40).refine((k) => isKnownLocation(k), "Unknown location");
+const statusKey = z.string().trim().min(1).max(40).refine((k) => isKnownStatus(k), "Unknown status");
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid id");
-const password = z.string().min(8, "Password must be at least 8 characters").max(128);
-const role = z.enum(ROLES);
+// Minimum length from Settings (auth.passwordMinLength, default 8).
+const password = z.string().max(128).refine((p) => p.length >= Math.max(8, setting("auth.passwordMinLength") ?? 8), { message: "Password is too short" });
+// Roles and permission keys come from the workflow config (built-in + custom), checked at request time.
+const role = z.string().trim().min(1).max(40).refine((r) => roleKeys().includes(r), "Unknown role");
 
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1) });
 export const passkeyRegistrationSchema = z.object({
@@ -43,7 +49,7 @@ export const createUserSchema = z.object({
   role: role.default("mould_technician")
 });
 
-const permissionList = z.array(z.enum(CUSTOM_PERMISSIONS)).max(CUSTOM_PERMISSIONS.length).refine(values => new Set(values).size === values.length, "Duplicate permissions");
+const permissionList = z.array(z.string().max(80).refine((p) => grantablePermissions().includes(p), "Unknown permission")).max(500).refine(values => new Set(values).size === values.length, "Duplicate permissions");
 const accessReason = z.string().trim().min(3, "A reason is required").max(500);
 // Role matrix row: a permission list, or null to go back to the role defaults.
 export const roleAccessSchema = z.object({ permissions: permissionList.nullable(), version: z.number().int().min(0).optional(), reason: accessReason }).strict();
@@ -101,7 +107,7 @@ const mouldFields = {
 export const createMouldSchema = z.object({
   toolId: upperId("Tool ID"),
   ...mouldFields,
-  location: z.enum(["MOULD_ROOM", "TOOL_ROOM", "PRODUCTION_FLOOR", "WORKSHOP"]).default("MOULD_ROOM"),
+  location: locationKey.default("MOULD_ROOM"), // where a new mould may start is checked by planInitialLocation
   rackId: objectId.optional(),
   overrideReason,
   items: z.array(createItemSchema).max(100).default([])
@@ -118,11 +124,11 @@ export const cavitiesSchema = z.object({
 export const updateMouldSchema = z.object({ toolId: upperId("Tool ID").optional(), ...mouldFields, remarks, version });
 export const moveMouldSchema = z.object({
   outOfServiceDetails: dispatchDetailsSchema.optional(),
-  to: z.enum(LOCATIONS),
+  to: locationKey,
   machineId: objectId.optional(),
   machineCode: z.string().trim().min(1).max(50).optional(),
   rackId: objectId.optional(),
-  status: z.enum(MOULD_STATUSES).optional(),
+  status: statusKey.optional(),
   intendedDestination: z.enum(["MACHINE", "PRODUCTION_FLOOR", "MOULD_ROOM", "TOOL_ROOM", "WORKSHOP"]).nullable().optional(),
   remarks,
   overrideReason,
@@ -131,7 +137,7 @@ export const moveMouldSchema = z.object({
   if (value.to === "OUT_OF_SERVICE" && !value.outOfServiceDetails) context.addIssue({ code: "custom", path: ["outOfServiceDetails"], message: "Enter recipient name, address and repair details" });
   if (value.to !== "OUT_OF_SERVICE" && value.outOfServiceDetails) context.addIssue({ code: "custom", path: ["outOfServiceDetails"], message: "Dispatch details can only be set when sending Out of Service" });
 });
-export const statusSchema = z.object({ status: z.enum(MOULD_STATUSES), remarks, version });
+export const statusSchema = z.object({ status: statusKey, remarks, version });
 export const shotsSchema = z.object({ shots: z.number().int().min(1).max(10_000_000), version });
 export const reasonSchema = z.object({ reason: z.string().trim().max(1000).default("") });
 
@@ -141,8 +147,8 @@ export const suggestQuery = z.object({ q: searchText, toolType: z.enum(TOOL_TYPE
 export const listMouldsQuery = z.object({
   toolType: z.enum(TOOL_TYPES).optional(),
   q: searchText,
-  location: z.enum(LOCATIONS).optional(),
-  status: z.enum(MOULD_STATUSES).optional(),
+  location: locationKey.optional(),
+  status: statusKey.optional(),
   owner: z.string().trim().max(10).optional(),
   zone: z.string().trim().max(10).optional(),
   rackId: objectId.optional(),
@@ -179,7 +185,7 @@ const catalogText = z.string().trim().max(64).optional();
 export const catalogQuery = z.object({
   tab: z.enum(["moulds", "products"]).default("moulds"),
   process: z.enum(["INJECTION", "EXTRUSION"]).optional(),
-  status: z.enum(MOULD_STATUSES).optional(),
+  status: statusKey.optional(),
   owner: catalogText, machine: catalogText, material: catalogText, family: catalogText, q: searchText,
   sort: z.enum(["toolId", "items", "status", "itemId", "moulds"]).optional(),
   page: z.coerce.number().int().min(1).max(10000).default(1)
@@ -187,17 +193,17 @@ export const catalogQuery = z.object({
 export const catalogExportQuery = catalogQuery.extend({ format: z.enum(["csv", "xlsx"]).default("csv") });
 
 // ---- Work log ----
-const MANUAL_WORK_TYPES = ["REPAIR", "SERVICE", "MINOR_FIX", "INSPECTION", "CLEANING", "OTHER"];
-const WORK_TYPES = [...MANUAL_WORK_TYPES, "CAVITY_BLOCK", "CAVITY_RESTORE"]; // report filters include cavity entries
+// Work types come from Settings > Lists (active items; built-in ones by default).
+const manualWorkType = z.string().max(40).refine((k) => listKeys("workTypes", { activeOnly: true }).includes(k) && !k.startsWith("CAVITY_"), "Unknown work type");
 export const createWorkLogSchema = z.object({
-  type: z.enum(MANUAL_WORK_TYPES),
+  type: manualWorkType,
   description: z.string().trim().min(1, "Say what was done").max(2000),
   partsUsed: z.string().trim().max(1000).default(""),
   timeSpentMinutes: z.number().int().min(0).max(100000).nullable().optional(),
   doneBy: z.array(objectId).min(1).max(5).optional(),
   doneAt: z.coerce.date().optional(),
   shots: z.number().int().min(0).nullable().optional(),
-  outcome: z.enum(["OK", "NEEDS_REPAIR", "NEEDS_SERVICE"]).nullable().optional(),
+  outcome: z.string().max(40).refine((k) => listKeys("outcomes", { activeOnly: true }).includes(k), "Unknown outcome").nullable().optional(),
   sendToWorkshop: z.boolean().default(false),
   correctsId: objectId.optional(),
   photos: z.array(z.string().max(9_000_000)).max(3).default([]),
@@ -209,10 +215,10 @@ export const workLogQuery = z.object({
   q: searchText,
   toolId: z.string().trim().max(100).optional(),
   userId: objectId.optional(),
-  type: z.enum(WORK_TYPES).optional(),
+  type: z.string().max(40).refine((k) => [...listKeys("workTypes"), "CAVITY_BLOCK", "CAVITY_RESTORE"].includes(k), "Unknown work type").optional(),
   machine: z.string().trim().max(50).optional(),
-  outcome: z.enum(["OK", "NEEDS_REPAIR", "NEEDS_SERVICE", "NONE"]).optional(),
-  status: z.enum(MOULD_STATUSES).optional(),
+  outcome: z.string().max(40).refine((k) => k === "NONE" || listKeys("outcomes").includes(k), "Unknown outcome").optional(),
+  status: statusKey.optional(),
   problem: z.enum(["true", "false"]).optional(),
   range: z.enum(["today", "7d", "30d", "month", "all", "custom"]).optional(),
   from: localDay.optional(), // whole local days (Asia/Colombo)
@@ -228,3 +234,32 @@ export const reportProblemSchema = z.object({
   photos: z.array(z.string().max(9_000_000)).max(3).default([]),
   version
 });
+
+// ---- Workflow config ----
+const labels = z.object({ en: z.string().max(120), si: z.string().max(120) }).passthrough();
+const configBody = z.object({
+  locations: z.array(z.object({ key: z.string().max(40), labels }).passthrough()).max(100),
+  statuses: z.array(z.object({ key: z.string().max(40), labels }).passthrough()).max(100),
+  transitions: z.array(z.object({ from: z.string().max(40).nullable(), to: z.string().max(40) }).passthrough()).max(20000),
+  roles: z.array(z.object({ key: z.string().max(40), labels }).passthrough()).max(100),
+  intendedDestinations: z.array(z.string().max(40)).max(100).optional(),
+  limitedRunAlertDays: z.number().int().min(1).max(365).optional()
+}).passthrough();
+const configReason = z.string().trim().min(3, "A reason is required").max(500);
+export const configDraftSchema = z.object({ config: configBody, draftVersion: z.number().int().optional() });
+export const configValidateSchema = z.object({ config: configBody.optional() });
+export const configPublishSchema = z.object({ reason: configReason, draftVersion: z.number().int().optional() });
+export const configRollbackSchema = z.object({ version: z.number().int().min(1), reason: configReason });
+export const configImportSchema = z.object({ config: configBody, reason: configReason });
+export const simulateSchema = z.object({
+  mouldId: z.string().regex(/^[a-f0-9]{24}$/).optional(),
+  mould: z.object({ location: z.string().max(40), status: z.string().max(40), toolType: z.string().max(40).optional() }).optional(),
+  to: z.string().max(40), status: z.string().max(40).optional(), intendedDestination: z.string().max(40).nullable().optional(),
+  remarks: z.string().max(2000).optional(), draft: z.boolean().optional(), role: z.string().max(40).optional()
+}).refine((v) => v.mouldId || v.mould, "Choose a mould or a location and status");
+
+// ---- General settings ----
+export const settingValueSchema = z.object({ value: z.unknown(), reason: z.string().trim().max(500).optional() });
+export const settingListSchema = z.object({ items: z.array(z.object({ key: z.string().max(40), labels: z.object({ en: z.string().max(200), si: z.string().max(200) }), active: z.boolean().optional(), sortOrder: z.number().optional() }).passthrough()).max(200) });
+export const settingTextSchema = z.object({ en: z.string().max(2000).optional(), si: z.string().max(2000).optional() });
+export const settingTextsImportSchema = z.object({ texts: z.record(z.string(), z.object({ en: z.string().max(2000).optional(), si: z.string().max(2000).optional() })) });

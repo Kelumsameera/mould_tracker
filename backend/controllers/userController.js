@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { userDTO } from "../utils/serializers.js";
-import { CUSTOM_PERMISSIONS, ROLES, ASSIGNABLE_ROLES, resolveRole, can, canManageUser, canViewUser, roleDefaults, rolePermissionsFor, effectivePermissions, normalizeOverrides, overridesActive, upgradePermissions, visibleUsersFilter } from "../lib/permissions.js";
+import { grantablePermissions, roleKeys, assignableFor, configRole, resolveRole, can, canManageUser, canViewUser, roleDefaults, rolePermissionsFor, effectivePermissions, normalizeOverrides, overridesActive, upgradePermissions, visibleUsersFilter } from "../lib/permissions.js";
 import { audit, changes } from "../lib/audit.js";
 import RoleAccess from "../models/RoleAccess.js";
 import { invalidateRoleAccess, loadRoleAccess, roleMatrix } from "../lib/roleAccess.js";
@@ -84,10 +84,12 @@ const accessDTO = (user) => ({
 
 async function rolesDTO() {
   const matrix = await roleMatrix();
-  return ROLES.filter((role) => role !== "system_admin").map((role) => {
+  // Built-in and custom roles from the workflow config (the System Administrator role is locked).
+  return roleKeys().filter((role) => role !== "system_admin").map((role) => {
     const row = matrix.get(role);
     const saved = row ? upgradePermissions(row.permissions) : null;
-    return { role, customised: Boolean(row), version: row?.version ?? 0, defaults: roleDefaults(role).filter((p) => p !== "access.manage"),
+    const def = configRole(role);
+    return { role, labels: def?.labels ?? null, builtIn: def?.builtIn ?? true, active: def?.active !== false, customised: Boolean(row), version: row?.version ?? 0, defaults: roleDefaults(role).filter((p) => p !== "access.manage"),
       permissions: rolePermissionsFor({ role, rolePermissionOverrides: saved }) };
   });
 }
@@ -97,14 +99,15 @@ export async function listUserAccess(req, res) {
   if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage user access");
   const users = await User.find({ deletedAt: null, role: { $ne: "system_admin" } }).sort({ name: 1 });
   for (const user of users) await loadRoleAccess(user);
-  res.json({ success: true, permissions: CUSTOM_PERMISSIONS, assignableRoles: ASSIGNABLE_ROLES, roles: await rolesDTO(), users: users.map(accessDTO) });
+  const assignableRoles = Object.fromEntries(roleKeys().map((r) => [r, assignableFor(r)]).filter(([, list]) => list.length));
+  res.json({ success: true, permissions: grantablePermissions(), assignableRoles, roles: await rolesDTO(), users: users.map(accessDTO) });
 }
 
 // PATCH /api/users/roles/:role/access  { permissions: [...] | null (reset to defaults), version?, reason }
 export async function updateRoleAccess(req, res) {
   if (!can(req.user, "access.manage")) throw new ApiError(403, "You cannot manage role access");
   const { role } = req.params;
-  if (!ROLES.includes(role) || role === "system_admin") throw new ApiError(400, "This role cannot be configured", { code: "ROLE_LOCKED" });
+  if (!roleKeys().includes(role) || role === "system_admin") throw new ApiError(400, "This role cannot be configured", { code: "ROLE_LOCKED" });
   const { permissions, version, reason } = req.body;
   if (permissions?.includes("move.outOfService") && role !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins", { code: "SUPER_ADMIN_ONLY" });
   const previous = await RoleAccess.findOne({ role });
@@ -125,7 +128,7 @@ export async function updateUserAccess(req, res) {
   if (!user || user.deletedAt || !canViewUser(req.user, user)) throw new ApiError(404, "User not found");
   if (user.role === "system_admin") throw new ApiError(403, "System Administrator access is always everything", { code: "ROLE_LOCKED" });
   const grant = req.body.grant ?? [], deny = req.body.deny ?? [];
-  const known = (list) => Array.isArray(list) && list.every((p) => CUSTOM_PERMISSIONS.includes(p)) && new Set(list).size === list.length;
+  const known = (list) => Array.isArray(list) && list.every((p) => grantablePermissions().includes(p)) && new Set(list).size === list.length;
   if (!known(grant) || !known(deny) || grant.some((p) => deny.includes(p))) throw new ApiError(400, "Invalid permissions", { code: "INVALID_PERMISSIONS" });
   if (grant.includes("move.outOfService") && resolveRole(user.role) !== "super_admin") throw new ApiError(400, "Out of Service access is reserved for Super Admins", { code: "SUPER_ADMIN_ONLY" });
   const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;

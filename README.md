@@ -117,7 +117,7 @@ After upgrading from an older version run `npm run migrate:permissions` (dry run
 names correctly, so this is housekeeping. Likewise `npm run migrate:conditional` (then `-- --apply`) renames the
 old mould status `RUNNING_LIMITED` to `CONDITIONAL`; history keeps the old value and is shown as Conditional.
 
-## Workflow rules (enforced on the server, `backend/lib/workflow.js`)
+## Workflow rules (built-in defaults; editable in Workflow settings)
 
 1. GOOD moulds may be on a machine, on the Production Floor, in the Isolation Area or on a Mould Room rack
    (extrusion dies: Tool Room).
@@ -143,6 +143,58 @@ old mould status `RUNNING_LIMITED` to `CONDITIONAL`; history keeps the old value
    refused (mould `version`). Edits appear in the timeline as "Edited" with before/after.
 7. Every change is recorded (Movement + AuditLog); remarks are required for service/repair.
 8. `totalShots >= shotsToService` flags NEEDS_SERVICE when shots are recorded.
+
+## Configurable workflow (Workflow settings, `/workflow`)
+
+Locations, statuses, roles and the move rules are data, not code. The built-in defaults (`backend/lib/workflowConfig.js`)
+are exactly the original rules, so nothing changes until a System Administrator publishes something else.
+
+- **Who:** editing needs `config.manage` (System Administrator only, never grantable). Super Admin, Admin and Executive
+  can view the workflow, its versions and differences read-only.
+- **Draft → publish:** every change goes into one draft. *Publish* needs a reason, refuses an invalid draft with the
+  list of problems, and applies to everyone on their next request/refresh. *Versions* shows history and differences,
+  *Roll back* re-publishes an older version as a new version, *Export/Import JSON* moves a config between systems
+  (an import always becomes the draft). Every step is in the audit log with the difference and the reason.
+- **One rules engine:** `evaluateMove(config, mould, request)` (`backend/lib/evaluateMove.js`) decides every move for
+  the API, the simulator and the UI's buttons. Location kinds: `machine` (one mould per machine), `rack` (zone + rack),
+  `simple`, `transit` (holding area with a max wait). Rules: allowed / *via* another location / required fields /
+  permissions (one from each line). Statuses have *allowed at* and *may move to* lists plus flags.
+- **Simulator:** pick a location, status, destination (and, for a System Administrator, the draft and a role) to see
+  allowed/blocked, the route, required fields and the exact error before publishing.
+- **Validation** refuses: missing EN/SI labels, bad/duplicate keys, not exactly one machine location, no rack location,
+  GOOD missing, locations nothing leads into or out of, statuses with nowhere to be or go, *via* cycles and dead ends,
+  unknown or locked permissions, removing built-in roles or anything still used by records (disable it instead).
+
+### How to …
+- **Add a location** (e.g. Calibration Room): Workflow settings → Locations → key `CALIBRATION_ROOM` → Add; set labels,
+  kind, icon, colour, "Allow status changes here", "Allow new moulds to start here". Its permission `move.calibration_room`
+  appears in Access Control automatically. Then Workflow rules → click the cells (e.g. Workshop → Calibration Room,
+  Calibration Room → Mould Room) → Allowed, *via*, requirements. Statuses → allow GOOD there (done automatically).
+  Save draft → check the problem list → Simulator → Publish with a reason. The location gets its own screen in the menu.
+- **Add a status:** Statuses → key → Add; set labels, colour, where it may be and where it may go.
+- **Add a role:** Roles → key (e.g. `quality_inspector`) → *Copy permissions from* → Add; tick permissions and which
+  roles it may assign; give other roles the right to assign it. After publishing it can be given to users.
+- **Remove the Isolation step for one move:** Workflow rules → that cell → *Must go through* = none → publish.
+- **Undo:** Versions → *Roll back to this version* (with a reason).
+
+## Settings (`/settings`)
+
+Every list, label and limit that used to be in the code has a default and can be changed here (permission
+`settings.manage`: Super Admin by default, System Administrator always). Changes apply at once (confirm + audit) and are
+marked *Modified*; *Reset to default* puts the original back.
+- **Texts / Labels:** every English/Sinhala UI text, side by side with the code default; search, "missing Sinhala",
+  export/import JSON. (Texts that contain numbers or names keep their code wording.)
+- **Thresholds & limits:** pictures per item, picture size/quality, export row cap, page size, "service soon" warning
+  level, auto-refresh interval, session length, minimum password length, typo suggestions on/off, recent searches.
+  The Isolation max wait and the Conditional overdue days are part of the workflow (Workflow settings).
+- **Lists:** work-log types, outcomes, problem types, standard remarks (tap to add in move forms), owners, processes,
+  product families. Items used in records can be disabled but not removed.
+- **Dashboards:** which cards each role sees, in which order.
+- Machines (Machines screen) and zones/racks (Rack management) keep their own screens.
+
+After upgrading, run each of these as a dry run first, then with `--apply` (back up first):
+`npm run seed:workflow` (stores the built-in workflow as published version 1), `npm run migrate:permissions`,
+`npm run migrate:conditional`, `npm run backfill:search`.
 
 ## Catalog & Totals
 
@@ -180,6 +232,10 @@ Zones, rows and pallet positions are managed by Super Admins under *Rack managem
 Mould Room needs a rack with free capacity. `scripts/migrate-rack-positions.mjs` converts older rack data.
 
 ## Backup and restore
+
+The workflow config, settings and texts are stored in the database (`workflowconfigs`, `settings`), so a normal
+database backup covers them. A workflow change can also be undone with *Roll back* or a JSON export/import.
+
 
 Back up the database **and** the uploads folder together, before every upgrade or migration:
 

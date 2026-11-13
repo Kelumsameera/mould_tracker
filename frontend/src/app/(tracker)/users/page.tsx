@@ -1,4 +1,5 @@
 "use client";
+import { roleName } from "@/utils/i18n";
 import { useApp } from "@/components/AppLayout";
 
 import { useCallback, useEffect, useState } from "react";
@@ -52,7 +53,7 @@ export default function UsersPage() {
     return availableRoles.map((role) => {
       return (
         <option key={role} value={role}>
-          {translations.roles[role]}
+          {roleName(role, translations)}
         </option>
       );
     });
@@ -274,8 +275,8 @@ export default function UsersPage() {
                   title: translations.confirm.roleTitle,
                   message: translations.confirm.role(
                     listedUser.name,
-                    translations.roles[listedUser.role],
-                    translations.roles[role],
+                    roleName(listedUser.role, translations),
+                    roleName(role, translations),
                   ),
                   confirmText: translations.confirm.roleBtn,
                   tone: ["system_admin", "super_admin"].includes(role) ? "danger" : "default",

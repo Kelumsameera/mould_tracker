@@ -1,12 +1,13 @@
 "use client";
-import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { setRuntime, type RuntimeBundle } from "@/utils/runtimeConfig";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const BOTTOM_ITEM = "no-underline min-h-(--nav-h) border-0 bg-transparent flex flex-col items-center justify-center gap-[3px] text-[11px] font-extrabold cursor-pointer px-0.5 py-1.5 [&>span]:max-w-full [&>span]:overflow-hidden [&>span]:text-ellipsis [&>span]:whitespace-nowrap ";
 import { PAGE_PATHS, getPageName, type PageName } from "@/utils/helpers";
 import { api, ApiError } from "@/utils/api";
-import { I18N, type Dict, type Lang } from "@/utils/i18n";
+import { I18N, applyTextOverrides, type Dict, type Lang } from "@/utils/i18n";
 import { can, canEditMoulds, canVisitPage } from "@/utils/permissions";
 import type { Mould, User } from "@/utils/types";
 import Sidebar from "@/components/Sidebar";
@@ -51,7 +52,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [navOpen, setNavOpen] = useState(false);
   const [formFor, setFormFor] = useState<Mould | null | "new">(null);
-  const translations = I18N[lang];
+  // Workflow config + settings + text overrides (GET /api/config); built-in fallbacks until loaded.
+  const [bundle, setBundle] = useState<RuntimeBundle | null>(null);
+  setRuntime(bundle, lang);
+  const translations = useMemo(() => applyTextOverrides(I18N[lang], bundle?.texts?.[lang]), [lang, bundle]);
+  const loadConfig = useCallback(() => {
+    api.config().then(setBundle).catch(() => { /* keep the last config; retried on the next refresh */ });
+  }, []);
 
   // Effects: load data and update the screen
   useEffect(() => {
@@ -149,9 +156,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [user, allowed, router, view]);
 
   // A 401 anywhere means the session ended.
+  const signedIn = Boolean(user);
+  useEffect(() => { if (signedIn) loadConfig(); }, [signedIn, loadConfig]);
   useEffect(() => {
     if (!user) return;
     const refreshSession = () => {
+      loadConfig(); // config/label changes reach everyone on the next refresh
       api.me().then(response => setUser(response.user)).catch((error) => {
         if (error instanceof ApiError && error.status === 401) setUser(null);
       });
@@ -162,7 +172,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       clearInterval(id);
       window.removeEventListener("focus", refreshSession);
     };
-  }, [user]);
+  }, [user, loadConfig]);
 
   if (booting || !allowed)
     return (

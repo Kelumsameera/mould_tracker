@@ -1,10 +1,12 @@
 "use client";
+import { setting } from "@/utils/runtimeConfig";
 import Icon, { type IconName } from "@/components/Icon";
 import type { Dict } from "@/utils/i18n";
 
 // Pictures of one item: add (gallery or phone camera), replace, remove, reorder.
 // Works for saved pictures (server calls) and for pictures picked before saving (kept in form state).
-export const MAX_ITEM_PICTURES = 5; // mirrors MAX_ITEM_IMAGES on the server
+// Pictures per item: Settings > Thresholds & limits (limits.maxItemImages), same value the server enforces.
+export const maxItemPictures = () => Number(setting("limits.maxItemImages", 5));
 
 export type Picture = { id: string; src: string };
 
@@ -49,11 +51,11 @@ function FileButton({ label, icon, capture, disabled, onFile }: { label: string;
 }
 
 export default function PictureStrip({ pictures, translations: t, busy, label, onAdd, onReplace, onRemove, onMove }: Props) {
-  const full = pictures.length >= MAX_ITEM_PICTURES;
+  const full = pictures.length >= maxItemPictures();
   return (
     <div className="mt-3">
       <div className="text-sm font-semibold text-ink">
-        {t.form.pictures} <small className="text-ink-faint font-normal">· {t.form.picturesHint(MAX_ITEM_PICTURES)}</small>
+        {t.form.pictures} <small className="text-ink-faint font-normal">· {t.form.picturesHint(maxItemPictures())}</small>
       </div>
       <div className="flex gap-2 flex-wrap mt-1.5">
         {pictures.map((p, index) => (

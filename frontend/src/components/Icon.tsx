@@ -1,3 +1,4 @@
+import { configLocation } from "@/utils/runtimeConfig";
 // One place for every icon, all from one family (Lucide via react-icons/lu, named imports only),
 // so the same meaning always gets the same picture and a swap is one line.
 import type { IconType } from "react-icons";
@@ -150,3 +151,10 @@ export const workIcon: Record<WorkType, IconName> = {
   CAVITY_BLOCK: "attention",
   CAVITY_RESTORE: "good",
 };
+
+// Icon of a location: built-in map, then the icon chosen in Workflow Settings, then a generic pin.
+export function iconForLocation(key: string | null | undefined): IconName {
+  const builtIn = (locationIcon as Record<string, IconName>)[key ?? ""];
+  const chosen = configLocation(key)?.icon;
+  return builtIn ?? (chosen && chosen in ICONS ? (chosen as IconName) : "location");
+}

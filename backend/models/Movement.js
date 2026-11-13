@@ -1,3 +1,4 @@
+import { getConfig } from "../lib/configStore.js";
 import mongoose from "mongoose";
 import { dispatchDetailsSchema } from "./DispatchDetails.js";
 import { immutable } from "../lib/immutable.js";
@@ -29,6 +30,7 @@ const movementSchema = new mongoose.Schema(
     outOfServiceDetails: { type: dispatchDetailsSchema, default: null },
     remarks: { type: String, default: "", maxlength: 2000 },
     changes: { type: mongoose.Schema.Types.Mixed, default: null },
+    configVersion: { type: Number, default: null }, // workflow config version in force when this was written
     intendedDestination: { type: String, default: null }, // sent to Isolation: where it should go next
     dwellMinutes: { type: Number, default: null }, // left Isolation: how long this stay lasted
     isolationSince: { type: Date, default: null },
@@ -44,4 +46,6 @@ movementSchema.index({ mouldId: 1, createdAt: -1 });
 movementSchema.index({ legacyMovementId: 1 }, { unique: true, sparse: true });
 movementSchema.plugin(immutable, { name: "Movement" });
 
+// Record which workflow config version applied (immutable history keeps it).
+movementSchema.pre("validate", function () { if (this.configVersion == null) this.configVersion = getConfig().version ?? 0; });
 export default mongoose.model("Movement", movementSchema);

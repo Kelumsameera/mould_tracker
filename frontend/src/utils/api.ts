@@ -89,6 +89,29 @@ export const api = {
     if (!res.ok) throw new ApiError(res.status, data.message || "Request failed", data.code, data.details || {});
     return data as { moulds: Mould[]; items: Mould[]; didYouMean: string[] };
   },
+  config: () => request<import("./runtimeConfig").RuntimeBundle>("/config"),
+  // General settings (Settings screen).
+  settings: () => request<SettingsPayload>("/settings"),
+  putSetting: (key: string, value: unknown) => request<{ value: unknown }>(`/settings/values/${encodeURIComponent(key)}`, "PUT", { value }),
+  resetSetting: (key: string) => request<{ value: unknown }>(`/settings/values/${encodeURIComponent(key)}`, "DELETE"),
+  putList: (list: string, items: SettingListItem[]) => request<{ items: SettingListItem[] }>(`/settings/lists/${list}`, "PUT", { items }),
+  resetList: (list: string) => request<{ items: SettingListItem[] }>(`/settings/lists/${list}`, "DELETE"),
+  putText: (key: string, en: string, si: string) => request<{ texts: Record<string, Record<string, string>> }>(`/settings/texts/${encodeURIComponent(key)}`, "PUT", { en, si }),
+  resetText: (key: string) => request<{ texts: Record<string, Record<string, string>> }>(`/settings/texts/${encodeURIComponent(key)}`, "DELETE"),
+  exportTexts: () => request<{ texts: Record<string, { en?: string; si?: string }> }>("/settings/texts-export"),
+  importTexts: (texts: Record<string, { en?: string; si?: string }>) => request<{ texts: Record<string, Record<string, string>> }>("/settings/texts-import", "POST", { texts }),
+  // Workflow settings (System Administrator edits; Super Admin / Admin / Executive read).
+  configVersions: () => request<{ current: number; versions: ConfigVersionMeta[] }>("/config/versions"),
+  configVersion: (v: number | "draft") => request<{ meta: ConfigVersionMeta; config: import("./runtimeConfig").WorkflowConfig }>(`/config/versions/${v}`),
+  saveConfigDraft: (config: unknown, draftVersion?: number) => request<{ meta: ConfigVersionMeta; problems: ConfigProblem[] }>("/config/draft", "PUT", { config, draftVersion }),
+  discardConfigDraft: (reason: string) => request<unknown>("/config/draft", "DELETE", { reason }),
+  validateConfig: (config?: unknown) => request<{ problems: ConfigProblem[] }>("/config/validate", "POST", config ? { config } : {}),
+  publishConfig: (reason: string, draftVersion?: number) => request<{ meta: ConfigVersionMeta }>("/config/publish", "POST", { reason, draftVersion }),
+  rollbackConfig: (version: number, reason: string) => request<{ meta: ConfigVersionMeta }>("/config/rollback", "POST", { version, reason }),
+  importConfig: (config: unknown, reason: string) => request<{ meta: ConfigVersionMeta }>("/config/import", "POST", { config, reason }),
+  exportConfig: () => request<{ config: unknown; version: number }>("/config/export"),
+  configDiff: (from?: string, to?: string) => request<{ diff: Record<string, unknown> }>(`/config/diff${qs({ from, to })}`),
+  simulateMove: (body: Record<string, unknown>) => request<{ configVersion: number; verdict: { ok: boolean; path: string[]; requiredFields: string[]; errors: { code: string; message: string }[]; permissionGroups: string[][]; nextStatus: string | null } }>("/config/simulate", "POST", body),
   stats: (toolType?: import("./types").ToolType) => request<{ stats: Stats }>(`/moulds/stats${qs({ toolType })}`),
   mould: (id: string) => request<{ mould: Mould }>(`/moulds/${id}`),
   history: (id: string) => request<{ history: Movement[] }>(`/moulds/${id}/history`),
@@ -176,3 +199,14 @@ export const api = {
   updateUser: (id: string, patch: { name?: string; email?: string; role?: Role; active?: boolean; password?: string }) => request<{ user: User | null }>(`/users/${id}`, "PATCH", patch),
   deleteUser: (id: string) => request<unknown>(`/users/${id}`, "DELETE", {}),
 };
+
+export interface ConfigVersionMeta { version: number; state: "draft" | "published" | "archived"; reason: string; basedOn: number | null; publishedAt: string | null; createdAt: string | null; updatedAt: string | null }
+export interface ConfigProblem { code: string; message: string; path: string }
+
+export interface SettingListItem { key: string; labels: { en: string; si: string }; active?: boolean; sortOrder?: number }
+export interface SettingsPayload {
+  settings: { key: string; type: "int" | "bool" | "dashboard"; group: string; default: unknown; value: unknown; min: number | null; max: number | null; affects: string; modified: boolean }[];
+  lists: { key: string; builtIn: boolean; default: SettingListItem[]; items: SettingListItem[]; modified: boolean }[];
+  texts: { en: Record<string, string>; si: Record<string, string> };
+  dashboardCards: string[];
+}

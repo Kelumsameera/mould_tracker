@@ -6,8 +6,9 @@ import { can } from "../lib/permissions.js";
 import { fail } from "../utils/ApiError.js";
 import { imageDTO } from "../utils/serializers.js";
 import { displayStatus } from "../lib/mouldState.js";
+import { setting } from "../lib/settings.js";
 import {
-  EXPORT_CAP, PAGE_SIZE, describeFilters, itemSummaryPipeline, mouldListPipeline, mouldSummaryPipeline, productDetailPipeline, productListPipeline, shapeList, shapeSummary
+  EXPORT_CAP as DEFAULT_EXPORT_CAP, PAGE_SIZE, describeFilters, itemSummaryPipeline, mouldListPipeline, mouldSummaryPipeline, productDetailPipeline, productListPipeline, shapeList, shapeSummary
 } from "../lib/catalog.js";
 
 const uploadUrl = (p) => (p ? `/uploads/${p}` : null);
@@ -30,14 +31,16 @@ export async function catalogSummary(req, res) {
 
 // GET /api/catalog/moulds?process&status&owner&machine&material&q&sort&page
 export async function catalogMoulds(req, res) {
-  const out = shapeList(await Mould.aggregate(mouldListPipeline({ ...req.validQuery, limit: PAGE_SIZE })), "moulds");
-  res.json({ success: true, total: out.total, pageSize: PAGE_SIZE, rows: out.rows.map(mouldRow), breakdown: out.breakdown });
+  const pageSize = setting("limits.pageSize") ?? PAGE_SIZE;
+  const out = shapeList(await Mould.aggregate(mouldListPipeline({ ...req.validQuery, limit: pageSize })), "moulds");
+  res.json({ success: true, total: out.total, pageSize, rows: out.rows.map(mouldRow), breakdown: out.breakdown });
 }
 
 // GET /api/catalog/products?process&family&material&q&sort&page
 export async function catalogProducts(req, res) {
-  const out = shapeList(await Item.aggregate(productListPipeline({ ...req.validQuery, limit: PAGE_SIZE })), "products");
-  res.json({ success: true, total: out.total, pageSize: PAGE_SIZE, rows: out.rows.map(productRow), breakdown: out.breakdown });
+  const pageSize = setting("limits.pageSize") ?? PAGE_SIZE;
+  const out = shapeList(await Item.aggregate(productListPipeline({ ...req.validQuery, limit: pageSize })), "products");
+  res.json({ success: true, total: out.total, pageSize, rows: out.rows.map(productRow), breakdown: out.breakdown });
 }
 
 // GET /api/catalog/products/:itemId - every live mould that makes this item.
@@ -60,6 +63,7 @@ export async function catalogExport(req, res) {
   if (!can(req.user, "export.run")) fail(403, "FORBIDDEN", "You do not have permission to export");
   const q = req.validQuery;
   const products = q.tab === "products";
+  const EXPORT_CAP = setting("limits.exportRowCap") ?? DEFAULT_EXPORT_CAP;
   const shaped = shapeList(await (products ? Item.aggregate(productListPipeline({ ...q, page: 1, limit: EXPORT_CAP + 1 })) : Mould.aggregate(mouldListPipeline({ ...q, page: 1, limit: EXPORT_CAP + 1 }))), q.tab);
   const truncated = shaped.rows.length > EXPORT_CAP;
   const rows = shaped.rows.slice(0, EXPORT_CAP).map(products ? productRow : mouldRow);

@@ -1,3 +1,4 @@
+import { setting } from "./runtimeConfig.ts";
 // Mirrors backend/lib/search.js: case, punctuation and spacing never matter ("FLK-19066" = "flk 19066").
 export const MAX_QUERY = 64;
 
@@ -40,12 +41,13 @@ export function highlightSegments(text: string, query: string): { text: string; 
 }
 
 // Recent searches on this device (per user). Storage may be unavailable: never throw.
-const RECENT_MAX = 6;
+// How many recent searches to keep: Settings (search.recentCount).
+const recentMax = () => Number(setting("search.recentCount", 6));
 const recentKey = (userId: string) => `mt.recentSearches.${userId}`;
 export function readRecent(userId: string): string[] {
   try {
     const v = JSON.parse(localStorage.getItem(recentKey(userId)) || "[]");
-    return Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, RECENT_MAX) : [];
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, recentMax()) : [];
   } catch {
     return [];
   }
@@ -54,7 +56,7 @@ export function rememberSearch(userId: string, q: string) {
   const text = q.trim().slice(0, MAX_QUERY);
   if (!text) return;
   try {
-    const next = [text, ...readRecent(userId).filter((x) => normalize(x) !== normalize(text))].slice(0, RECENT_MAX);
+    const next = [text, ...readRecent(userId).filter((x) => normalize(x) !== normalize(text))].slice(0, recentMax());
     localStorage.setItem(recentKey(userId), JSON.stringify(next));
   } catch {
     /* storage blocked: recent searches are optional */
