@@ -180,7 +180,7 @@ are exactly the original rules, so nothing changes until a System Administrator 
 ## Settings (`/settings`)
 
 Every list, label and limit that used to be in the code has a default and can be changed here (permission
-`settings.manage`: System Administrator only, never grantable). Changes apply at once (confirm + audit) and are
+`settings.manage`: System Administrator always, other users only with an explicit Access Control grant). Changes apply at once (confirm + audit) and are
 marked *Modified*; *Reset to default* puts the original back.
 - **Texts / Labels:** every English/Sinhala UI text, side by side with the code default; search, "missing Sinhala",
   export/import JSON. (Texts that contain numbers or names keep their code wording.)

@@ -276,7 +276,7 @@ function RolesTab({ view, ro, edit, w, permissionLabel }: { view: WorkflowConfig
   const [newKey, setNewKey] = useState("");
   const [copyFrom, setCopyFrom] = useState("");
   const [open, setOpen] = useState<string | null>(null);
-  const perms = runtime().permissions.filter((p) => !SYSTEM_ADMIN_ONLY.has(p));
+  const perms = runtime().permissions.filter((p) => !SYSTEM_ADMIN_ONLY.has(p) && p !== "settings.manage");
   const allPerms = [...new Set([...perms, ...view.locations.map((l) => l.permission).filter(Boolean) as string[]])];
   const upd = (key: string, patch: Partial<ConfigRole>) => edit((c) => Object.assign(c.roles.find((r) => r.key === key)!, patch));
   return (

@@ -123,7 +123,7 @@ export function diffConfigs(a, b) {
 // Only the editable content (no _id / state / timestamps).
 export const configContent = (c) => ({
   locations: c.locations || [], statuses: c.statuses || [], transitions: c.transitions || [],
-  // Older published configs granted settings to Super Admin. Remove that retired grant when editing/exporting.
+  // Settings delegation is managed through Access Control, not workflow role defaults.
   roles: (c.roles || []).map(role => role.key === "system_admin" ? role : {
     ...role, permissions: (role.permissions || []).filter(permission => permission !== "settings.manage")
   }),

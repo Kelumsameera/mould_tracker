@@ -3,7 +3,7 @@ import * as s from "../validators/schemas.js";
 import { routerFrom } from "./table.js";
 
 const READ = ["settings.manage", "config.manage"];
-const WRITE = ["settings.manage"]; // System Administrator only; never grantable
+const WRITE = ["settings.manage"]; // System Administrator, or an explicit settings permission grant
 
 export const settingsRouteTable = [
   ["get", "/", READ, c.listSettings],

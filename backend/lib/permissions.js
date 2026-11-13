@@ -45,12 +45,12 @@ export const PERMISSIONS = {
   "import.run": SA,
   "audit.view": SA,
   "export.run": [...SA, "executive"],
-  "settings.manage": []             // system_admin only; never grantable
+  "settings.manage": []             // Only by an explicit System Administrator grant for other roles/users
 };
 
 export const PERMISSION_KEYS = Object.keys(PERMISSIONS);
 // System-Administrator-only capabilities kept outside the editable table: never grantable, never in a role.
-export const LOCKED_PERMISSIONS = ["access.manage", "config.manage", "settings.manage"];
+export const LOCKED_PERMISSIONS = ["access.manage", "config.manage"];
 const SYSADMIN_ONLY = new Set(LOCKED_PERMISSIONS);
 
 // Static keys + keys created by the workflow config (move.<locationKey> of each location).
@@ -111,7 +111,8 @@ export function roleDefaults(role) {
   const r = configRole(resolveRole(role));
   if (!r) return staticRoleDefaults(role);
   if (r.active === false) return [];
-  return allPermissionKeys().filter((p) => (r.permissions || []).includes(p));
+  // Settings delegation is explicit in Access Control, including for roles from older workflow defaults.
+  return allPermissionKeys().filter((p) => p !== "settings.manage" && (r.permissions || []).includes(p));
 }
 
 // Role permissions after the editable matrix (user.rolePermissionOverrides = the role's saved list, or null).
