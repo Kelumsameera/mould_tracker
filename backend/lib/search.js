@@ -34,9 +34,9 @@ export function keyFilter(words, field = "searchKey") {
 // separators between characters, e.g. "flk19066" matches "FLK 19066" and "FLK-19066".
 export function looseRegex(words) {
   const chars = [...words.join("")].map(escapeRegex);
-  // No "u" flag and no \p classes: MongoDB regex options do not accept them. A separator is anything that is not
-  // a Latin letter, digit or Sinhala character.
-  return chars.length ? new RegExp(chars.join("[^a-zA-Z0-9\\u0D80-\\u0DFF]*"), "i") : null;
+  // Use literal Sinhala code points in the pattern. MongoDB's PCRE2 rejects JavaScript \u escapes.
+  // A separator is anything that is not a Latin letter, digit or Sinhala character.
+  return chars.length ? new RegExp(chars.join("[^a-zA-Z0-9\u0D80-\u0DFF]*"), "i") : null;
 }
 
 // ---- Ranking ----

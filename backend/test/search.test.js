@@ -125,7 +125,11 @@ test("special characters and very long input never error and give an empty resul
 
 test("query filters are built from normalized text only and use the indexed key", () => {
   assert.deepEqual(keyFilter(["flk19066"]), { $and: [{ searchKey: { $regex: "flk19066" } }] });
-  assert.equal(String(looseRegex(["ab"])), "/a[^a-zA-Z0-9\\u0D80-\\u0DFF]*b/i");
+  assert.equal(String(looseRegex(["ab"])), "/a[^a-zA-Z0-9\u0D80-\u0DFF]*b/i");
+  assert.equal(looseRegex(["flk", "18063"]).source.includes("\\u"), false, "MongoDB PCRE2 receives literal code points");
+  assert.ok(looseRegex(["flk", "18063"]).test("FLK-18063"));
+  assert.ok(looseRegex(["සිංහල"]).test("සිංහල"));
+  assert.equal(looseRegex(["ab"]).test("aසිංහලb"), false, "Sinhala letters are not separators");
   assert.ok(Mould.schema.indexes().some(([k]) => k.searchKey === 1) && Item.schema.indexes().some(([k]) => k.searchKey === 1));
 });
 
