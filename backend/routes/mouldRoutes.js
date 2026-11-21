@@ -1,7 +1,7 @@
 import * as c from "../controllers/mouldController.js";
 import * as w from "../controllers/workLogController.js";
 import * as s from "../validators/schemas.js";
-import { routerFrom } from "./table.js";
+import { routerFrom, SIGNED_IN } from "./table.js";
 
 const VIEW = ["mould.view"];
 const EDIT = ["mould.edit"];
@@ -9,8 +9,8 @@ const IMAGES = ["mould.images.manage"];
 const DELETE = ["mould.delete"];
 // Editing a mould: details need mould.edit, capable machines need mould.machines.edit (checked per field).
 const UPDATE = ["mould.edit", "mould.machines.edit"];
-// The move route lets anyone with a move permission in; lib/workflow.js decides the exact move.
-const MOVE = ["move.outOfService", "move.machine", "move.floor", "move.mouldroom", "move.workshop", "move.isolation"];
+// The planner authorizes moves according to the current settings and workflow.
+const MOVE = SIGNED_IN;
 
 export const mouldRouteTable = [
   ["get", "/", VIEW, c.listMoulds, null, s.listMouldsQuery],

@@ -75,7 +75,7 @@ function Limits({ data, editable, busy, change }: Props) {
           <div key={x.key} className="rounded-lg border border-solid border-line bg-surface p-3 grid gap-2 md:grid-cols-[1fr_160px_auto] items-center">
             <div>
               <div className="font-bold text-sm">{x.key} {x.modified && <span className="ml-1 text-[11px] rounded-pill bg-warn-bg text-warn-ink px-1.5">{s.modified}</span>}</div>
-              <div className="text-xs text-ink-soft">{s.affects}: {x.affects} · {s.codeDefault}: {String(x.default)}{x.min != null ? ` (${x.min}–${x.max})` : ""}</div>
+              <div className="text-xs text-ink-soft">{s.affects}: {x.key === "moves.unrestricted" ? s.unrestrictedMoves : x.affects} · {s.codeDefault}: {String(x.default)}{x.min != null ? ` (${x.min}–${x.max})` : ""}</div>
             </div>
             {x.type === "bool"
               ? <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" disabled={!editable || busy} checked={Boolean(value)} onChange={(e) => setDraft({ ...draft, [x.key]: e.target.checked })} />{String(value)}</label>

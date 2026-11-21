@@ -117,6 +117,12 @@ After upgrading from an older version run `npm run migrate:permissions` (dry run
 names correctly, so this is housekeeping. Likewise `npm run migrate:conditional` (then `-- --apply`) renames the
 old mould status `RUNNING_LIMITED` to `CONDITIONAL`; history keeps the old value and is shown as Conditional.
 
+## Direct mould moves
+
+`moves.unrestricted` defaults to `true` (Settings ? Thresholds & limits). Every signed-in user can move a mould directly to any active location, including custom workflow locations, regardless of move permissions, Isolation routing, mould status, tool type, machine capability, shot limit or rack owner. The current status is preserved unless explicitly changed. Authentication, confirmation, version checks, active destinations, machine occupancy, rack capacity, required machine/rack selection, external dispatch details, transactions and audit history remain enforced. No database migration is required; existing published workflows remain stored. Turn this setting off to enforce their original move rules again.
+
+The rules below describe strict mode (`moves.unrestricted = false`).
+
 ## Workflow rules (built-in defaults; editable in Workflow settings)
 
 1. GOOD moulds may be on a machine, on the Production Floor, in the Isolation Area or on a Mould Room rack

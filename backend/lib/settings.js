@@ -7,6 +7,7 @@ const RECHECK_MS = 30_000;
 
 // key -> { type, default, min?, max?, group, affects }
 export const SETTINGS = {
+  "moves.unrestricted": { type: "bool", default: true, group: "limits", affects: "Allow every signed-in user to move directly to any active location" },
   "limits.maxItemImages": { type: "int", default: 5, min: 1, max: 20, group: "limits", affects: "Pictures per item (mould form, picture upload)" },
   "limits.imageMaxPx": { type: "int", default: 800, min: 200, max: 4000, group: "limits", affects: "Stored picture size in pixels (longest side)" },
   "limits.imageQuality": { type: "int", default: 80, min: 30, max: 100, group: "limits", affects: "Stored picture quality (WebP)" },

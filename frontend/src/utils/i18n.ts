@@ -68,6 +68,7 @@ const en = {
     confirmDiscard: 'Discard the draft? Its changes are lost.', confirmImport: 'Import this file as the draft?', publishedOk: 'Published', savedOk: 'Draft saved'
   },
   settingsAdmin: {
+    unrestrictedMoves: 'Allow every signed-in user to move directly to any active location',
     title: 'Settings', readOnly: 'You can view the settings. Changing them needs the "Manage system settings" permission.',
     tabs: { texts: 'Texts / Labels', limits: 'Thresholds & limits', lists: 'Lists', dashboards: 'Dashboards' } as Record<string, string>,
     search: 'Search by key or text', missingSi: 'Only texts without a Sinhala override', modified: 'Modified', reset: 'Reset to default', resetAll: 'Reset all texts',
@@ -457,6 +458,7 @@ const si: Dict = {
     confirmDiscard: 'කෙටුම්පත ඉවත් කරන්නද? එහි වෙනස්කම් නැති වෙනවා.', confirmImport: 'මෙම file එක කෙටුම්පත ලෙස import කරන්නද?', publishedOk: 'ප්‍රකාශ කළා', savedOk: 'කෙටුම්පත save කළා'
   },
   settingsAdmin: {
+    unrestrictedMoves: "ඕනෑම user කෙනෙකුට ඕනෑම active location එකකට direct move කරන්න ඉඩ දෙන්න",
     title: 'සැකසුම්', readOnly: 'සැකසුම් බැලිය හැක. වෙනස් කිරීමට "System settings වෙනස් කරන්න" අවසරය අවශ්‍යයි.',
     tabs: { texts: 'පෙළ / නම්', limits: 'සීමා', lists: 'ලැයිස්තු', dashboards: 'Dashboards' },
     search: 'Key හෝ පෙළ අනුව සොයන්න', missingSi: 'සිංහල override නැති ඒවා පමණක්', modified: 'වෙනස් කළා', reset: 'මුල් අගයට', resetAll: 'සියලු පෙළ මුල් අගයට',

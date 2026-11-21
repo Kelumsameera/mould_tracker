@@ -10,3 +10,7 @@ outputs
 test
 package-lock.json
 index-delete.tsx
+!test/
+test/*
+!test/navigation.test.mjs
+!test/runtimeConfig.test.mjs

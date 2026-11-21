@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { errorText, locationLine } from "@/utils/format";
 import { locationName, type Dict, statusName } from "@/utils/i18n";
 import { can, locationKind } from "@/utils/permissions";
-import { activeStatuses, configLocation, configStatus, currentConfig, transitionOf } from "@/utils/runtimeConfig";
+import { activeStatuses, configLocation, configStatus, currentConfig, transitionOf, setting } from "@/utils/runtimeConfig";
 import { CONDITIONAL_STATUS, INTENDED_DESTINATIONS, STATUSES, type Location, type Machine, type Mould, type MouldStatus, type MoveInput, type User, type Zone } from "@/utils/types";
 import { useEffect, useState } from "react";
 
@@ -78,15 +78,16 @@ export default function MouldActions({
   const isExternal = dest ? Boolean(dest.external) : action === "OUT_OF_SERVICE";
   const fromExternal = configLocation(mould.location) ? Boolean(configLocation(mould.location)?.external) : mould.location === "OUT_OF_SERVICE";
   const isStatusPlace = dest ? Boolean(dest.acceptsStatus) && !isTransit : action === "WORKSHOP";
-  const transitionNeedsRemarks = dest ? (transitionOf(mould.location, action)?.requires || []).includes("remarks") : action === "WORKSHOP" || action === "OUT_OF_SERVICE";
+  const transitionNeedsRemarks = !setting("moves.unrestricted", true) && (dest ? (transitionOf(mould.location, action)?.requires || []).includes("remarks") : action === "WORKSHOP" || action === "OUT_OF_SERVICE");
   const statusChoices = (activeStatuses()?.map((x) => x.key as MouldStatus) ?? STATUSES).filter((x) => !configStatus(x)?.limitedRun);
   const destinations = (currentConfig()?.intendedDestinations as Location[] | undefined) ?? INTENDED_DESTINATIONS;
   const machine = machines.find((x) => x.id === machineId);
-  const needsMachineReason = Boolean(machine && !mould.capableMachines.includes(machine.code));
-  const needsZoneReason = Boolean(rack && mould.owner && mould.owner !== rack.zone);
+  const unrestricted = setting("moves.unrestricted", true);
+  const needsMachineReason = !unrestricted && Boolean(machine && !mould.capableMachines.includes(machine.code));
+  const needsZoneReason = !unrestricted && Boolean(rack && mould.owner && mould.owner !== rack.zone);
   // Fields follow the destination kind and the transition rules of the workflow config.
-  const needsRemarks = action === "STATUS" || transitionNeedsRemarks || fromExternal || (isTransit && Boolean(status) && status !== "GOOD");
-  const canOverride = can(user, "machines.override");
+  const needsRemarks = action === "STATUS" || isExternal || (!unrestricted && (transitionNeedsRemarks || fromExternal || (isTransit && Boolean(status) && status !== "GOOD")));
+  const canOverride = unrestricted || can(user, "machines.override");
 
   // Where the mould would go, in the same words as the location line ("Mould Room · FLK · A3").
   // Button and form actions

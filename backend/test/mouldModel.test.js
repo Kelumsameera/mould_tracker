@@ -1,3 +1,6 @@
+import { setSettingsLoader, refreshSettings } from "../lib/settings.js";
+setSettingsLoader(async () => [{ kind: "setting", key: "moves.unrestricted", value: false }]);
+await refreshSettings();
 import { test, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";

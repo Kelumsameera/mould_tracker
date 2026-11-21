@@ -1,7 +1,7 @@
 // Mirrors backend/lib/permissions.js. The server decides; /api/auth/me returns the caller's EFFECTIVE
 // permission list (role matrix + personal grants - denies) and the UI only uses it to show or hide controls.
 import type { Mould as MouldT, User } from "@/utils/types";
-import { activeLocations, activeStatuses, configLocation, configStatus, transitionOf } from "./runtimeConfig.ts";
+import { activeLocations, activeStatuses, configLocation, configStatus, transitionOf, setting } from "./runtimeConfig.ts";
 import type { PageName } from "./helpers";
 
 export const ROLES = [
@@ -84,6 +84,7 @@ const STORAGE = ["MOULD_ROOM", "TOOL_ROOM"];
 // Mirrors isolationRouteError in backend/lib/workflow.js: non-machine moves go through the Isolation Area.
 const DIRECT_MOUNT_FROM = ["PRODUCTION_FLOOR", "ISOLATION", "MOULD_ROOM", "TOOL_ROOM", "MACHINE"];
 export function routeAllowed(from: string, to: string) {
+  if (setting("moves.unrestricted", true)) return from !== to || ["machine", "rack"].includes(locationKind(to));
   if (from === "OUT_OF_SERVICE" || to === "OUT_OF_SERVICE") return true;
   if (to === "MACHINE") return DIRECT_MOUNT_FROM.includes(from);
   if (to === "ISOLATION") return from !== "ISOLATION";
@@ -107,6 +108,8 @@ function builtInCanMoveTo(user: User | null | undefined, from: string, to: strin
 
 const legacyCanMoveTo = builtInCanMoveTo;
 export function canMoveTo(user: User | null | undefined, from: string, to: string) {
+  if (!user) return false;
+  if (setting("moves.unrestricted", true)) return Boolean(configLocation(to) && configLocation(to)?.active !== false);
   if (!activeLocations()) return legacyCanMoveTo(user, from, to);
   const t = transitionOf(from, to);
   if (!t || t.allowed === false || t.via) return false;
@@ -119,9 +122,10 @@ export function moveTargets(mould: Pick<MouldT, "location" | "status" | "toolTyp
   if (!list) return [];
   const status = configStatus(mould.status);
   return list.filter((loc) => {
-    if (loc.storage && !(loc.toolTypes || []).includes(mould.toolType ?? "INJECTION_MOULD")) return false;
+    if (!setting("moves.unrestricted", true) && loc.storage && !(loc.toolTypes || []).includes(mould.toolType ?? "INJECTION_MOULD")) return false;
     const same = loc.key === mould.location;
     if (same && loc.kind !== "machine" && loc.kind !== "rack") return false; // a status change at the same place is its own action
+    if (setting("moves.unrestricted", true)) return true;
     const allowed = status?.moveTo === "any" || (Array.isArray(status?.moveTo) && status.moveTo.includes(loc.key)) || Boolean(loc.acceptsStatus);
     return allowed || !status;
   });

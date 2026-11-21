@@ -1,3 +1,4 @@
+import { setting } from "./settings.js";
 // Mould workflow rules. Pure functions: the controllers load the documents, these decide what may happen and
 // what changes, and the controllers save it with a Movement + AuditLog.
 // The rules come from the workflow config (lib/workflowConfig.js; its defaults are the original rules):
@@ -20,7 +21,7 @@ import { isStorageIn, locationOf, statusOf, transitionOf } from "./workflowConfi
 // move into the same holding area, otherwise null.
 export function isolationRouteError(from, to, config = getConfig()) {
   const t = transitionOf(config, from ?? null, to);
-  if (t?.via) return "ISOLATION_FIRST";
+  if (!setting("moves.unrestricted") && t?.via) return "ISOLATION_FIRST";
   if (from != null && from === to && locationOf(config, to)?.kind === "transit") return "NO_CHANGE";
   return null;
 }
@@ -89,9 +90,9 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
     if (!machine) fail(400, "MACHINE_REQUIRED", "Choose a machine");
     if (!machine.active) fail(409, "MACHINE_INACTIVE", `${machine.code} is not in use`);
     if (from === to && sameId(mould.machineId, machine)) fail(400, "NO_CHANGE", `${mould.toolId} is already on ${machine.code}`);
-    if (isServiceDue(mould)) fail(409, "SERVICE_DUE", `${mould.toolId} has reached its shot limit (${mould.totalShots}/${mould.shotsToService}); send it to the Workshop`); // rule 8
+    if (!setting("moves.unrestricted") && isServiceDue(mould)) fail(409, "SERVICE_DUE", `${mould.toolId} has reached its shot limit (${mould.totalShots}/${mould.shotsToService}); send it to the Workshop`); // rule 8
     if (occupant && !sameId(occupant, mould)) fail(409, "MACHINE_OCCUPIED", `${machine.code} already has ${occupant.toolId}; take it off first`, { occupant: occupant.toolId }); // rule 6
-    if (!(mould.capableMachines || []).includes(machine.code)) { // rule 5
+    if (!setting("moves.unrestricted") && !(mould.capableMachines || []).includes(machine.code)) { // rule 5
       if (!can(user, "machines.override")) fail(409, "NOT_CAPABLE", `${mould.toolId} is not listed for ${machine.code}`, { capableMachines: mould.capableMachines || [] });
       if (!text(overrideReason)) fail(400, "OVERRIDE_REASON_REQUIRED", `${mould.toolId} is not listed for ${machine.code}; give a reason to override`);
       movement.overrideReason = text(overrideReason);
@@ -107,7 +108,7 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
     if (rack.deletedAt || !rack.active || rack.zoneActive === false) fail(409, "RACK_INACTIVE", `Rack ${rack.locationId} is not in use`);
     if (from === to && sameId(mould.rackId, rack)) fail(400, "NO_CHANGE", `${mould.toolId} is already on ${rack.locationId}`);
     if (rack.capacity != null && rackOccupancy >= rack.capacity) fail(409, "RACK_FULL", `Rack ${rack.locationId} is full (${rack.capacity})`);
-    if (mould.owner && mould.owner !== rack.zone) {
+    if (!setting("moves.unrestricted") && mould.owner && mould.owner !== rack.zone) {
       if (!text(overrideReason)) fail(409, "OWNER_MISMATCH", `${mould.toolId} belongs to ${mould.owner}, not ${rack.zone}; give a reason to use this rack`, { owner: mould.owner, zone: rack.zone });
       movement.overrideReason = text(overrideReason);
       warnings.push("OWNER_ZONE_OVERRIDDEN");
@@ -119,7 +120,7 @@ export function planMove({ mould, user, to, machine = null, occupant = null, rac
 
   // A place where a status is set on arrival: a second move there must change the status; remarks are
   // required where the transition says so (rule 7).
-  const requires = transitionOf(config, from ?? null, to)?.requires || [];
+  const requires = setting("moves.unrestricted") ? [] : transitionOf(config, from ?? null, to)?.requires || [];
   if (!target.external && target.kind !== "transit" && requires.includes("remarks")) {
     if (from === to && status === undefined) fail(400, "NO_CHANGE", `${mould.toolId} is already at the ${placeName(to, target)}`);
     requireRemarks(remarks, `when sending a mould to the ${placeName(to, target)}`);

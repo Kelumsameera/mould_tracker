@@ -1,3 +1,6 @@
+import { setSettingsLoader, refreshSettings } from "../lib/settings.js";
+setSettingsLoader(async () => [{ kind: "setting", key: "moves.unrestricted", value: false }]);
+await refreshSettings();
 // Step 4: Isolation Area between Production Floor, Mould Room and Workshop.
 import { test } from "node:test";
 import assert from "node:assert/strict";

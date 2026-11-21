@@ -1,3 +1,6 @@
+import { setSettingsLoader, refreshSettings } from "../lib/settings.js";
+setSettingsLoader(async () => [{ kind: "setting", key: "moves.unrestricted", value: false }]);
+await refreshSettings();
 // Step 5: running with blocked cavities (limited run).
 import { test } from "node:test";
 import assert from "node:assert/strict";

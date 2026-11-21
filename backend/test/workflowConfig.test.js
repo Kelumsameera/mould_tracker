@@ -1,3 +1,6 @@
+import { setSettingsLoader, refreshSettings } from "../lib/settings.js";
+setSettingsLoader(async () => [{ kind: "setting", key: "moves.unrestricted", value: false }]);
+await refreshSettings();
 // Configurable workflow: the built-in config equals the original hard-coded rules, and behaviour can be changed
 // through config only (new location, status, role, removed "via"). Existing rule tests run unchanged on top.
 import { test } from "node:test";

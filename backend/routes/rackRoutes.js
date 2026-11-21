@@ -2,7 +2,7 @@ import * as c from "../controllers/rackController.js";
 import * as s from "../validators/schemas.js";
 import { routerFrom } from "./table.js";
 
-const VIEW = ["rack.view"];
+const VIEW = ["rack.view", "mould.view"];
 const MANAGE = ["rack.manage"]; // Super Admin only; Admin sees racks read-only
 
 export const rackRouteTable = [

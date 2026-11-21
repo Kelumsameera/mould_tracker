@@ -1,3 +1,6 @@
+import { setSettingsLoader, refreshSettings } from "../lib/settings.js";
+setSettingsLoader(async () => [{ kind: "setting", key: "moves.unrestricted", value: false }]);
+await refreshSettings();
 // Phase C: workflow config API (draft, publish, rollback, export/import, validate, simulate), validation rules,
 // dynamic permission keys, custom roles and the locked config.manage capability.
 import { test, beforeEach, afterEach, mock } from "node:test";

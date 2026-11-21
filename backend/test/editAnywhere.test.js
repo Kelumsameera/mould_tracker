@@ -1,3 +1,6 @@
+import { setSettingsLoader, refreshSettings } from "../lib/settings.js";
+setSettingsLoader(async () => [{ kind: "setting", key: "moves.unrestricted", value: false }]);
+await refreshSettings();
 // Step 3: master data can be edited at any status/location; edits never change status/location.
 import { test } from "node:test";
 import assert from "node:assert/strict";

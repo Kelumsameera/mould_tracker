@@ -1,3 +1,5 @@
+import { getConfig } from "../lib/configStore.js";
+import { locationOf } from "../lib/workflowConfig.js";
 import Mould from "../models/Mould.js";
 import Item from "../models/Item.js";
 import Machine from "../models/Machine.js";
@@ -232,13 +234,14 @@ export async function moveMould(req, res) {
     const mould = await withPlace(doc, session);
 
     let machine = null, occupant = null;
-    if (to === "MACHINE") {
+    const target = locationOf(getConfig(), to);
+    if (target?.kind === "machine") {
       machine = machineId ? await Machine.findById(machineId).session(session).lean()
         : machineCode ? await Machine.findOne({ code: normalizeMachineCode(machineCode) }).session(session).lean() : null;
       if ((machineId || machineCode) && !machine) fail(404, "NOT_FOUND", "Machine not found");
       if (machine) occupant = await Mould.findOne({ location: "MACHINE", machineId: machine._id, deletedAt: null, _id: { $ne: doc._id } }).session(session).lean();
     }
-    const { rack, rackOccupancy } = to === "MOULD_ROOM" ? await rackForMove(rackId, doc._id, session) : { rack: null, rackOccupancy: 0 };
+    const { rack, rackOccupancy } = target?.kind === "rack" ? await rackForMove(rackId, doc._id, session) : { rack: null, rackOccupancy: 0 };
 
     const plan = planMove({ mould, user: req.user, to, machine, occupant, rack, rackOccupancy, remarks, overrideReason, status, outOfServiceDetails, intendedDestination });
     warnings = plan.warnings;

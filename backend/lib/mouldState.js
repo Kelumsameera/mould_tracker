@@ -1,3 +1,4 @@
+import { setting } from "./settings.js";
 // Locations, statuses and the invariants every stored mould must satisfy, read from the workflow config
 // (lib/workflowConfig.js defaults = the original fixed lists). The constants below are the built-in keys,
 // kept for code that needs them at import time; validation uses the published config (isKnownLocation …).
@@ -36,15 +37,15 @@ export const isKnownStatus = (key, config = getConfig()) => Boolean(statusOf(con
 export function mouldStateError(m, config = getConfig()) {
   const loc = locationOf(config, m.location);
   if (!loc) return "Unknown location";
-  if (loc.storage && !(loc.toolTypes || []).includes(m.toolType ?? "INJECTION_MOULD")) return "Use the Tool Room for extrusion dies and the Mould Room for injection moulds";
+  if (!setting("moves.unrestricted") && loc.storage && !(loc.toolTypes || []).includes(m.toolType ?? "INJECTION_MOULD")) return "Use the Tool Room for extrusion dies and the Mould Room for injection moulds";
   if (loc.kind === "machine" && !m.machineId) return "A mould on a machine needs a machine";
   if (loc.kind !== "machine" && m.machineId) return "Only a mould on a machine can reference a machine";
   if (loc.kind === "rack" && !m.rackId && !m.awaitingRack) return `A mould in the ${loc.labels?.en ?? m.location} needs a rack`;
   if (loc.kind !== "rack" && (m.rackId || m.awaitingRack)) return "Only a mould in the Mould Room can have a rack";
   const status = statusOf(config, displayStatus(m.status));
   if (!status) return "Unknown status";
-  if (!status.isGood && loc.storage) return "A mould that needs service or repair cannot be in the Mould Room or Tool Room";
-  if (!allowsAt(status.allowedLocations, m.location)) return status.stateMessage || `${status.labels?.en ?? m.status} is not allowed in the ${loc.labels?.en ?? m.location}`;
+  if (!setting("moves.unrestricted") && !status.isGood && loc.storage) return "A mould that needs service or repair cannot be in the Mould Room or Tool Room";
+  if (!setting("moves.unrestricted") && !allowsAt(status.allowedLocations, m.location)) return status.stateMessage || `${status.labels?.en ?? m.status} is not allowed in the ${loc.labels?.en ?? m.location}`;
   if (loc.kind !== "transit" && m.isolation?.since) return "Only a mould in the Isolation Area can have an isolation stay";
   return null;
 }
