@@ -5,6 +5,12 @@ import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequest
 
 export type PasskeyInfo = { id: string; name: string; createdAt: string; lastUsedAt?: string };
 export type PublicMould = { id: string; toolId: string; locationKey: string; location: { en: string; si: string }; status: MouldStatus; statusLabels: { en: string; si: string }; machine: string | null; rack: string | null; hasImage?: boolean };
+export type PublicMouldDetail = Omit<PublicMould, "machine"> & {
+  toolType: string; toolSet: string; size: string; owner: string | null; lastMovedAt: string | null;
+  machine: { code: string; name: string } | null; capableMachines: { code: string; name: string | null }[];
+  totalCavities: number; blockedCavities: number;
+  items: { itemId: string; description: string; cavities: number | null; material: string | null; masterbatch: string | null }[];
+};
 export const publicImagePath = (id: string, size: "thumb" | "full" = "thumb") => `/public/moulds/${id}/image${size === "full" ? "?size=full" : ""}`;
 export type PublicMouldResult = { hasMore: boolean; total: number; refreshSeconds: number; locations: { key: string; labels: { en: string; si: string }; icon?: string; count: number }[]; moulds: PublicMould[] };
 
@@ -54,6 +60,7 @@ async function request<T>(path: string, method = "GET", body?: unknown): Promise
 }
 
 export const api = {
+  publicMould: (id: string) => request<{ mould: PublicMouldDetail }>(`/public/moulds/${id}`),
   publicMoulds: (q: string, page = 1, filters: { toolType?: string; location?: string } = {}) => request<PublicMouldResult>("/public/moulds" + qs({ q, page, ...filters })),
   login: (email: string, password: string) => request<{ user: User }>("/auth/login", "POST", { email, password }),
   logout: () => request<unknown>("/auth/logout", "POST"),

@@ -164,3 +164,20 @@ test("public mould image rejects bad ids and moulds without pictures", async () 
     assert.equal((await fetch(`${base}/public/moulds/${new mongoose.Types.ObjectId()}/image`)).status, 404);
   } finally { exists.mock.restore(); findOne.mock.restore(); }
 });
+
+test("public mould detail hides private fields", async () => {
+  const id = new mongoose.Types.ObjectId();
+  const lean = rows => ({ sort() { return this; }, lean: async () => rows });
+  const findOne = mock.method(Mould, "findOne", () => lean({ _id: id, toolId: "P-1", location: "MACHINE", status: "GOOD", machineId: "mc1", capableMachines: ["INJ-01"], notes: "secret", lastMovedBy: "u1" }));
+  const itemFind = mock.method(Item, "find", () => lean([{ itemId: "A1", description: "Cap", cavities: 4, notes: "secret", images: [] }]));
+  const byId = mock.method(Machine, "findById", () => lean({ code: "INJ-01", name: "Engel 200" }));
+  const machineFind = mock.method(Machine, "find", () => lean([{ code: "INJ-01", name: "Engel 200" }]));
+  try {
+    const body = await (await fetch(`${base}/public/moulds/${id}`)).json();
+    assert.deepEqual(body.mould.machine, { code: "INJ-01", name: "Engel 200" });
+    assert.equal(body.mould.totalCavities, 4);
+    assert.equal(body.mould.items[0].itemId, "A1");
+    assert.ok(!JSON.stringify(body).includes("secret"));
+    assert.ok(!("lastMovedBy" in body.mould));
+  } finally { findOne.mock.restore(); itemFind.mock.restore(); byId.mock.restore(); machineFind.mock.restore(); }
+});

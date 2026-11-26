@@ -53,6 +53,36 @@ router.get("/moulds", validate(publicMouldsQuery, "query"), asyncHandler(async (
   })) });
 }));
 
+// One mould with its items and machine. Still public-safe: no notes, remarks, people, problems or history.
+router.get("/moulds/:id", asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, code: "NOT_FOUND", message: "Not found" });
+  const m = await Mould.findOne({ _id: req.params.id, deletedAt: null }, { toolId: 1, toolType: 1, toolSetCount: 1, size: 1, owner: 1, capableMachines: 1, location: 1, status: 1, machineId: 1, rackId: 1, blockedCavities: 1, lastMovedAt: 1 }).lean();
+  if (!m) return res.status(404).json({ success: false, code: "NOT_FOUND", message: "Not found" });
+  const codes = [...new Set(m.capableMachines || [])];
+  const [items, machine, rack, capable] = await Promise.all([
+    Item.find({ mouldId: m._id, deletedAt: null }, { itemId: 1, description: 1, cavities: 1, materialId: 1, materialDescription: 1, masterbatchId: 1, masterbatchDescription: 1, "images.0": 1 }).sort({ sortOrder: 1 }).lean(),
+    m.machineId ? Machine.findById(m.machineId, { code: 1, name: 1 }).lean() : null,
+    m.rackId ? Rack.findById(m.rackId, { locationId: 1 }).lean() : null,
+    codes.length ? Machine.find({ code: { $in: codes } }, { code: 1, name: 1 }).lean() : []
+  ]);
+  const config = getConfig();
+  const status = displayStatus(m.status);
+  res.set("Cache-Control", "no-store");
+  res.json({ success: true, mould: {
+    id: String(m._id), toolId: m.toolId, toolType: m.toolType, toolSet: m.toolSetCount || "", size: m.size || "", owner: m.owner ?? null,
+    locationKey: m.location, location: config.locations.find(l => l.key === m.location)?.labels ?? { en: m.location, si: m.location },
+    status, statusLabels: config.statuses.find(s => s.key === status)?.labels ?? { en: m.status, si: m.status },
+    rack: rack?.locationId ?? null, lastMovedAt: m.lastMovedAt ?? null, hasImage: items.some(i => i.images?.length),
+    machine: machine ? { code: machine.code, name: machine.name } : null,
+    capableMachines: codes.map(code => ({ code, name: capable.find(x => x.code === code)?.name ?? null })),
+    totalCavities: items.reduce((sum, i) => sum + (i.cavities > 0 ? i.cavities : 0), 0),
+    blockedCavities: (m.blockedCavities || []).length,
+    items: items.map(i => ({ itemId: i.itemId, description: i.description || "", cavities: i.cavities ?? null,
+      material: [i.materialId, i.materialDescription].filter(Boolean).join(" – ") || null,
+      masterbatch: [i.masterbatchId, i.masterbatchDescription].filter(Boolean).join(" – ") || null }))
+  } });
+}));
+
 // The first item picture of a mould, without sign-in. Only that one file is reachable; no paths are exposed.
 router.get("/moulds/:id/image", asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).end();

@@ -15,6 +15,7 @@ import EmptyState from "@/components/EmptyState";
 import Icon, { iconForLocation } from "@/components/Icon";
 import Sheet from "@/components/Sheet";
 import Lightbox from "@/components/Lightbox";
+import PublicMouldDetails from "@/components/PublicMouldDetails";
 
 export default function HomePage() {
   return <Suspense fallback={null}><PublicHome /></Suspense>;
@@ -144,6 +145,7 @@ function PublicHome() {
           <img src={assetUrl(publicImagePath(selected.id, "full"))} alt={selected.toolId} className="mx-auto max-h-72 w-auto object-contain" decoding="async" />
         </button>}
         <PublicMouldCard mould={selected} lang={lang} query="" onOpen={() => {}} />
+        <PublicMouldDetails id={selected.id} lang={lang} version={refresh} />
         <p className="text-ink-soft">{t.publicView.hint}</p>
         <Link href="/login" className="rounded-md bg-action text-white p-3 text-center font-bold">{t.signIn}</Link>
       </div>}
