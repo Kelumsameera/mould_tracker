@@ -181,3 +181,20 @@ test("public mould detail hides private fields", async () => {
     assert.ok(!("lastMovedBy" in body.mould));
   } finally { findOne.mock.restore(); itemFind.mock.restore(); byId.mock.restore(); machineFind.mock.restore(); }
 });
+
+test("public rack view works without a session and drops rack notes", async () => {
+  const Zone = (await import("../models/Zone.js")).default;
+  const chain = rows => ({ sort() { return this; }, collation() { return this; }, lean: async () => rows });
+  const zones = mock.method(Zone, "find", () => chain([{ _id: "z1", code: "FLK", name: "Flexi", active: true }]));
+  const racks = mock.method(Rack, "find", () => chain([{ _id: "r1", zone: "FLK", row: "A", pallet: 1, number: 1, code: "A-P1-1", note: "secret", active: true }]));
+  const moulds = mock.method(Mould, "find", () => chain([{ _id: "m1", toolId: "R-1", status: "GOOD", owner: "FLK", rackId: "r1" }]));
+  const items = mock.method(Item, "find", () => chain([]));
+  try {
+    const response = await fetch(`${base}/public/racks`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.zones[0].racks[0].moulds[0].toolId, "R-1");
+    assert.ok(!JSON.stringify(body).includes("secret"));
+    assert.ok(!("owner" in body.zones[0].racks[0].moulds[0]));
+  } finally { zones.mock.restore(); racks.mock.restore(); moulds.mock.restore(); items.mock.restore(); }
+});

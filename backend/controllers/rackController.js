@@ -36,18 +36,22 @@ async function activeZone(code, session) {
 
 // GET /api/racks?zone=FLK - zones -> racks with the moulds on each, plus moulds still waiting for a rack.
 export async function listRacks(req, res) {
-  const zoneFilter = req.query.zone ? { code: String(req.query.zone).toUpperCase() } : {};
+  res.json({ success: true, ...(await rackOverview(req.query.zone)) });
+}
+
+// Zones -> racks -> moulds, shared by the signed-in rack view and the public one.
+export async function rackOverview(zone) {
+  const zoneFilter = zone ? { code: String(zone).toUpperCase() } : {};
   const zones = await Zone.find({ ...live, ...zoneFilter }).sort({ sortOrder: 1, code: 1 }).lean();
   const racks = await Rack.find({ ...live, zone: { $in: zones.map((z) => z.code) } }).sort(RACK_SORT).lean();
   const moulds = await Mould.find({ ...live, location: "MOULD_ROOM" }, { toolId: 1, status: 1, owner: 1, rackId: 1, awaitingRack: 1, size: 1, capableMachines: 1 }).sort({ toolId: 1 }).collation({ locale: "en", numericOrdering: true }).lean();
   await attachRackItems(moulds);
   const onRack = new Map();
   for (const m of moulds) if (m.rackId) onRack.set(String(m.rackId), [...(onRack.get(String(m.rackId)) || []), mouldChip(m)]);
-  res.json({
-    success: true,
+  return {
     zones: zones.map((z) => ({ ...zoneDTO(z), racks: racks.filter((r) => r.zone === z.code).map((r) => rackDTO(r, onRack.get(String(r._id)) || [])) })),
     awaitingRack: moulds.filter((m) => m.awaitingRack).map(mouldChip)
-  });
+  };
 }
 
 export async function getRack(req, res) {

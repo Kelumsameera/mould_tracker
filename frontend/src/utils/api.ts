@@ -60,6 +60,7 @@ async function request<T>(path: string, method = "GET", body?: unknown): Promise
 }
 
 export const api = {
+  publicRacks: () => request<{ refreshSeconds: number; zones: Zone[]; awaitingRack: { id: string; toolId: string }[] }>("/public/racks"),
   publicMould: (id: string) => request<{ mould: PublicMouldDetail }>(`/public/moulds/${id}`),
   publicMoulds: (q: string, page = 1, filters: { toolType?: string; location?: string } = {}) => request<PublicMouldResult>("/public/moulds" + qs({ q, page, ...filters })),
   login: (email: string, password: string) => request<{ user: User }>("/auth/login", "POST", { email, password }),

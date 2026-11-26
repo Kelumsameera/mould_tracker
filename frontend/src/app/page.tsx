@@ -16,6 +16,8 @@ import Icon, { iconForLocation } from "@/components/Icon";
 import Sheet from "@/components/Sheet";
 import Lightbox from "@/components/Lightbox";
 import PublicMouldDetails from "@/components/PublicMouldDetails";
+import RackOverview from "@/components/RackOverview";
+import type { Zone } from "@/utils/types";
 
 export default function HomePage() {
   return <Suspense fallback={null}><PublicHome /></Suspense>;
@@ -28,6 +30,10 @@ function PublicHome() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const toolType: ToolType = params.get("toolType") === "EXTRUSION_DIE" ? "EXTRUSION_DIE" : "INJECTION_MOULD";
+  const rackMode = params.get("view") === "racks";
+  const [rackData, setRackData] = useState<{ zones: Zone[]; waiting: { id: string; toolId: string }[] } | null>(null);
+  const [rackError, setRackError] = useState(false);
+  const [rackTitle, setRackTitle] = useState<Record<string, string>>({});
   const sentinel = useRef<HTMLDivElement>(null);
   const [location, setLocation] = useState<string>();
   const [result, setResult] = useState<PublicMouldResult | null>(null);
@@ -39,9 +45,10 @@ function PublicHome() {
   const [navOpen, setNavOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const t = I18N[lang];
-  const view = toolType === "EXTRUSION_DIE" ? "extrusion" : "find";
+  const view = rackMode ? "racks" : toolType === "EXTRUSION_DIE" ? "extrusion" : "find";
   const sync = error ? "offline" : loading ? "syncing" : "synced";
-  const selected = result?.moulds.find(m => m.id === selectedId);
+  const selected = rackMode ? undefined : result?.moulds.find(m => m.id === selectedId);
+  const selectedTitle = selected?.toolId ?? (selectedId ? rackTitle[selectedId] : undefined);
   const closeSelected = useCallback(() => setSelectedId(null), []);
   const search = useCallback((q: string) => { setQuery(q); setPage(1); setSelectedId(null); }, []);
 
@@ -67,7 +74,7 @@ function PublicHome() {
   }, [query, page, toolType, location, refresh]);
 
   // Reset the list when the tool type changes (tabs, sidebar or bottom nav).
-  useEffect(() => { setPage(1); setLocation(undefined); setSelectedId(null); setResult(null); }, [toolType]);
+  useEffect(() => { setPage(1); setLocation(undefined); setSelectedId(null); setResult(null); }, [toolType, rackMode]);
 
   // Load the next page when the end of the list scrolls into view.
   const canLoadMore = Boolean(result?.hasMore) && !loading && !error;
@@ -78,6 +85,18 @@ function PublicHome() {
     observer.observe(node);
     return () => observer.disconnect();
   }, [canLoadMore]);
+
+  useEffect(() => {
+    if (!rackMode) return;
+    let active = true;
+    api.publicRacks().then(data => {
+      if (!active) return;
+      setRackData({ zones: data.zones, waiting: data.awaitingRack });
+      setRackTitle(Object.fromEntries([...data.zones.flatMap(z => z.racks.flatMap(r => r.moulds)), ...data.awaitingRack].map(m => [m.id, m.toolId])));
+      setRackError(false);
+    }).catch(() => { if (active) setRackError(true); });
+    return () => { active = false; };
+  }, [rackMode, refresh]);
 
   const refreshSeconds = result?.refreshSeconds;
   useEffect(() => {
@@ -102,12 +121,17 @@ function PublicHome() {
           <p className="text-xs text-ink-soft">{t.publicView.hint}</p>
           <Link className="shrink-0 font-bold text-action text-sm" href="/login">{t.signIn}</Link>
         </div>
-        <div role="tablist" aria-label={t.toolType} className="grid grid-cols-2 gap-1 mb-4 rounded-md border border-line bg-surface p-1">
-          {(["INJECTION_MOULD", "EXTRUSION_DIE"] as const).map(type => <Link key={type} role="tab" aria-selected={toolType === type} href={type === "EXTRUSION_DIE" ? "/?toolType=EXTRUSION_DIE" : "/"} scroll={false}
-            className={"min-h-tap flex items-center justify-center gap-2 rounded-sm text-sm font-bold " + (toolType === type ? "bg-action text-white" : "text-ink-soft hover:text-ink")}>
+        <div role="tablist" aria-label={t.toolType} className="grid grid-cols-3 gap-1 mb-4 rounded-md border border-line bg-surface p-1">
+          {(["INJECTION_MOULD", "EXTRUSION_DIE"] as const).map(type => <Link key={type} role="tab" aria-selected={!rackMode && toolType === type} href={type === "EXTRUSION_DIE" ? "/?toolType=EXTRUSION_DIE" : "/"} scroll={false}
+            className={"min-h-tap flex items-center justify-center gap-2 rounded-sm text-sm font-bold " + (!rackMode && toolType === type ? "bg-action text-white" : "text-ink-soft hover:text-ink")}>
             <Icon name="mould" size={18} />{t.toolTypes[type]}
           </Link>)}
+          <Link role="tab" aria-selected={rackMode} href="/?view=racks" scroll={false}
+            className={"min-h-tap flex items-center justify-center gap-2 rounded-sm text-sm font-bold " + (rackMode ? "bg-action text-white" : "text-ink-soft hover:text-ink")}>
+            <Icon name="rack" size={18} />{t.nav.racks}
+          </Link>
         </div>
+        {rackMode ? <RackOverview embedded zones={rackData?.zones ?? []} waiting={rackData?.waiting ?? []} translations={t} loaded={Boolean(rackData)} error={rackError ? t.offlineError : ""} onRetry={() => setRefresh(n => n + 1)} onOpenMould={setSelectedId} /> : <>
         <div className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-2 mb-5">
           {result?.locations.map(place => <button key={place.key} aria-pressed={location === place.key} className={"bg-surface border border-solid rounded-md px-2 py-3 text-left cursor-pointer text-inherit flex flex-col gap-0.5 min-h-17 " + (location === place.key ? "border-ink shadow-[inset_0_-3px_0_var(--accent)]" : "border-line hover:border-line-strong")} onClick={() => { setLocation(current => current === place.key ? undefined : place.key); setPage(1); setSelectedId(null); }}>
             <span className={"text-xl font-extrabold leading-[1.1] flex items-center gap-1.5 " + (TONE_TEXT[place.key] ?? "text-ink")}><Icon name={iconForLocation(place.key)} size={18} />{place.count}</span>
@@ -131,6 +155,7 @@ function PublicHome() {
             </>}
           </>}
         </div>
+        </>}
       </main>
     </div>
     <nav className="md:hidden fixed left-0 right-0 bottom-0 z-35 grid grid-cols-3 bg-surface border-t border-line pb-(--safe-b)" aria-label={t.nav.menu}>
@@ -138,14 +163,14 @@ function PublicHome() {
       <Link href="/?toolType=EXTRUSION_DIE" aria-current={view === "extrusion" ? "page" : undefined} className="min-h-(--nav-h) flex flex-col items-center justify-center gap-1 text-xs font-bold text-action"><Icon name="mould" size={22} />{t.extrusionShort}</Link>
       <button className="min-h-(--nav-h) flex flex-col items-center justify-center gap-1 text-xs font-bold" onClick={() => setNavOpen(true)}><Icon name="more" size={22} />{t.nav.more}</button>
     </nav>
-    <Sheet open={Boolean(selected)} onClose={closeSelected} label={selected?.toolId ?? t.brandTitle} closeLabel={t.close}>
-      {selected && <div className="py-5 grid gap-4">
-        <h2 className="text-2xl font-bold">{selected.toolId}</h2>
-        {selected.hasImage && <button type="button" className="rounded-lg border border-line bg-white p-2 cursor-zoom-in" aria-label={t.publicView.viewPicture} title={t.publicView.viewPicture} onClick={() => setZoomSrc(assetUrl(publicImagePath(selected.id, "full")))}>
-          <img src={assetUrl(publicImagePath(selected.id, "full"))} alt={selected.toolId} className="mx-auto max-h-72 w-auto object-contain" decoding="async" />
+    <Sheet open={Boolean(selectedId)} onClose={closeSelected} label={selectedTitle ?? t.brandTitle} closeLabel={t.close}>
+      {selectedId && <div className="py-5 grid gap-4">
+        <h2 className="text-2xl font-bold">{selectedTitle}</h2>
+        {(selected?.hasImage ?? true) && <button type="button" className="rounded-lg border border-line bg-white p-2 cursor-zoom-in" aria-label={t.publicView.viewPicture} title={t.publicView.viewPicture} onClick={() => setZoomSrc(assetUrl(publicImagePath(selectedId, "full")))}>
+          <img key={selectedId} src={assetUrl(publicImagePath(selectedId, "full"))} alt={selectedTitle ?? ""} className="mx-auto max-h-72 w-auto object-contain" decoding="async" onError={event => { const box = event.currentTarget.parentElement; if (box) box.style.display = "none"; }} />
         </button>}
-        <PublicMouldCard mould={selected} lang={lang} query="" onOpen={() => {}} />
-        <PublicMouldDetails id={selected.id} lang={lang} version={refresh} />
+        {selected && <PublicMouldCard mould={selected} lang={lang} query="" onOpen={() => {}} />}
+        <PublicMouldDetails id={selectedId} lang={lang} version={refresh} />
         <p className="text-ink-soft">{t.publicView.hint}</p>
         <Link href="/login" className="rounded-md bg-action text-white p-3 text-center font-bold">{t.signIn}</Link>
       </div>}

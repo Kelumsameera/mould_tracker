@@ -13,6 +13,7 @@ import { searchMoulds } from "../lib/mouldSearch.js";
 import { getConfig } from "../lib/configStore.js";
 import { setting } from "../lib/settings.js";
 import { displayStatus, toolTypeFilter } from "../lib/mouldState.js";
+import { rackOverview } from "../controllers/rackController.js";
 
 const router = Router();
 // A deliberately small public projection. No history, people, notes or write routes.
@@ -51,6 +52,17 @@ router.get("/moulds", validate(publicMouldsQuery, "query"), asyncHandler(async (
     rack: racks.find(x => String(x._id) === String(m.rackId))?.locationId ?? null,
     hasImage: hasPicture.has(String(m._id))
   })) });
+}));
+
+// Read-only rack view. Rack notes are left out and pictures go through the public image route.
+router.get("/racks", asyncHandler(async (req, res) => {
+  const { zones, awaitingRack } = await rackOverview();
+  const chip = ({ id, toolId, status, size, capableMachines, items }) => ({ id, toolId, status: displayStatus(status), size, capableMachines,
+    items: items.map(({ itemId, description, cavities, thumbUrl }) => ({ itemId, description, cavities, thumbUrl: thumbUrl ? `/public/moulds/${id}/image` : null })) });
+  res.set("Cache-Control", "no-store");
+  res.json({ success: true, refreshSeconds: setting("ui.refreshSeconds"),
+    zones: zones.filter(z => z.active !== false).map(({ racks, ...z }) => ({ ...z, racks: racks.map(({ note, moulds, ...r }) => ({ ...r, note: "", moulds: moulds.map(chip) })) })),
+    awaitingRack: awaitingRack.map(({ id, toolId }) => ({ id, toolId })) });
 }));
 
 // One mould with its items and machine. Still public-safe: no notes, remarks, people, problems or history.

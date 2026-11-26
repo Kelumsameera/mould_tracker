@@ -30,7 +30,7 @@ type Props = {
 };
 
 export default function Sidebar({ open, translations, lang, user, view, sync, syncText, onLogout, onClose }: Props) {
-  const mayVisit = (page: PageName) => user ? canVisitPage(user, page) : page === "find" || page === "extrusion";
+  const mayVisit = (page: PageName) => user ? canVisitPage(user, page) : page === "find" || page === "extrusion" || page === "racks";
   // Screen state
   const [expanded, setExpanded] = useState(false);
   // Effects: load data and update the screen
@@ -124,7 +124,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
       aria-current={view === key ? "page" : undefined}
       title={label}
       aria-label={label}
-      href={user ? PAGE_PATHS[key] : key === "extrusion" ? "/?toolType=EXTRUSION_DIE" : "/"}
+      href={user ? PAGE_PATHS[key] : key === "extrusion" ? "/?toolType=EXTRUSION_DIE" : key === "racks" ? "/?view=racks" : "/"}
       onClick={onClose}
     >
       <Icon name={icon} size={20} />
