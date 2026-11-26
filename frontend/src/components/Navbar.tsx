@@ -8,6 +8,7 @@ import { passkeyText } from "@/utils/passkeyText";
 import SearchBox from "./SearchBox";
 
 type Props = {
+  publicMode?: boolean;
   page: PageName;
   translations: Dict;
   lang: Lang;
@@ -29,6 +30,7 @@ export default function Navbar({
   onOpenSidebar,
   userId,
   onOpenMould,
+  publicMode = false,
 }: Props) {
   const showSearch = page === "find" || page === "extrusion";
   const searchPlaceholder = page === "extrusion" ? translations.extrusionSearch : translations.search.placeholder;
@@ -69,7 +71,7 @@ export default function Navbar({
       </div>
 
       {showSearch && (
-        <SearchBox key={page} translations={translations} placeholder={searchPlaceholder} userId={userId} toolType={page === "extrusion" ? "EXTRUSION_DIE" : undefined} onSearch={onSearch} onOpenMould={onOpenMould} />
+        <SearchBox key={page} publicMode={publicMode} translations={translations} placeholder={searchPlaceholder} userId={userId} toolType={page === "extrusion" ? "EXTRUSION_DIE" : undefined} onSearch={onSearch} onOpenMould={onOpenMould} />
       )}
 
       <div className="flex shrink-0 rounded-md bg-white/10 p-0.5" role="group" aria-label={translations.nav.language}>

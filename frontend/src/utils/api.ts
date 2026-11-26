@@ -1,9 +1,12 @@
 import type { Permission } from "@/utils/permissions";
-import type { UserAccess, RoleAccess } from "@/utils/types";
+import type { UserAccess, RoleAccess, MouldStatus } from "@/utils/types";
 import type { AuditEntry, ItemInput, Machine, Mould, MouldInput, MoveInput, Movement, Person, Rack, Role, Stats, User, WorkFilter, WorkLog, WorkLogInput, WorkSummary, Zone } from "@/utils/types";
 import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON } from "@simplewebauthn/browser";
 
 export type PasskeyInfo = { id: string; name: string; createdAt: string; lastUsedAt?: string };
+export type PublicMould = { id: string; toolId: string; locationKey: string; location: { en: string; si: string }; status: MouldStatus; statusLabels: { en: string; si: string }; machine: string | null; rack: string | null; hasImage?: boolean };
+export const publicImagePath = (id: string, size: "thumb" | "full" = "thumb") => `/public/moulds/${id}/image${size === "full" ? "?size=full" : ""}`;
+export type PublicMouldResult = { hasMore: boolean; total: number; refreshSeconds: number; locations: { key: string; labels: { en: string; si: string }; icon?: string; count: number }[]; moulds: PublicMould[] };
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -51,6 +54,7 @@ async function request<T>(path: string, method = "GET", body?: unknown): Promise
 }
 
 export const api = {
+  publicMoulds: (q: string, page = 1, filters: { toolType?: string; location?: string } = {}) => request<PublicMouldResult>("/public/moulds" + qs({ q, page, ...filters })),
   login: (email: string, password: string) => request<{ user: User }>("/auth/login", "POST", { email, password }),
   logout: () => request<unknown>("/auth/logout", "POST"),
   me: () => request<{ user: User }>("/auth/me"),

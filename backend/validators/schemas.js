@@ -144,6 +144,7 @@ export const reasonSchema = z.object({ reason: z.string().trim().max(1000).defau
 // Search text: any characters are allowed (punctuation is ignored by the search); long input is cut, never rejected.
 const searchText = z.string().transform((s) => s.trim().slice(0, 64)).optional();
 export const suggestQuery = z.object({ q: searchText, toolType: z.enum(TOOL_TYPES).optional() });
+export const publicMouldsQuery = z.object({ q: searchText, page: z.coerce.number().int().min(1).default(1), toolType: z.enum(TOOL_TYPES).optional(), location: locationKey.optional() });
 export const listMouldsQuery = z.object({
   toolType: z.enum(TOOL_TYPES).optional(),
   q: searchText,

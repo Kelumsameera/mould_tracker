@@ -21,7 +21,7 @@ type Props = {
   open: boolean;
   translations: Dict;
   lang: Lang;
-  user: User;
+  user: User | null;
   view: PageName;
   sync: string;
   syncText: string;
@@ -30,6 +30,7 @@ type Props = {
 };
 
 export default function Sidebar({ open, translations, lang, user, view, sync, syncText, onLogout, onClose }: Props) {
+  const mayVisit = (page: PageName) => user ? canVisitPage(user, page) : page === "find" || page === "extrusion";
   // Screen state
   const [expanded, setExpanded] = useState(false);
   // Effects: load data and update the screen
@@ -77,8 +78,8 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
   const adminLinks: { key: PageName; label: string; icon: IconName }[] = [];
   const BUILT_IN_PLACES = ["MACHINE", "PRODUCTION_FLOOR", "ISOLATION", "MOULD_ROOM", "TOOL_ROOM", "WORKSHOP", "OUT_OF_SERVICE"];
   const customPlaces = (activeLocations() || []).filter((l) => !BUILT_IN_PLACES.includes(l.key));
-  if (canVisitPage(user, "workflow")) adminLinks.push({ key: "workflow", label: translations.workflowAdmin.title, icon: "admin" });
-  if (canVisitPage(user, "settings")) adminLinks.push({ key: "settings", label: translations.settingsAdmin.title, icon: "admin" });
+  if (mayVisit("workflow")) adminLinks.push({ key: "workflow", label: translations.workflowAdmin.title, icon: "admin" });
+  if (mayVisit("settings")) adminLinks.push({ key: "settings", label: translations.settingsAdmin.title, icon: "admin" });
 
   if (can(user, "access.manage")) {
     adminLinks.push({ key: "access", label: translations.accessAdmin.title, icon: "admin" });
@@ -123,7 +124,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
       aria-current={view === key ? "page" : undefined}
       title={label}
       aria-label={label}
-      href={PAGE_PATHS[key]}
+      href={user ? PAGE_PATHS[key] : key === "extrusion" ? "/?toolType=EXTRUSION_DIE" : "/"}
       onClick={onClose}
     >
       <Icon name={icon} size={20} />
@@ -185,9 +186,9 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
         </button>
 
         <nav className="flex flex-col gap-0.5 mx-0 my-4">
-          {mainLinks.filter((link) => canVisitPage(user, link.key)).map(renderNavItem)}
+          {mainLinks.filter((link) => mayVisit(link.key)).map(renderNavItem)}
           {/* Locations added in Workflow Settings get the generic location screen. */}
-          {canVisitPage(user, "place") && customPlaces.map((loc) => (
+          {mayVisit("place") && customPlaces.map((loc) => (
             <Link key={"place-" + loc.key} className={itemBase} href={`${PAGE_PATHS.place}?key=${encodeURIComponent(loc.key)}`} onClick={onClose} title={locationName(loc.key as Location, translations)} aria-label={locationName(loc.key as Location, translations)}>
               <Icon name={iconForLocation(loc.key)} size={20} />
               <span className={"overflow-hidden text-ellipsis " + RAIL_HIDE}>{locationName(loc.key as Location, translations)}</span>
@@ -201,6 +202,7 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
         </nav>
 
         <div className="mt-auto [border-top:1px_solid_rgba(255,255,255,.1)] pt-3 flex flex-col gap-0.5">
+          {user ? <>
           <div className={"flex items-center gap-3 px-3 py-2 mb-1 text-sm rounded-md bg-white/4 " + RAIL_ITEM} title={user.name}>
             <Icon name="user" size={20} />
             <div className={"min-w-0 [&>*]:block [&>*]:overflow-hidden [&>*]:text-ellipsis [&>*]:whitespace-nowrap " + RAIL_HIDE}>
@@ -218,8 +220,9 @@ export default function Sidebar({ open, translations, lang, user, view, sync, sy
             label: passkeyText(lang).title,
             icon: "passkey",
           })}
+          </> : <Link className={itemBase} href="/login"><Icon name="user" size={20} /><span className={RAIL_HIDE}>{translations.signIn}</span></Link>}
           <PwaInstallButton lang={lang} />
-          {renderAccountLink(translations.signOut, "logout", onLogout)}
+          {user && renderAccountLink(translations.signOut, "logout", onLogout)}
         </div>
       </aside>
     </>

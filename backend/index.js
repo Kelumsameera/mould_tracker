@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
 import { refreshConfig } from "./lib/configStore.js";
 import authRoutes from "./routes/authRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js";
 import mouldRoutes from "./routes/mouldRoutes.js";
 import rackRoutes from "./routes/rackRoutes.js";
 import machineRoutes from "./routes/machineRoutes.js";
@@ -44,6 +45,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/public", publicRoutes);
 app.use("/api/moulds", mouldRoutes);
 app.use("/api/racks", rackRoutes);
 app.use("/api/machines", machineRoutes);

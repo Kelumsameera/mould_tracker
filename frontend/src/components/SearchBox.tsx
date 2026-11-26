@@ -14,9 +14,10 @@ export const SEARCH_EVENT = "mt:search"; // other components can set the search 
 
 type Row = { mould: Mould; kind: "mould" | "item" };
 
-export default function SearchBox({ translations: t, placeholder, userId, toolType, onSearch, onOpenMould }: {
+export default function SearchBox({ translations: t, placeholder, userId, toolType, onSearch, onOpenMould, publicMode = false }: {
   translations: Dict; placeholder: string; userId: string; toolType?: ToolType;
   onSearch: (q: string) => void; onOpenMould: (id: string) => void;
+  publicMode?: boolean;
 }) {
   const [text, setText] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
@@ -32,7 +33,7 @@ export default function SearchBox({ translations: t, placeholder, userId, toolTy
     return () => clearTimeout(h);
   }, [text, onSearch]);
   useEffect(() => {
-    if (!queryWords(text).length) { setRows([]); return; }
+    if (publicMode || !queryWords(text).length) { setRows([]); return; }
     const ctrl = new AbortController();
     const h = setTimeout(async () => {
       try {
@@ -44,7 +45,7 @@ export default function SearchBox({ translations: t, placeholder, userId, toolTy
       }
     }, 200);
     return () => { clearTimeout(h); ctrl.abort(); };
-  }, [text, toolType]);
+  }, [text, toolType, publicMode]);
   useEffect(() => {
     input.current?.focus();
     const onExternal = (e: Event) => { const q = String((e as CustomEvent).detail ?? ""); setText(q); onSearch(q); };

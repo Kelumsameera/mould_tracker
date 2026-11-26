@@ -214,6 +214,8 @@ Pin ID kept on the items).
 
 ## Search
 
+The home page is public: visitors can search mould locations by mould/item ID, description, machine or rack without signing in. It uses the app's navigation and card layout, with tool-category and location filters, live refresh and paged results. The public API exposes mould IDs, statuses, current locations and location totals. Editing, moves and all existing internal APIs still require sign-in and their existing permissions.
+
 Every search box uses one helper (`backend/lib/search.js`, mirrored in `frontend/src/utils/search.ts`): case,
 punctuation and spacing never matter (`FLK19066` = `flk 19066` = `FLK-19066`), Sinhala text is kept, and every word
 of a multi-word query must match. Moulds and items store a normalized `searchKey` (kept up to date on save and by the

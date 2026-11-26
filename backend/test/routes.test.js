@@ -6,6 +6,10 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/User.js";
+import Mould from "../models/Mould.js";
+import Machine from "../models/Machine.js";
+import Rack from "../models/Rack.js";
+import Item from "../models/Item.js";
 import { errorHandler } from "../middleware/errorMiddleware.js";
 
 // No database in tests: queries fail fast (500) instead of waiting, which still proves the permission check passed.
@@ -40,6 +44,7 @@ before(async () => {
   app.use(express.json());
   app.use(cookieParser());
   app.use("/api/moulds", moulds.default);
+  app.use("/api/public", (await import("../routes/publicRoutes.js")).default);
   app.use("/api/racks", racks.default);
   app.use("/api/audit", audit.default);
   app.use("/api/machines", machines.default);
@@ -95,6 +100,42 @@ test("signed-out requests are refused", async () => {
   assert.equal(res.status, 401);
 });
 
+test("public locations work without a session and expose only location fields", async () => {
+  const chain = rows => ({ sort() { return this; }, skip() { return this; }, limit() { return this; }, lean: async () => rows });
+  const mouldFind = mock.method(Mould, "find", filter => {
+    assert.equal(filter.deletedAt, null);
+    return chain([{ _id: "m1", toolId: "PUBLIC-1", location: "MACHINE", status: "GOOD", machineId: "machine1", notes: "private", lastMovedBy: "private" }]);
+  });
+  const machineFind = mock.method(Machine, "find", () => chain([{ _id: "machine1", code: "INJ-01", note: "private" }]));
+  const rackFind = mock.method(Rack, "find", () => chain([]));
+  const counts = mock.method(Mould, "aggregate", async () => [{ _id: "MACHINE", count: 1 }]);
+  const total = mock.method(Mould, "countDocuments", async () => 1);
+  const pictured = mock.method(Item, "distinct", async () => ["m1"]);
+  try {
+    const response = await fetch(`${base}/public/moulds`);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    const body = await response.json();
+    assert.equal(body.moulds[0].machine, "INJ-01");
+    assert.deepEqual(Object.keys(body.moulds[0]).sort(), ["hasImage", "id", "location", "locationKey", "machine", "rack", "status", "statusLabels", "toolId"]);
+    assert.equal(body.total, 1);
+    assert.equal(body.moulds[0].hasImage, true);
+    assert.equal(body.locations.find(l => l.key === "MACHINE").count, 1);
+    assert.equal(body.moulds[0].statusLabels.en, "Good");
+    assert.equal((await fetch(`${base}/public/moulds?page=0`)).status, 400);
+  } finally {
+    mouldFind.mock.restore(); machineFind.mock.restore(); rackFind.mock.restore(); counts.mock.restore(); total.mock.restore(); pictured.mock.restore();
+  }
+});
+
+test("all mould mutations require authentication", async () => {
+  for (const [method, path] of tables.moulds.filter(([method]) => method !== "get")) {
+    assert.equal((await fetch(`${base}/moulds${fill(path)}`, {
+      method: method.toUpperCase(), headers: { "Content-Type": "application/json" }, body: "{}"
+    })).status, 401, `${method} ${path}`);
+  }
+});
+
 test("each role gets exactly the routes the permission table gives it", async () => {
   const wrong = [];
   for (const [name, table] of Object.entries(tables)) {
@@ -113,4 +154,13 @@ test("each role gets exactly the routes the permission table gives it", async ()
     }
   }
   assert.deepEqual(wrong, []);
+});
+
+test("public mould image rejects bad ids and moulds without pictures", async () => {
+  assert.equal((await fetch(`${base}/public/moulds/not-an-id/image`)).status, 404);
+  const exists = mock.method(Mould, "exists", async () => ({ _id: "x" }));
+  const findOne = mock.method(Item, "findOne", () => ({ sort() { return this; }, lean: async () => null }));
+  try {
+    assert.equal((await fetch(`${base}/public/moulds/${new mongoose.Types.ObjectId()}/image`)).status, 404);
+  } finally { exists.mock.restore(); findOne.mock.restore(); }
 });

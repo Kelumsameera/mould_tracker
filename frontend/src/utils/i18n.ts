@@ -8,6 +8,7 @@ export type Lang = 'en' | 'si';
 type D = Record<string, unknown>; // error detail values sent by the server
 
 const en = {
+  publicView: { hint: 'View mould locations without signing in. Sign in to edit or move a mould.', search: 'Search', previous: 'Previous', next: 'Next', viewPicture: 'Tap the picture to enlarge it' },
   rackLayout: {
     title: 'Mould storage & identification', format: 'Location format', formatHint: 'Rack – Pallet / Level – Position',
     layout: 'Storage rack layout', rack: 'Rack', pallet: 'Pallet / level', position: 'Position', legacy: 'Existing locations',
@@ -398,6 +399,7 @@ const en = {
 export type Dict = typeof en;
 
 const si: Dict = {
+  publicView: { hint: 'Login නොවී mould තිබෙන තැන් බලන්න. Mould එකක් edit හෝ move කිරීමට login වන්න.', search: 'සොයන්න', previous: 'පෙර', next: 'ඊළඟ', viewPicture: 'පින්තූරය විශාල කිරීමට එය තට්ටු කරන්න' },
   rackLayout: {
     title: 'Mould ගබඩා කිරීම සහ හඳුනාගැනීම', format: 'Location ආකෘතිය', formatHint: 'Rack – Pallet / තට්ටුව – ස්ථානය',
     layout: 'ගබඩා rack සැලැස්ම', rack: 'Rack', pallet: 'Pallet / තට්ටුව', position: 'ස්ථානය', legacy: 'පැරණි locations',

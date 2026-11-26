@@ -3,7 +3,7 @@
 import Highlight from "@/components/Highlight";
 import AlertBadges, { hasAlertBadges } from "@/components/AlertBadges";
 import Icon from "./Icon";
-import { assetUrl } from "@/utils/api";
+import MouldCardSurface from "./MouldCardSurface";
 import { type Dict, type Lang } from "@/utils/i18n";
 import { relativeTime } from "@/utils/format";
 import type { Mould } from "@/utils/types";
@@ -23,22 +23,7 @@ type Props = {
 export default function MouldCard({ mould, translations, lang, onOpen, query }: Props) {
   const what = mould.itemIds?.slice(0, 3).join(", ") ?? "";
   return (
-    <div
-      className="min-w-0 bg-surface rounded-lg px-3 py-2 flex items-start gap-2 border border-solid border-line shadow-card cursor-pointer relative overflow-hidden [transition:transform_var(--fast),border-color_var(--fast),box-shadow_var(--fast)] active:scale-[.985] [@media(hover:hover)]:hover:border-line-strong [@media(hover:hover)]:hover:shadow-panel [@media(hover:hover)]:hover:-translate-y-px"
-      role="button"
-      tabIndex={0}
-      aria-label={mould.toolId}
-      onClick={() => onOpen(mould.id)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen(mould.id);
-        }
-      }}
-    >
-      <div className="w-13 aspect-square rounded-sm bg-white dark:bg-surface-2 dark:has-[img]:bg-white shrink-0 flex items-center justify-center overflow-hidden border border-solid border-line text-ink-faint">
-        {mould.thumbUrl ? <img src={assetUrl(mould.thumbUrl)} alt="" loading="lazy" decoding="async" className="size-full object-contain" width={72} height={72} onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <Icon name="mould" size={26} />}
-      </div>
+    <MouldCardSurface id={mould.id} toolId={mould.toolId} thumbUrl={mould.thumbUrl} onOpen={onOpen}>
       <div className="flex-1 min-w-0 flex flex-col gap-0.75">
         <div className="flex items-center gap-2 flex-wrap pr-1">
           <span className={TOOL_ID_TAG}><Highlight text={mould.toolId} query={query} /></span>
@@ -90,6 +75,6 @@ export default function MouldCard({ mould, translations, lang, onOpen, query }: 
           </div>
         )}
       </div>
-    </div>
+    </MouldCardSurface>
   );
 }
