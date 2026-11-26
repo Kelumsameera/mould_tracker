@@ -4,6 +4,8 @@ Find a mould, check its location and condition, and keep its movement and mainte
 
 ## Start here
 
+- [Read what Mould Tracker does and what is new](introduction.md).
+- [View moulds without signing in](user-guide/public-view.md).
 - [Sign in](getting-started/first-login.md).
 - [Follow the quick start](getting-started/quick-start.md).
 - [Browse the user guide](user-guide/README.md).
@@ -26,6 +28,8 @@ Mould Tracker භාවිතයෙන් mould එකක් සොයා එහ
 
 ### ආරම්භ කරන්න
 
+- [Mould Tracker ගැන සහ අලුතින් එකතු වූ දේ](introduction.md) කියවන්න.
+- [Login නොවී moulds බලන්න](user-guide/public-view.md).
 - [පද්ධතියට ඇතුළු වන්න](getting-started/first-login.md).
 - [ඉක්මන් ආරම්භක උපදෙස්](getting-started/quick-start.md) අනුගමනය කරන්න.
 - [භාවිත මාර්ගෝපදේශය](user-guide/README.md) බලන්න.

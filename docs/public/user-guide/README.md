@@ -2,6 +2,7 @@
 
 | Task | Guide |
 |---|---|
+| Look up moulds without signing in | [View moulds without signing in](public-view.md) |
 | Find a mould or extrusion die | [Find a mould](find-a-mould.md) |
 | Read a storage location | [Find a storage position](rack-view.md) |
 | Change a mould's location | [Move a mould](move-a-mould.md) |
@@ -18,6 +19,7 @@ Some actions require assigned access. Ask your supervisor if you cannot perform 
 
 | කාර්යය | මාර්ගෝපදේශය |
 |---|---|
+| Login නොවී moulds බැලීම | [Login නොවී moulds බලන්න](public-view.md) |
 | Mould එකක් හෝ extrusion die එකක් සෙවීම | [Mould එකක් සොයන්න](find-a-mould.md) |
 | ගබඩා ස්ථානය කියවීම | [ගබඩා ස්ථානය සොයන්න](rack-view.md) |
 | Mould එකේ පිහිටීම වෙනස් කිරීම | [Mould එකක් මාරු කරන්න](move-a-mould.md) |

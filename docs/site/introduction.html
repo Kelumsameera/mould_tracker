@@ -1,0 +1,100 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-title-en="About Mould Tracker" data-title-si="Mould Tracker ගැන">About Mould Tracker · Mould Tracker Docs</title><meta name="description" content="">
+<script>try { if (localStorage.getItem('mt-docs-language') === 'si') document.documentElement.lang = 'si'; } catch {}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="assets/docs.css"></head><body>
+<header class="top"><button class="menu" data-label-en="Menu" data-label-si="මෙනුව" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="index.html"><span class="logo">◆</span> Mould Tracker <span data-doc-lang="en">Docs</span><span data-doc-lang="si" lang="si">උපදෙස්</span></a>
+<div class="header-actions"><button class="language" type="button" aria-label="සිංහලට මාරු කරන්න" onclick="toggleLanguage()">සිංහල</button><button class="theme" data-label-en="Toggle theme" data-label-si="පෙනුම වෙනස් කරන්න" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></div></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Start</span><span data-doc-lang="si" lang="si">ආරම්භය</span></div><a class="nav-a" href="index.html"><span data-doc-lang="en">Mould Tracker user guide</span><span data-doc-lang="si" lang="si">භාවිත මාර්ගෝපදේශය</span></a><a class="nav-a on" href="introduction.html"><span data-doc-lang="en">About Mould Tracker</span><span data-doc-lang="si" lang="si">Mould Tracker ගැන</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Getting started</span><span data-doc-lang="si" lang="si">මුල් පියවර</span></div><a class="nav-a" href="getting-started/first-login.html"><span data-doc-lang="en">Sign in</span><span data-doc-lang="si" lang="si">පද්ධතියට ඇතුළු වීම</span></a><a class="nav-a" href="getting-started/quick-start.html"><span data-doc-lang="en">Quick start</span><span data-doc-lang="si" lang="si">ඉක්මන් ආරම්භය</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">User guide</span><span data-doc-lang="si" lang="si">භාවිත උපදෙස්</span></div><a class="nav-a" href="user-guide/index.html"><span data-doc-lang="en">Using Mould Tracker</span><span data-doc-lang="si" lang="si">Mould Tracker භාවිතය</span></a><a class="nav-a" href="user-guide/public-view.html"><span data-doc-lang="en">View moulds without signing in</span><span data-doc-lang="si" lang="si">Login නොවී moulds බැලීම</span></a><a class="nav-a" href="user-guide/find-a-mould.html"><span data-doc-lang="en">Find a mould</span><span data-doc-lang="si" lang="si">Mould එකක් සෙවීම</span></a><a class="nav-a" href="user-guide/move-a-mould.html"><span data-doc-lang="en">Move a mould</span><span data-doc-lang="si" lang="si">Mould එකක් මාරු කිරීම</span></a><a class="nav-a" href="user-guide/rack-view.html"><span data-doc-lang="en">Find a storage position</span><span data-doc-lang="si" lang="si">ගබඩා ස්ථානය සෙවීම</span></a><a class="nav-a" href="user-guide/workshop-queue.html"><span data-doc-lang="en">Workshop queue</span><span data-doc-lang="si" lang="si">Workshop පෝලිම</span></a><a class="nav-a" href="user-guide/work-log.html"><span data-doc-lang="en">Record work</span><span data-doc-lang="si" lang="si">කළ වැඩ සටහන් කිරීම</span></a><a class="nav-a" href="user-guide/report-a-problem.html"><span data-doc-lang="en">Report a problem</span><span data-doc-lang="si" lang="si">ගැටලුවක් වාර්තා කිරීම</span></a><a class="nav-a" href="user-guide/record-shots.html"><span data-doc-lang="en">Record shots</span><span data-doc-lang="si" lang="si">Shots සටහන් කිරීම</span></a><a class="nav-a" href="user-guide/account-and-passkeys.html"><span data-doc-lang="en">Your account and passkeys</span><span data-doc-lang="si" lang="si">Account සහ passkeys</span></a><a class="nav-a" href="user-guide/app-settings-and-install.html"><span data-doc-lang="en">Install and personalise the app</span><span data-doc-lang="si" lang="si">App එක install කිරීම සහ සැකසීම</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Support</span><span data-doc-lang="si" lang="si">උදව්</span></div><a class="nav-a" href="support/troubleshooting.html"><span data-doc-lang="en">Troubleshooting</span><span data-doc-lang="si" lang="si">ගැටලු විසඳීම</span></a><a class="nav-a" href="support/faq.html"><span data-doc-lang="en">Frequently asked questions</span><span data-doc-lang="si" lang="si">නිතර අසන ප්‍රශ්න</span></a></div></aside>
+<main class="main" data-doc-lang="en" lang="en"><article class="doc"><h1 id="en-about-mould-tracker"><a class="anchor" href="#en-about-mould-tracker">#</a>About Mould Tracker</h1><p>Mould Tracker shows where every injection mould and extrusion die tool is, what condition it is in, and what work was done on it. Production, the Mould Room and the workshop all see the same live information.</p>
+<h2 id="en-what-you-can-do"><a class="anchor" href="#en-what-you-can-do">#</a>What you can do</h2><table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>See where a mould is now: on a machine, on the production floor, in the Isolation Area, in the Mould Room or in the workshop</td>
+<td><a href="user-guide/find-a-mould.html">Find a mould</a></td>
+</tr>
+<tr>
+<td>See the storage position of a mould on the rack layout</td>
+<td><a href="user-guide/rack-view.html">Find a storage position</a></td>
+</tr>
+<tr>
+<td>Move a mould and record where it went</td>
+<td><a href="user-guide/move-a-mould.html">Move a mould</a></td>
+</tr>
+<tr>
+<td>Record service and repair work, problems and production shots</td>
+<td><a href="user-guide/work-log.html">Record work</a></td>
+</tr>
+<tr>
+<td>Look up moulds without signing in</td>
+<td><a href="user-guide/public-view.html">View moulds without signing in</a></td>
+</tr>
+</tbody></table>
+<p>Every move follows the rules set by your administrator. Moves away from a machine go through the Isolation Area first. Mounting a mould on a machine is direct.</p>
+<h2 id="en-two-ways-to-use-it"><a class="anchor" href="#en-two-ways-to-use-it">#</a>Two ways to use it</h2><ul>
+<li><strong>Without signing in.</strong> Anyone on the factory network can open the app and see mould locations, details, pictures and the rack view. Nothing can be changed.</li>
+<li><strong>Signed in.</strong> You see the actions your role allows, such as moving moulds, recording work or managing racks.</li>
+</ul>
+<h2 id="en-what-is-new"><a class="anchor" href="#en-what-is-new">#</a>What is new</h2><p><strong>November 2026</strong></p>
+<ul>
+<li><strong>View without signing in.</strong> The opening page now uses the same layout as the app: sidebar, search, language and theme controls, and mould cards.</li>
+<li><strong>Injection Moulds and Extrusion Die Tools tabs.</strong> Switch between the two tool types on the same page.</li>
+<li><strong>Location filters.</strong> Tap a location count, such as Machine or Mould Room, to show only the moulds there.</li>
+<li><strong>Live updates.</strong> The list refreshes on its own every few seconds, so a moved mould shows its new place without reloading.</li>
+<li><strong>Continuous scrolling.</strong> More moulds load as you scroll. There are no Next and Previous buttons.</li>
+<li><strong>Pictures.</strong> Mould cards show the product picture. Tap a mould, then tap the picture to enlarge it.</li>
+<li><strong>Mould and machine details.</strong> The mould sheet shows size, cavities, items, materials, the machine the mould is running on and the machines it can run on.</li>
+<li><strong>Rack view without signing in.</strong> Open the <strong>Rack view</strong> tab to see zones, racks and the moulds stored on them.</li>
+</ul>
+<footer class="foot">Mould Tracker user guide</footer></article><nav class="toc" aria-label="On this page"><div class="toc-h">On this page</div><a class="l2" href="#en-what-you-can-do">What you can do</a><a class="l2" href="#en-two-ways-to-use-it">Two ways to use it</a><a class="l2" href="#en-what-is-new">What is new</a></nav></main><main class="main" data-doc-lang="si" lang="si"><article class="doc"><h1 id="si-mould-tracker-ගැන"><a class="anchor" href="#si-mould-tracker-ගැන">#</a>Mould Tracker ගැන</h1><p>Mould Tracker මගින් හැම injection mould එකක්ම සහ extrusion die tool එකක්ම දැන් තියෙන්නේ කොහෙද, එහි තත්ත්වය මොකක්ද, ඒකට කරපු වැඩ මොනවද කියලා පෙන්වනවා. Production, Mould කාමරය සහ workshop එක හැමෝටම එකම live තොරතුරු පේනවා.</p>
+<h3 id="si-ඔබට-කළ-හැකි-දේ"><a class="anchor" href="#si-ඔබට-කළ-හැකි-දේ">#</a>ඔබට කළ හැකි දේ</h3><table>
+<thead>
+<tr>
+<th>කාර්යය</th>
+<th>කොතැනද</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mould එක දැන් කොහෙද බලන්න: මැෂිමක, production floor එකේ, Isolation කලාපයේ, Mould කාමරයේ හෝ workshop එකේ</td>
+<td><a href="user-guide/find-a-mould.html">Mould එකක් සොයන්න</a></td>
+</tr>
+<tr>
+<td>Rack සැලැස්මේ mould එකේ ගබඩා ස්ථානය බලන්න</td>
+<td><a href="user-guide/rack-view.html">ගබඩා ස්ථානය සොයන්න</a></td>
+</tr>
+<tr>
+<td>Mould එකක් මාරු කරලා ගෙනගිය තැන සටහන් කරන්න</td>
+<td><a href="user-guide/move-a-mould.html">Mould එකක් මාරු කරන්න</a></td>
+</tr>
+<tr>
+<td>Service, repair වැඩ, ගැටලු සහ production shots සටහන් කරන්න</td>
+<td><a href="user-guide/work-log.html">කළ වැඩ සටහන් කරන්න</a></td>
+</tr>
+<tr>
+<td>Login නොවී moulds බලන්න</td>
+<td><a href="user-guide/public-view.html">Login නොවී moulds බැලීම</a></td>
+</tr>
+</tbody></table>
+<p>හැම move එකක්ම administrator සකස් කරපු නීති අනුව යනවා. මැෂිමකින් ඉවත් කරන moulds මුලින්ම Isolation කලාපයට යනවා. Mould එකක් මැෂිමකට දාන එක කෙලින්ම කරන්න පුළුවන්.</p>
+<h3 id="si-භාවිත-කරන-ක්රම-දෙක"><a class="anchor" href="#si-භාවිත-කරන-ක්රම-දෙක">#</a>භාවිත කරන ක්‍රම දෙක</h3><ul>
+<li><strong>Login නොවී.</strong> Factory network එකේ ඕනම කෙනෙක්ට app එක open කරලා mould තිබෙන තැන්, විස්තර, පින්තූර සහ rack view එක බලන්න පුළුවන්. කිසිම දෙයක් වෙනස් කරන්න බැහැ.</li>
+<li><strong>Login වෙලා.</strong> ඔබේ role එකට අවසර තියෙන කාර්යයන් පේනවා: moulds මාරු කිරීම, වැඩ සටහන් කිරීම, racks කළමනාකරණය වගේ.</li>
+</ul>
+<h3 id="si-අලුතින්-එකතු-වූ-දේ"><a class="anchor" href="#si-අලුතින්-එකතු-වූ-දේ">#</a>අලුතින් එකතු වූ දේ</h3><p><strong>2026 නොවැම්බර්</strong></p>
+<ul>
+<li><strong>Login නොවී බැලීම.</strong> මුල් පිටුව දැන් app එකේම layout එක භාවිත කරනවා: sidebar, search, භාෂා සහ theme controls, mould cards.</li>
+<li><strong>Injection Moulds සහ Extrusion Die Tools tabs.</strong> එකම පිටුවේ tool වර්ග දෙක අතර මාරු වෙන්න.</li>
+<li><strong>Location filters.</strong> Machine හෝ Mould කාමරය වගේ location count එකක් තට්ටු කරලා එතන තියෙන moulds විතරක් බලන්න.</li>
+<li><strong>Live updates.</strong> List එක තත්පර කිහිපයකට වරක් ඉබේම refresh වෙනවා. ඒ නිසා mould එකක් move කළාම reload නොකර අලුත් තැන පේනවා.</li>
+<li><strong>නොනවත්වා scroll කිරීම.</strong> පහළට scroll කරද්දී තවත් moulds load වෙනවා. Next / Previous බොත්තම් නැහැ.</li>
+<li><strong>පින්තූර.</strong> Mould cards වල product පින්තූරය පේනවා. Mould එකක් තට්ටු කරලා, පින්තූරය තට්ටු කළාම විශාල වෙනවා.</li>
+<li><strong>Mould සහ මැෂින් විස්තර.</strong> Mould sheet එකේ ප්‍රමාණය, cavities, items, materials, දැනට දාලා තියෙන මැෂිම සහ යොදන්න පුළුවන් මැෂින් පේනවා.</li>
+<li><strong>Login නොවී rack view.</strong> <strong>Rack view</strong> tab එක open කරලා zones, racks සහ ඒවායේ ගබඩා කරපු moulds බලන්න.</li>
+</ul>
+<footer class="foot">Mould Tracker භාවිත මාර්ගෝපදේශය</footer></article><nav class="toc" aria-label="මෙම පිටුවේ"><div class="toc-h">මෙම පිටුවේ</div><a class="l3" href="#si-ඔබට-කළ-හැකි-දේ">ඔබට කළ හැකි දේ</a><a class="l3" href="#si-භාවිත-කරන-ක්රම-දෙක">භාවිත කරන ක්‍රම දෙක</a><a class="l3" href="#si-අලුතින්-එකතු-වූ-දේ">අලුතින් එකතු වූ දේ</a></nav></main>
+<script src="assets/docs.js"></script></body></html>

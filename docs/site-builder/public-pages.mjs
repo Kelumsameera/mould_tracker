@@ -5,9 +5,11 @@ import { DOCS } from "./pages.mjs";
 // Publication is opt-in. Internal documents are never discovered or copied here.
 export const PUBLIC_PAGES = [
   ["Start", "README.md", "Mould Tracker user guide"],
+  ["Start", "introduction.md", "About Mould Tracker"],
   ["Getting started", "getting-started/first-login.md", "Sign in"],
   ["Getting started", "getting-started/quick-start.md", "Quick start"],
   ["User guide", "user-guide/README.md", "Using Mould Tracker"],
+  ["User guide", "user-guide/public-view.md", "View moulds without signing in"],
   ["User guide", "user-guide/find-a-mould.md", "Find a mould"],
   ["User guide", "user-guide/move-a-mould.md", "Move a mould"],
   ["User guide", "user-guide/rack-view.md", "Find a storage position"],
@@ -23,8 +25,8 @@ export const PUBLIC_PAGES = [
 
 export function loadPublicPages() {
   const sinhalaTitles = [
-    "භාවිත මාර්ගෝපදේශය", "පද්ධතියට ඇතුළු වීම", "ඉක්මන් ආරම්භය",
-    "Mould Tracker භාවිතය", "Mould එකක් සෙවීම", "Mould එකක් මාරු කිරීම",
+    "භාවිත මාර්ගෝපදේශය", "Mould Tracker ගැන", "පද්ධතියට ඇතුළු වීම", "ඉක්මන් ආරම්භය",
+    "Mould Tracker භාවිතය", "Login නොවී moulds බැලීම", "Mould එකක් සෙවීම", "Mould එකක් මාරු කිරීම",
     "ගබඩා ස්ථානය සෙවීම", "Workshop පෝලිම", "කළ වැඩ සටහන් කිරීම",
     "ගැටලුවක් වාර්තා කිරීම", "Shots සටහන් කිරීම", "Account සහ passkeys",
     "App එක install කිරීම සහ සැකසීම", "ගැටලු විසඳීම", "නිතර අසන ප්‍රශ්න",

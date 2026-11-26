@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title data-title-en="View moulds without signing in" data-title-si="Login නොවී moulds බැලීම">View moulds without signing in · Mould Tracker Docs</title><meta name="description" content="">
+<script>try { if (localStorage.getItem('mt-docs-language') === 'si') document.documentElement.lang = 'si'; } catch {}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="../assets/docs.css"></head><body>
+<header class="top"><button class="menu" data-label-en="Menu" data-label-si="මෙනුව" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+<a class="brand" href="../index.html"><span class="logo">◆</span> Mould Tracker <span data-doc-lang="en">Docs</span><span data-doc-lang="si" lang="si">උපදෙස්</span></a>
+<div class="header-actions"><button class="language" type="button" aria-label="සිංහලට මාරු කරන්න" onclick="toggleLanguage()">සිංහල</button><button class="theme" data-label-en="Toggle theme" data-label-si="පෙනුම වෙනස් කරන්න" aria-label="Toggle theme" onclick="toggleTheme()">◐</button></div></header>
+<aside class="side"><input class="filter" type="search" placeholder="Filter pages…" aria-label="Filter pages" oninput="filterNav(this.value)"><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Start</span><span data-doc-lang="si" lang="si">ආරම්භය</span></div><a class="nav-a" href="../index.html"><span data-doc-lang="en">Mould Tracker user guide</span><span data-doc-lang="si" lang="si">භාවිත මාර්ගෝපදේශය</span></a><a class="nav-a" href="../introduction.html"><span data-doc-lang="en">About Mould Tracker</span><span data-doc-lang="si" lang="si">Mould Tracker ගැන</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Getting started</span><span data-doc-lang="si" lang="si">මුල් පියවර</span></div><a class="nav-a" href="../getting-started/first-login.html"><span data-doc-lang="en">Sign in</span><span data-doc-lang="si" lang="si">පද්ධතියට ඇතුළු වීම</span></a><a class="nav-a" href="../getting-started/quick-start.html"><span data-doc-lang="en">Quick start</span><span data-doc-lang="si" lang="si">ඉක්මන් ආරම්භය</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">User guide</span><span data-doc-lang="si" lang="si">භාවිත උපදෙස්</span></div><a class="nav-a" href="../user-guide/index.html"><span data-doc-lang="en">Using Mould Tracker</span><span data-doc-lang="si" lang="si">Mould Tracker භාවිතය</span></a><a class="nav-a on" href="../user-guide/public-view.html"><span data-doc-lang="en">View moulds without signing in</span><span data-doc-lang="si" lang="si">Login නොවී moulds බැලීම</span></a><a class="nav-a" href="../user-guide/find-a-mould.html"><span data-doc-lang="en">Find a mould</span><span data-doc-lang="si" lang="si">Mould එකක් සෙවීම</span></a><a class="nav-a" href="../user-guide/move-a-mould.html"><span data-doc-lang="en">Move a mould</span><span data-doc-lang="si" lang="si">Mould එකක් මාරු කිරීම</span></a><a class="nav-a" href="../user-guide/rack-view.html"><span data-doc-lang="en">Find a storage position</span><span data-doc-lang="si" lang="si">ගබඩා ස්ථානය සෙවීම</span></a><a class="nav-a" href="../user-guide/workshop-queue.html"><span data-doc-lang="en">Workshop queue</span><span data-doc-lang="si" lang="si">Workshop පෝලිම</span></a><a class="nav-a" href="../user-guide/work-log.html"><span data-doc-lang="en">Record work</span><span data-doc-lang="si" lang="si">කළ වැඩ සටහන් කිරීම</span></a><a class="nav-a" href="../user-guide/report-a-problem.html"><span data-doc-lang="en">Report a problem</span><span data-doc-lang="si" lang="si">ගැටලුවක් වාර්තා කිරීම</span></a><a class="nav-a" href="../user-guide/record-shots.html"><span data-doc-lang="en">Record shots</span><span data-doc-lang="si" lang="si">Shots සටහන් කිරීම</span></a><a class="nav-a" href="../user-guide/account-and-passkeys.html"><span data-doc-lang="en">Your account and passkeys</span><span data-doc-lang="si" lang="si">Account සහ passkeys</span></a><a class="nav-a" href="../user-guide/app-settings-and-install.html"><span data-doc-lang="en">Install and personalise the app</span><span data-doc-lang="si" lang="si">App එක install කිරීම සහ සැකසීම</span></a></div><div class="nav-sec"><div class="nav-h"><span data-doc-lang="en">Support</span><span data-doc-lang="si" lang="si">උදව්</span></div><a class="nav-a" href="../support/troubleshooting.html"><span data-doc-lang="en">Troubleshooting</span><span data-doc-lang="si" lang="si">ගැටලු විසඳීම</span></a><a class="nav-a" href="../support/faq.html"><span data-doc-lang="en">Frequently asked questions</span><span data-doc-lang="si" lang="si">නිතර අසන ප්‍රශ්න</span></a></div></aside>
+<main class="main" data-doc-lang="en" lang="en"><article class="doc"><h1 id="en-view-moulds-without-signing-in"><a class="anchor" href="#en-view-moulds-without-signing-in">#</a>View moulds without signing in</h1><p>Open Mould Tracker on the factory network. The first page shows every mould without signing in. You can look, but you cannot move or change anything.</p>
+<h2 id="en-choose-what-to-see"><a class="anchor" href="#en-choose-what-to-see">#</a>Choose what to see</h2><p>Use the tabs at the top of the page:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Shows</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Injection Moulds</strong></td>
+<td>All injection moulds</td>
+</tr>
+<tr>
+<td><strong>Extrusion Die Tools</strong></td>
+<td>All extrusion die tools</td>
+</tr>
+<tr>
+<td><strong>Rack view</strong></td>
+<td>Zones, racks and the moulds stored on them</td>
+</tr>
+</tbody></table>
+<p>The sidebar has the same links. On a phone, open <strong>More</strong> to see the sidebar.</p>
+<h2 id="en-find-a-mould"><a class="anchor" href="#en-find-a-mould">#</a>Find a mould</h2><ol>
+<li>Type a mould ID, product ID or description in the search box.</li>
+<li>Tap a location count, such as <strong>Machine</strong> or <strong>Mould Room</strong>, to show only the moulds there. Tap it again, or tap <strong>Clear filter</strong>, to show all moulds.</li>
+<li>Scroll down. More moulds load as you reach the end of the list.</li>
+</ol>
+<p>The list refreshes on its own every few seconds. When someone moves a mould, its new place appears without reloading the page.</p>
+<h2 id="en-open-a-mould"><a class="anchor" href="#en-open-a-mould">#</a>Open a mould</h2><p>Tap a mould card. The sheet shows:</p>
+<ul>
+<li>the product picture. Tap it to see it full screen. Tap again or press Esc to close it.</li>
+<li>the current location and status.</li>
+<li><strong>Mould details</strong>: size, tool set, owner zone, rack position, total cavities and when it was last moved.</li>
+<li><strong>Machine details</strong>: the machine the mould is running on now and the machines it can run on.</li>
+<li>the items the mould makes, with cavities, material and masterbatch.</li>
+</ul>
+<h2 id="en-use-the-rack-view"><a class="anchor" href="#en-use-the-rack-view">#</a>Use the rack view</h2><p>Open the <strong>Rack view</strong> tab. Choose a zone or show all zones. Search for a mould ID, product ID or a position such as <strong>A-P1-1</strong>. Tap a rack to list its moulds, and tap a mould ID to open its details.</p>
+<blockquote class="note"><p>To move a mould, record work or report a problem, tap <strong>Sign in</strong>.</p>
+</blockquote><footer class="foot">Mould Tracker user guide</footer></article><nav class="toc" aria-label="On this page"><div class="toc-h">On this page</div><a class="l2" href="#en-choose-what-to-see">Choose what to see</a><a class="l2" href="#en-find-a-mould">Find a mould</a><a class="l2" href="#en-open-a-mould">Open a mould</a><a class="l2" href="#en-use-the-rack-view">Use the rack view</a></nav></main><main class="main" data-doc-lang="si" lang="si"><article class="doc"><h1 id="si-login-නොවී-moulds-බැලීම"><a class="anchor" href="#si-login-නොවී-moulds-බැලීම">#</a>Login නොවී moulds බැලීම</h1><p>Factory network එකේදී Mould Tracker open කරන්න. මුල් පිටුවේ login නොවී හැම mould එකක්ම පේනවා. බලන්න පුළුවන්, හැබැයි කිසිවක් මාරු කරන්න හෝ වෙනස් කරන්න බැහැ.</p>
+<h3 id="si-බලන්න-ඕන-දේ-තෝරන්න"><a class="anchor" href="#si-බලන්න-ඕන-දේ-තෝරන්න">#</a>බලන්න ඕන දේ තෝරන්න</h3><p>පිටුවේ උඩ තියෙන tabs භාවිත කරන්න:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>පෙන්වන්නේ</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Injection Moulds</strong></td>
+<td>හැම injection mould එකක්ම</td>
+</tr>
+<tr>
+<td><strong>Extrusion Die Tools</strong></td>
+<td>හැම extrusion die tool එකක්ම</td>
+</tr>
+<tr>
+<td><strong>Rack view</strong></td>
+<td>Zones, racks සහ ඒවායේ ගබඩා කරපු moulds</td>
+</tr>
+</tbody></table>
+<p>Sidebar එකේත් එම links තියෙනවා. Phone එකේ sidebar එක බලන්න <strong>More</strong> open කරන්න.</p>
+<h3 id="si-mould-එකක්-සොයන්න"><a class="anchor" href="#si-mould-එකක්-සොයන්න">#</a>Mould එකක් සොයන්න</h3><ol>
+<li>Search box එකේ mould ID, product ID හෝ විස්තරය type කරන්න.</li>
+<li>එතන තියෙන moulds විතරක් බලන්න <strong>Machine</strong> හෝ <strong>Mould කාමරය</strong> වගේ location count එකක් තට්ටු කරන්න. හැම mould එකක්ම ආයෙ බලන්න එය නැවත තට්ටු කරන්න, නැත්නම් <strong>Clear filter</strong> තට්ටු කරන්න.</li>
+<li>පහළට scroll කරන්න. List එකේ අගට එද්දී තවත් moulds load වෙනවා.</li>
+</ol>
+<p>List එක තත්පර කිහිපයකට වරක් ඉබේම refresh වෙනවා. කවුරුහරි mould එකක් move කළාම පිටුව reload නොකර අලුත් තැන පේනවා.</p>
+<h3 id="si-mould-එකක්-open-කරන්න"><a class="anchor" href="#si-mould-එකක්-open-කරන්න">#</a>Mould එකක් open කරන්න</h3><p>Mould card එකක් තට්ටු කරන්න. Sheet එකේ පේන්නේ:</p>
+<ul>
+<li>Product පින්තූරය. Full screen බලන්න එය තට්ටු කරන්න. වහන්න නැවත තට්ටු කරන්න හෝ Esc ඔබන්න.</li>
+<li>දැන් තියෙන තැන සහ තත්ත්වය.</li>
+<li><strong>Mould විස්තර</strong>: ප්‍රමාණය, tool set, අයිති zone එක, rack ස්ථානය, මුළු cavities සහ අවසන් වරට ගෙනගිය වෙලාව.</li>
+<li><strong>මැෂින් විස්තර</strong>: mould එක දැනට දාලා තියෙන මැෂිම සහ යොදන්න පුළුවන් මැෂින්.</li>
+<li>Mould එකෙන් හදන items, ඒවායේ cavities, material සහ masterbatch එක්ක.</li>
+</ul>
+<h3 id="si-rack-view-භාවිත-කරන්න"><a class="anchor" href="#si-rack-view-භාවිත-කරන්න">#</a>Rack view භාවිත කරන්න</h3><p><strong>Rack view</strong> tab එක open කරන්න. Zone එකක් තෝරන්න, නැත්නම් හැම zone එකක්ම පෙන්වන්න. Mould ID, product ID හෝ <strong>A-P1-1</strong> වගේ ස්ථානයක් සොයන්න. Rack එකක් තට්ටු කළාම එහි moulds පේනවා. විස්තර බලන්න mould ID එක තට්ටු කරන්න.</p>
+<blockquote class="note"><p>Mould එකක් මාරු කරන්න, වැඩ සටහන් කරන්න හෝ ගැටලුවක් වාර්තා කරන්න <strong>Sign in</strong> තට්ටු කරන්න.</p>
+</blockquote><footer class="foot">Mould Tracker භාවිත මාර්ගෝපදේශය</footer></article><nav class="toc" aria-label="මෙම පිටුවේ"><div class="toc-h">මෙම පිටුවේ</div><a class="l3" href="#si-බලන්න-ඕන-දේ-තෝරන්න">බලන්න ඕන දේ තෝරන්න</a><a class="l3" href="#si-mould-එකක්-සොයන්න">Mould එකක් සොයන්න</a><a class="l3" href="#si-mould-එකක්-open-කරන්න">Mould එකක් open කරන්න</a><a class="l3" href="#si-rack-view-භාවිත-කරන්න">Rack view භාවිත කරන්න</a></nav></main>
+<script src="../assets/docs.js"></script></body></html>
